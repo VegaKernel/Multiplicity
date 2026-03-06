@@ -9,8 +9,7 @@ namespace Multiplicity.Packets.Extensions
     {
         public static ColorStruct ReadColor(this BinaryReader br)
         {
-            byte[] colourPayload = br.ReadBytes(3);
-            return new ColorStruct() { R = colourPayload[0], G = colourPayload[1], B = colourPayload[2] };
+            return new ColorStruct { R = br.ReadByte(), G = br.ReadByte(), B = br.ReadByte() };
         }
 
         public static NetworkText ReadNetworkText(this BinaryReader br)

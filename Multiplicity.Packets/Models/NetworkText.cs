@@ -1,114 +1,88 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets.Models
 {
-	/// <summary>
-	/// Represents an translatable string of text
-	/// </summary>
-	public class NetworkText
-	{
+    /// <summary>
+    /// Represents a translatable string of text.
+    /// </summary>
+    public class NetworkText
+    {
+        private const short FixedPayloadLength = 1;
+        private const short SubstitutionCountPayloadLength = 1;
+
         public enum Mode : byte
         {
             Literal = 0,
             Formattable,
-            LocalizationKey,
+            LocalizationKey
         }
 
-		/// <summary>
-		/// Mode of the text
-		/// </summary>
-		public byte TextMode { get; set; }
-
-		/// <summary>
-		/// The text itself
-		/// </summary>
-		public string Text { get; set; }
-
-        /// <summary>
-        /// The length of the SubstitutionList
-        /// </summary>
+        public byte TextMode { get; set; }
+        public string Text { get; set; }
         public byte SubstitutionListLength { get; set; }
-
-		/// <summary>
-		/// A list of substitutions to make
-		/// </summary>
         public NetworkText[] SubstitutionList { get; set; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NetworkText"/> class.
-        /// </summary>
         public NetworkText()
         {
-            
+            Text = string.Empty;
+            SubstitutionList = Array.Empty<NetworkText>();
         }
 
-        /// <summary>
-        /// Reads from the given reader and initializes a new instance of the <see cref="NetworkText"/> class.
-        /// </summary>
-        /// <param name="br">Reader to initialize instance from.</param>
         public NetworkText(BinaryReader br)
-		{
-            this.TextMode = br.ReadByte();
-            this.Text = br.ReadString();
-            if (this.TextMode != (byte) Mode.Literal)
+        {
+            TextMode = br.ReadByte();
+            Text = br.ReadString();
+            if (TextMode != (byte)Mode.Literal)
             {
-                this.SubstitutionListLength = br.ReadByte();
-                this.SubstitutionList = new NetworkText[(int)SubstitutionListLength];
+                SubstitutionListLength = br.ReadByte();
+                SubstitutionList = new NetworkText[SubstitutionListLength];
 
-                for (int i = 0; i < this.SubstitutionListLength; i++)
+                for (int i = 0; i < SubstitutionListLength; i++)
                 {
-                    this.SubstitutionList[i] = br.ReadNetworkText();
+                    SubstitutionList[i] = br.ReadNetworkText();
                 }
             }
-		}
+            else
+            {
+                SubstitutionList = Array.Empty<NetworkText>();
+            }
+        }
 
-        /// <summary>
-        /// Writes this instance to the given BinaryWriter.
-        /// </summary>
-        /// <param name="bw">BinaryWriter to write contents to.</param>
         public void ToStream(BinaryWriter bw)
-		{
+        {
             bw.Write(TextMode);
-            bw.Write(Text);
-            if (this.TextMode != (byte) Mode.Literal)
+            bw.Write(Text ?? string.Empty);
+            if (TextMode != (byte)Mode.Literal)
             {
-                bw.Write(SubstitutionList.Length);
+                byte substitutionCount = (byte)Math.Min(SubstitutionList?.Length ?? 0, byte.MaxValue);
+                SubstitutionListLength = substitutionCount;
+                bw.Write(substitutionCount);
 
-                for (int i = 0; i < this.SubstitutionListLength; i++)
+                for (int i = 0; i < substitutionCount; i++)
                 {
-                    bw.Write(this.SubstitutionList[i]);
+                    bw.Write(SubstitutionList[i]);
                 }
             }
-		}
+        }
 
-        /// <summary>
-        /// Gets the length of the NetworkText object in bytes.
-        /// </summary>
-        /// <returns>The length in bytes.</returns>
         public short GetLength()
         {
-            short length = 1;
+            short length = FixedPayloadLength;
+            length += (short)PacketSerializationHelper.GetSerializedStringLength(Text);
 
-            // Length of the text in bytes (Terraria only supports extended ASCII)
-            // Add 1 to accomodate for the string length byte
-            length += (short)(1 + (short)this.Text.Length);
-
-            if (this.TextMode != (byte) Mode.Literal)
+            if (TextMode != (byte)Mode.Literal)
             {
-                length += 1;
-                for (int i = 0; i < this.SubstitutionListLength; i++)
+                int substitutionCount = Math.Min(SubstitutionList?.Length ?? 0, byte.MaxValue);
+                length += SubstitutionCountPayloadLength;
+                for (int i = 0; i < substitutionCount; i++)
                 {
-                    length += this.SubstitutionList[i].GetLength();
+                    length += SubstitutionList[i].GetLength();
                 }
             }
 
             return length;
         }
-	}
+    }
 }
