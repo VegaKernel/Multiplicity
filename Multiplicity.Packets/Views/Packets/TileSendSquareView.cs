@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using Multiplicity.Packets.Models;
+using TileModel = Multiplicity.Packets.Models.Tile;
 
 namespace Multiplicity.Packets.Views
 {
@@ -41,7 +42,15 @@ namespace Multiplicity.Packets.Views
         public byte TileChangeType => _packetObject.TileChangeType;
 
         public ReadOnlyMemory<byte> TilePayloadMemory => _packetObject.TilePayloadMemory;
+
+        public PacketReader CreateTilePayloadReader() => new PacketReader(TilePayloadMemory.Span);
+
+        public TileModel[,] ReadTiles(Func<ushort, bool> isFrameImportant)
+        {
+            PacketReader reader = CreateTilePayloadReader();
+            TileModel[,] tiles = TilePayloadReader.ReadRectangle(ref reader, Width, Height, isFrameImportant);
+            reader.EnsureEnd();
+            return tiles;
+        }
     }
 }
-
-

@@ -4,6 +4,7 @@ using Multiplicity.Packets;
 using Multiplicity.Packets.Models;
 using Multiplicity.Packets.Views;
 using Xunit;
+using TileModel = Multiplicity.Packets.Models.Tile;
 
 namespace Multiplicity.Packets.Tests
 {
@@ -683,6 +684,139 @@ namespace Multiplicity.Packets.Tests
             Assert.Equal((byte)6, payload.Variant);
         }
 
+        [Fact]
+        public void TilePayloadReader_Read_PacketReader_ParsesFrameImportantTile()
+        {
+            using MemoryStream stream = new MemoryStream();
+            using (BinaryWriter writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
+            {
+                writer.Write((byte)29);
+                writer.Write((byte)159);
+                writer.Write((byte)5);
+                writer.Write((byte)7);
+                writer.Write((byte)8);
+                writer.Write((ushort)21);
+                writer.Write((short)10);
+                writer.Write((short)20);
+                writer.Write((ushort)55);
+                writer.Write((byte)6);
+                writer.Write((byte)2);
+            }
+
+            PacketReader reader = new PacketReader(stream.ToArray());
+            TileModel tile = TilePayloadReader.Read(ref reader, static tileType => tileType == 21);
+
+            Assert.True(tile.IsActive);
+            Assert.True(tile.HasWall);
+            Assert.True(tile.HasLiquid);
+            Assert.True(tile.WireRed);
+            Assert.True(tile.WireGreen);
+            Assert.True(tile.WireBlue);
+            Assert.True(tile.WireYellow);
+            Assert.True(tile.HasTileColor);
+            Assert.True(tile.HasWallColor);
+            Assert.Equal((ushort)21, tile.Type);
+            Assert.Equal((short)10, tile.FrameX);
+            Assert.Equal((short)20, tile.FrameY);
+            Assert.Equal((ushort)55, tile.Wall);
+            Assert.Equal((byte)7, tile.TileColor);
+            Assert.Equal((byte)8, tile.WallColor);
+            Assert.Equal((byte)1, tile.Slope);
+            Assert.Equal((byte)6, tile.LiquidAmount);
+            Assert.Equal((byte)2, tile.LiquidType);
+            reader.EnsureEnd();
+        }
+
+        [Fact]
+        public void TileSendSquareView_CreateTilePayloadReader_AllowsReadingNestedTilePayload()
+        {
+            byte[] tilePayload;
+            using (MemoryStream stream = new MemoryStream())
+            {
+                using BinaryWriter writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+                writer.Write((byte)1);
+                writer.Write((byte)96);
+                writer.Write((byte)0);
+                writer.Write((ushort)53);
+                tilePayload = stream.ToArray();
+            }
+
+            TileSendSquare packet = new TileSendSquare
+            {
+                TileX = 100,
+                TileY = 200,
+                Width = 1,
+                Height = 1,
+                TileChangeType = 0,
+                TilePayload = tilePayload
+            };
+
+            TileSendSquareView view = PacketViewParser.ParseExact(packet.ToArray(includeHeader: true)).AsTileSendSquareView();
+            PacketReader reader = view.CreateTilePayloadReader();
+            TileModel tile = TilePayloadReader.Read(ref reader, static _ => false);
+
+            Assert.Equal((short)100, view.TileX);
+            Assert.Equal((short)200, view.TileY);
+            Assert.Equal((byte)1, view.Width);
+            Assert.Equal((byte)1, view.Height);
+            Assert.Equal((ushort)53, tile.Type);
+            Assert.Equal((short)-1, tile.FrameX);
+            Assert.Equal((short)-1, tile.FrameY);
+            Assert.Equal((byte)6, tile.Slope);
+            reader.EnsureEnd();
+        }
+
+        [Fact]
+        public void TileSendSquareView_ReadTiles_ParsesRectangle()
+        {
+            byte[] tilePayload;
+            using (MemoryStream stream = new MemoryStream())
+            {
+                using BinaryWriter writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+
+                writer.Write((byte)1);
+                writer.Write((byte)0);
+                writer.Write((byte)0);
+                writer.Write((ushort)1);
+
+                writer.Write((byte)5);
+                writer.Write((byte)0);
+                writer.Write((byte)0);
+                writer.Write((ushort)2);
+                writer.Write((ushort)9);
+
+                writer.Write((byte)0);
+                writer.Write((byte)0);
+                writer.Write((byte)0);
+
+                writer.Write((byte)1);
+                writer.Write((byte)0);
+                writer.Write((byte)0);
+                writer.Write((ushort)7);
+
+                tilePayload = stream.ToArray();
+            }
+
+            TileSendSquare packet = new TileSendSquare
+            {
+                TileX = 50,
+                TileY = 75,
+                Width = 2,
+                Height = 2,
+                TileChangeType = 0,
+                TilePayload = tilePayload
+            };
+
+            TileSendSquareView view = PacketViewParser.ParseExact(packet.ToArray(includeHeader: true)).AsTileSendSquareView();
+            TileModel[,] tiles = view.ReadTiles(static _ => false);
+
+            Assert.Equal((ushort)1, tiles[0, 0].Type);
+            Assert.Equal((ushort)2, tiles[0, 1].Type);
+            Assert.Equal((ushort)9, tiles[0, 1].Wall);
+            Assert.False(tiles[1, 0].IsActive);
+            Assert.Equal((ushort)7, tiles[1, 1].Type);
+        }
+
         private static ColorStruct CreateColor(byte r, byte g, byte b)
         {
             return new ColorStruct
@@ -694,5 +828,6 @@ namespace Multiplicity.Packets.Tests
         }
     }
 }
+
 
 
