@@ -23,7 +23,6 @@ NuGet package identifier:
 - enum и typed-модели пакетов `1..163`;
 - поддержка протокола `317-318`;
 - zero-copy разбор через `ReadOnlySpan<byte>` для server hot-path;
-- typed views для часто используемых и modern packet types.
 - публичные имена `PacketTypes`, packet classes и packet views выровнены под `TerrariaApi.Server.PacketTypes` из TSAPI.
 
 ## Ограничения
