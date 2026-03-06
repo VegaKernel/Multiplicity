@@ -4,7 +4,17 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct PlaceObjectView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public PlaceObjectView(ReadOnlySpan<byte> payload)
+        : this(PacketView.FromPayload(PacketTypes.PlaceObject, payload))
+        {
+        }
+
+        public static PlaceObjectView FromPayload(ReadOnlySpan<byte> payload)
+        {
+            return new PlaceObjectView(payload);
+        }
 
         public PlaceObjectView(PacketView packet)
         {
@@ -21,7 +31,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             X = x;
             Y = y;
             Type = type;
@@ -33,7 +43,7 @@ namespace Multiplicity.Packets.Views
 
         public PacketHeader Header { get; }
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public short X { get; }
 
@@ -50,3 +60,6 @@ namespace Multiplicity.Packets.Views
         public bool Direction { get; }
     }
 }
+
+
+

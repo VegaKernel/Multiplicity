@@ -10,7 +10,7 @@ namespace Multiplicity.Packets
     public class NumberOfAnglerQuestsCompleted : TerrariaPacket
     {
 
-        public byte PlayerID { get; set; }
+        public byte PlayerId { get; set; }
 
         public int AnglerQuestsCompleted { get; set; }
 
@@ -30,13 +30,13 @@ namespace Multiplicity.Packets
         public NumberOfAnglerQuestsCompleted(BinaryReader br)
             : base(br)
         {
-            this.PlayerID = br.ReadByte();
+            this.PlayerId = br.ReadByte();
             this.AnglerQuestsCompleted = br.ReadInt32();
         }
 
         public override string ToString()
         {
-            return $"[NumberOfAnglerQuestsCompleted: PlayerID = {PlayerID} AnglerQuestsCompleted = {AnglerQuestsCompleted}]";
+            return $"[NumberOfAnglerQuestsCompleted: PlayerId = {PlayerId} AnglerQuestsCompleted = {AnglerQuestsCompleted}]";
         }
 
         #region implemented abstract members of TerrariaPacket
@@ -49,7 +49,7 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             /*
-             * Length and ID headers get written in the base packet class.
+             * Length and Id headers get written in the base packet class.
              */
             if (includeHeader)
             {
@@ -66,7 +66,7 @@ namespace Multiplicity.Packets
              */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
-                br.Write(PlayerID);
+                br.Write(PlayerId);
                 br.Write(AnglerQuestsCompleted);
             }
         }
@@ -75,3 +75,4 @@ namespace Multiplicity.Packets
 
     }
 }
+

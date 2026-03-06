@@ -4,7 +4,17 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct PlayerActiveView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public PlayerActiveView(ReadOnlySpan<byte> payload)
+        : this(PacketView.FromPayload(PacketTypes.PlayerActive, payload))
+        {
+        }
+
+        public static PlayerActiveView FromPayload(ReadOnlySpan<byte> payload)
+        {
+            return new PlayerActiveView(payload);
+        }
 
         public PlayerActiveView(PacketView packet)
         {
@@ -16,17 +26,20 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             Active = active;
         }
 
         public PacketHeader Header { get; }
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public byte PlayerId { get; }
 
         public bool Active { get; }
     }
 }
+
+
+

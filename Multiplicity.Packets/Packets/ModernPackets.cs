@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 
 using Multiplicity.Packets.Models;
 
@@ -463,7 +463,7 @@ namespace Multiplicity.Packets
 
         public ushort NpcId { get; set; }
 
-        public TamperWithNpcActionType ActionType { get; set; }
+        public TamperWithNPCActionType ActionType { get; set; }
 
         public int ImmunityTime { get; set; }
 
@@ -478,9 +478,9 @@ namespace Multiplicity.Packets
             : base(br)
         {
             NpcId = br.ReadUInt16();
-            ActionType = (TamperWithNpcActionType)br.ReadByte();
+            ActionType = (TamperWithNPCActionType)br.ReadByte();
 
-            if (ActionType == TamperWithNpcActionType.GrantImmunity)
+            if (ActionType == TamperWithNPCActionType.GrantImmunity)
             {
                 ImmunityTime = br.ReadInt32();
                 PlayerId = br.ReadInt16();
@@ -489,7 +489,7 @@ namespace Multiplicity.Packets
 
         public override short GetLength()
         {
-            return ActionType == TamperWithNpcActionType.GrantImmunity ? ImmunityPayloadLength : BasePayloadLength;
+            return ActionType == TamperWithNPCActionType.GrantImmunity ? ImmunityPayloadLength : BasePayloadLength;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
@@ -504,7 +504,7 @@ namespace Multiplicity.Packets
                 bw.Write(NpcId);
                 bw.Write((byte)ActionType);
 
-                if (ActionType == TamperWithNpcActionType.GrantImmunity)
+                if (ActionType == TamperWithNPCActionType.GrantImmunity)
                 {
                     bw.Write(ImmunityTime);
                     bw.Write(PlayerId);
@@ -1605,4 +1605,5 @@ namespace Multiplicity.Packets
     }
 
 }
+
 

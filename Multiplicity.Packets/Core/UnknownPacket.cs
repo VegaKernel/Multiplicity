@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace Multiplicity.Packets
@@ -7,7 +7,7 @@ namespace Multiplicity.Packets
 	{
 		private byte[] _payload;
 
-		public byte[] payload
+		public byte[] Payload
 		{
 			get
 			{
@@ -25,12 +25,12 @@ namespace Multiplicity.Packets
 		public UnknownPacket(BinaryReader br)
 			: base(br)
 		{
-			PayloadMemory = br.ReadMemory(_length - TerrariaPacket.PACKET_HEADER_LEN);
+			PayloadMemory = br.ReadMemory(_length - TerrariaPacket.PacketHeaderLength);
 		}
 
         public override short GetLength()
 		{
-			return (short)(_length - TerrariaPacket.PACKET_HEADER_LEN);
+			return (short)(_length - TerrariaPacket.PacketHeaderLength);
 		}
 
 		public override void ToStream(Stream stream, bool includeHeader = true)
@@ -45,10 +45,11 @@ namespace Multiplicity.Packets
 
 		public override string ToString()
 		{
-			string hex = BitConverter.ToString(payload).Replace("-", string.Empty);
+			string hex = BitConverter.ToString(Payload).Replace("-", string.Empty);
 
-			return $"[UnknownPacket: ID={ID} Len={GetLength()} Content={hex}]";
+			return $"[UnknownPacket: Id={Id} Len={GetLength()} Content={hex}]";
 		}
 	}
 }
+
 

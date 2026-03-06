@@ -9,7 +9,7 @@ namespace Multiplicity.Packets
     {
         public TerrariaNetModule LoadedModule { get; set; }
 
-        public NetworkModuleTypes? LoadedModuleType => LoadedModule?.ID;
+        public NetworkModuleTypes? LoadedModuleType => LoadedModule?.Id;
 
         public LoadNetModule()
             : base((byte)PacketTypes.LoadNetModule)

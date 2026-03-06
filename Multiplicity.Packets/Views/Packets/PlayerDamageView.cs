@@ -5,7 +5,17 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct PlayerDamageView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public PlayerDamageView(ReadOnlySpan<byte> payload)
+        : this(PacketView.FromPayload(PacketTypes.PlayerDamage, payload))
+        {
+        }
+
+        public static PlayerDamageView FromPayload(ReadOnlySpan<byte> payload)
+        {
+            return new PlayerDamageView(payload);
+        }
 
         public PlayerDamageView(PacketView packet)
         {
@@ -20,7 +30,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             HitDirection = hitDirection;
             Damage = damage;
@@ -30,7 +40,7 @@ namespace Multiplicity.Packets.Views
 
         public PacketHeader Header { get; }
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public byte PlayerId { get; }
 
@@ -48,3 +58,6 @@ namespace Multiplicity.Packets.Views
         }
     }
 }
+
+
+

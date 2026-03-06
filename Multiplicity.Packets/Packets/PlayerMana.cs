@@ -10,7 +10,7 @@ namespace Multiplicity.Packets
     public class PlayerMana : TerrariaPacket
     {
 
-        public byte PlayerID { get; set; }
+        public byte PlayerId { get; set; }
 
         public short Mana { get; set; }
 
@@ -32,14 +32,14 @@ namespace Multiplicity.Packets
         public PlayerMana(BinaryReader br)
             : base(br)
         {
-            this.PlayerID = br.ReadByte();
+            this.PlayerId = br.ReadByte();
             this.Mana = br.ReadInt16();
             this.MaxMana = br.ReadInt16();
         }
 
         public override string ToString()
         {
-            return $"[PlayerMana: PlayerID = {PlayerID} Mana = {Mana} MaxMana = {MaxMana}]";
+            return $"[PlayerMana: PlayerId = {PlayerId} Mana = {Mana} MaxMana = {MaxMana}]";
         }
 
         #region implemented abstract members of TerrariaPacket
@@ -52,7 +52,7 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             /*
-             * Length and ID headers get written in the base packet class.
+             * Length and Id headers get written in the base packet class.
              */
             if (includeHeader)
             {
@@ -69,7 +69,7 @@ namespace Multiplicity.Packets
              */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
-                br.Write(PlayerID);
+                br.Write(PlayerId);
                 br.Write(Mana);
                 br.Write(MaxMana);
             }
@@ -79,3 +79,4 @@ namespace Multiplicity.Packets
 
     }
 }
+

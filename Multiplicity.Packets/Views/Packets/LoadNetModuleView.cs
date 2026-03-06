@@ -4,7 +4,17 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct LoadNetModuleView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public LoadNetModuleView(ReadOnlySpan<byte> payload)
+        : this(PacketView.FromPayload(PacketTypes.LoadNetModule, payload))
+        {
+        }
+
+        public static LoadNetModuleView FromPayload(ReadOnlySpan<byte> payload)
+        {
+            return new LoadNetModuleView(payload);
+        }
 
         public LoadNetModuleView(PacketView packet)
         {
@@ -16,14 +26,14 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             ModuleType = moduleType;
             ModulePayloadSpan = modulePayloadSpan;
         }
 
         public PacketHeader Header { get; }
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public NetworkModuleTypes ModuleType { get; }
 
@@ -35,3 +45,6 @@ namespace Multiplicity.Packets.Views
         }
     }
 }
+
+
+

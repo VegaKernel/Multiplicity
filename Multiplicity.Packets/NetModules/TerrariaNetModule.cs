@@ -8,23 +8,23 @@ namespace Multiplicity.Packets
     {
         public const short ModuleHeaderLength = sizeof(ushort);
 
-        public static readonly Dictionary<NetworkModuleTypes, Func<BinaryReader, TerrariaNetModule>> deserializerMap =
+        public static readonly Dictionary<NetworkModuleTypes, Func<BinaryReader, TerrariaNetModule>> DeserializerMap =
             new Dictionary<NetworkModuleTypes, Func<BinaryReader, TerrariaNetModule>>
             {
                 { NetworkModuleTypes.NetLiquidModule, br => new NetLiquidModule(br) },
                 { NetworkModuleTypes.NetTextModule, br => new NetTextModule(br) }
             };
 
-        public NetworkModuleTypes ID { get; protected set; }
+        public NetworkModuleTypes Id { get; protected set; }
 
         protected TerrariaNetModule(BinaryReader br)
         {
-            ID = (NetworkModuleTypes)br.ReadUInt16();
+            Id = (NetworkModuleTypes)br.ReadUInt16();
         }
 
         protected TerrariaNetModule(NetworkModuleTypes id)
         {
-            ID = id;
+            Id = id;
         }
 
         public static TerrariaNetModule Deserialize(BinaryReader br)
@@ -33,7 +33,7 @@ namespace Multiplicity.Packets
             ushort rawId = br.ReadUInt16();
             br.BaseStream.Seek(startPosition, SeekOrigin.Begin);
 
-            if (!deserializerMap.TryGetValue((NetworkModuleTypes)rawId, out Func<BinaryReader, TerrariaNetModule> deserializer))
+            if (!DeserializerMap.TryGetValue((NetworkModuleTypes)rawId, out Func<BinaryReader, TerrariaNetModule> deserializer))
             {
                 return new UnknownNetModule(br);
             }
@@ -56,7 +56,7 @@ namespace Multiplicity.Packets
 
             using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                bw.Write((ushort)ID);
+                bw.Write((ushort)Id);
             }
         }
     }

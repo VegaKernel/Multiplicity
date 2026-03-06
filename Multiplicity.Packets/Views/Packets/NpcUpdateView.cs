@@ -4,11 +4,21 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct NpcUpdateView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public NpcUpdateView(ReadOnlySpan<byte> payload)
+        : this(PacketView.FromPayload(PacketTypes.NpcUpdate, payload))
+        {
+        }
+
+        public static NpcUpdateView FromPayload(ReadOnlySpan<byte> payload)
+        {
+            return new NpcUpdateView(payload);
+        }
 
         public NpcUpdateView(PacketView packet)
         {
-            packet.EnsureType(PacketTypes.NPCUpdate);
+            packet.EnsureType(PacketTypes.NpcUpdate);
 
             PacketReader reader = packet.CreatePayloadReader();
             short npcId = reader.ReadInt16();
@@ -17,29 +27,29 @@ namespace Multiplicity.Packets.Views
             float velocityX = reader.ReadSingle();
             float velocityY = reader.ReadSingle();
             ushort target = reader.ReadUInt16();
-            NPCUpdateFlags flags = (NPCUpdateFlags)reader.ReadByte();
-            NPCUpdateExtraFlags extraFlags = (NPCUpdateExtraFlags)reader.ReadByte();
+            NpcUpdateFlags flags = (NpcUpdateFlags)reader.ReadByte();
+            NpcUpdateExtraFlags extraFlags = (NpcUpdateExtraFlags)reader.ReadByte();
             float ai0 = 0f;
             float ai1 = 0f;
             float ai2 = 0f;
             float ai3 = 0f;
 
-            if ((flags & NPCUpdateFlags.HasAI0) != 0)
+            if ((flags & NpcUpdateFlags.HasAI0) != 0)
             {
                 ai0 = reader.ReadSingle();
             }
 
-            if ((flags & NPCUpdateFlags.HasAI1) != 0)
+            if ((flags & NpcUpdateFlags.HasAI1) != 0)
             {
                 ai1 = reader.ReadSingle();
             }
 
-            if ((flags & NPCUpdateFlags.HasAI2) != 0)
+            if ((flags & NpcUpdateFlags.HasAI2) != 0)
             {
                 ai2 = reader.ReadSingle();
             }
 
-            if ((flags & NPCUpdateFlags.HasAI3) != 0)
+            if ((flags & NpcUpdateFlags.HasAI3) != 0)
             {
                 ai3 = reader.ReadSingle();
             }
@@ -51,17 +61,17 @@ namespace Multiplicity.Packets.Views
             int life = 0;
             byte releaseOwner = 0;
 
-            if ((extraFlags & NPCUpdateExtraFlags.HasPlayerCountScaling) != 0)
+            if ((extraFlags & NpcUpdateExtraFlags.HasPlayerCountScaling) != 0)
             {
                 statsScaledForPlayerCount = reader.ReadByte();
             }
 
-            if ((extraFlags & NPCUpdateExtraFlags.HasDifficultyOverride) != 0)
+            if ((extraFlags & NpcUpdateExtraFlags.HasDifficultyOverride) != 0)
             {
                 difficulty = reader.ReadSingle();
             }
 
-            if ((flags & NPCUpdateFlags.LifeIsFull) == 0)
+            if ((flags & NpcUpdateFlags.LifeIsFull) == 0)
             {
                 lifeByteCount = reader.ReadByte();
                 life = lifeByteCount switch
@@ -72,8 +82,8 @@ namespace Multiplicity.Packets.Views
                 };
             }
 
-            int npcType = NPCUpdate.NPCTypeFromNetID(npcNetId);
-            bool isCatchable = npcType >= 0 && NPCUpdate.NpcCatchable.Contains((short)npcType);
+            int npcType = NpcUpdate.NpcTypeFromNetId(npcNetId);
+            bool isCatchable = npcType >= 0 && NpcUpdate.NpcCatchable.Contains((short)npcType);
             if (isCatchable)
             {
                 releaseOwner = reader.ReadByte();
@@ -82,7 +92,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             NpcId = npcId;
             PositionX = positionX;
             PositionY = positionY;
@@ -107,7 +117,7 @@ namespace Multiplicity.Packets.Views
 
         public PacketHeader Header { get; }
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public short NpcId { get; }
 
@@ -121,9 +131,9 @@ namespace Multiplicity.Packets.Views
 
         public ushort Target { get; }
 
-        public NPCUpdateFlags Flags { get; }
+        public NpcUpdateFlags Flags { get; }
 
-        public NPCUpdateExtraFlags ExtraFlags { get; }
+        public NpcUpdateExtraFlags ExtraFlags { get; }
 
         public float AI0 { get; }
 
@@ -149,18 +159,22 @@ namespace Multiplicity.Packets.Views
 
         public bool IsCatchable { get; }
 
-        public bool HasAI0 => (Flags & NPCUpdateFlags.HasAI0) != 0;
+        public bool HasAI0 => (Flags & NpcUpdateFlags.HasAI0) != 0;
 
-        public bool HasAI1 => (Flags & NPCUpdateFlags.HasAI1) != 0;
+        public bool HasAI1 => (Flags & NpcUpdateFlags.HasAI1) != 0;
 
-        public bool HasAI2 => (Flags & NPCUpdateFlags.HasAI2) != 0;
+        public bool HasAI2 => (Flags & NpcUpdateFlags.HasAI2) != 0;
 
-        public bool HasAI3 => (Flags & NPCUpdateFlags.HasAI3) != 0;
+        public bool HasAI3 => (Flags & NpcUpdateFlags.HasAI3) != 0;
 
-        public bool HasPlayerCountScaling => (ExtraFlags & NPCUpdateExtraFlags.HasPlayerCountScaling) != 0;
+        public bool HasPlayerCountScaling => (ExtraFlags & NpcUpdateExtraFlags.HasPlayerCountScaling) != 0;
 
-        public bool HasDifficultyOverride => (ExtraFlags & NPCUpdateExtraFlags.HasDifficultyOverride) != 0;
+        public bool HasDifficultyOverride => (ExtraFlags & NpcUpdateExtraFlags.HasDifficultyOverride) != 0;
 
-        public bool HasLifePayload => (Flags & NPCUpdateFlags.LifeIsFull) == 0;
+        public bool HasLifePayload => (Flags & NpcUpdateFlags.LifeIsFull) == 0;
     }
 }
+
+
+
+

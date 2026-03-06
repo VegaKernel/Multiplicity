@@ -23,7 +23,7 @@ namespace Multiplicity.Packets
         public short Style { get; set; }
 
         /// <summary>
-        /// Gets or sets the chest ID to destroy on the client. On the server this is written as 0.
+        /// Gets or sets the chest Id to destroy on the client. On the server this is written as 0.
         /// </summary>
         public short ChestIdToDestroy { get; set; }
 
@@ -65,7 +65,7 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             /*
-             * Length and ID headers get written in the base packet class.
+             * Length and Id headers get written in the base packet class.
              */
             if (includeHeader)
             {

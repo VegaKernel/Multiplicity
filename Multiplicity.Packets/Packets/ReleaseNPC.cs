@@ -14,10 +14,10 @@ namespace Multiplicity.Packets
 
         public int Y { get; set; }
 
-        public short NPCType { get; set; }
+        public short NpcType { get; set; }
 
         /// <summary>
-        /// Gets or sets the Style - Sent to NPC AI[2]|
+        /// Gets or sets the Style - Sent to Npc AI[2]|
         /// </summary>
         public byte Style { get; set; }
 
@@ -39,13 +39,13 @@ namespace Multiplicity.Packets
         {
             this.X = br.ReadInt32();
             this.Y = br.ReadInt32();
-            this.NPCType = br.ReadInt16();
+            this.NpcType = br.ReadInt16();
             this.Style = br.ReadByte();
         }
 
         public override string ToString()
         {
-            return $"[ReleaseNPC: X = {X} Y = {Y} NPCType = {NPCType} Style = {Style}]";
+            return $"[ReleaseNPC: X = {X} Y = {Y} NpcType = {NpcType} Style = {Style}]";
         }
 
         #region implemented abstract members of TerrariaPacket
@@ -58,7 +58,7 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             /*
-             * Length and ID headers get written in the base packet class.
+             * Length and Id headers get written in the base packet class.
              */
             if (includeHeader)
             {
@@ -77,7 +77,7 @@ namespace Multiplicity.Packets
             {
                 br.Write(X);
                 br.Write(Y);
-                br.Write(NPCType);
+                br.Write(NpcType);
                 br.Write(Style);
             }
         }
@@ -86,3 +86,4 @@ namespace Multiplicity.Packets
 
     }
 }
+

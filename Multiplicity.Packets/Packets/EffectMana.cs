@@ -1,0 +1,78 @@
+using System;
+using System.IO;
+using Multiplicity.Packets.Extensions;
+
+namespace Multiplicity.Packets
+{
+    /// <summary>
+    /// The EffectMana (0x2B) packet.
+    /// </summary>
+    public class EffectMana : TerrariaPacket
+    {
+
+        public byte PlayerId { get; set; }
+
+        public short ManaAmount { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EffectMana"/> class.
+        /// </summary>
+        public EffectMana()
+            : base((byte)PacketTypes.EffectMana)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EffectMana"/> class.
+        /// </summary>
+        /// <param name="br">br</param>
+        public EffectMana(BinaryReader br)
+            : base(br)
+        {
+            this.PlayerId = br.ReadByte();
+            this.ManaAmount = br.ReadInt16();
+        }
+
+        public override string ToString()
+        {
+            return $"[EffectMana: PlayerId = {PlayerId} ManaAmount = {ManaAmount}]";
+        }
+
+        #region implemented abstract members of TerrariaPacket
+
+        public override short GetLength()
+        {
+            return (short)(3);
+        }
+
+        public override void ToStream(Stream stream, bool includeHeader = true)
+        {
+            /*
+             * Length and Id headers get written in the base packet class.
+             */
+            if (includeHeader)
+            {
+                base.ToStream(stream, includeHeader);
+            }
+
+            /*
+             * Always make sure to not close the stream when serializing.
+             * 
+             * It is up to the caller to decide if the underlying stream
+             * gets closed.  If this is a network stream we do not want
+             * the regressions of unconditionally closing the TCP socket
+             * once the payload of data has been sent to the client.
+             */
+            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
+            {
+                br.Write(PlayerId);
+                br.Write(ManaAmount);
+            }
+        }
+
+        #endregion
+
+    }
+}
+

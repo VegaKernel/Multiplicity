@@ -10,7 +10,7 @@ namespace Multiplicity.Packets
     public class PlayerActive : TerrariaPacket
     {
 
-        public byte PlayerID { get; set; }
+        public byte PlayerId { get; set; }
 
         public bool Active { get; set; }
 
@@ -30,13 +30,13 @@ namespace Multiplicity.Packets
         public PlayerActive(BinaryReader br)
             : base(br)
         {
-            this.PlayerID = br.ReadByte();
+            this.PlayerId = br.ReadByte();
             this.Active = br.ReadBoolean();
         }
 
         public override string ToString()
         {
-            return $"[PlayerActive: PlayerID = {PlayerID} Active = {Active}]";
+            return $"[PlayerActive: PlayerId = {PlayerId} Active = {Active}]";
         }
 
         #region implemented abstract members of TerrariaPacket
@@ -49,7 +49,7 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             /*
-             * Length and ID headers get written in the base packet class.
+             * Length and Id headers get written in the base packet class.
              */
             if (includeHeader)
             {
@@ -66,7 +66,7 @@ namespace Multiplicity.Packets
              */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
-                br.Write(PlayerID);
+                br.Write(PlayerId);
                 br.Write(Active);
             }
         }
@@ -75,3 +75,4 @@ namespace Multiplicity.Packets
 
     }
 }
+

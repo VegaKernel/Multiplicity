@@ -6,7 +6,17 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct StringPacketView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public StringPacketView(PacketTypes packetType, ReadOnlySpan<byte> payload)
+            : this(PacketView.FromPayload(packetType, payload))
+        {
+        }
+
+        public static StringPacketView FromPayload(PacketTypes packetType, ReadOnlySpan<byte> payload)
+        {
+            return new StringPacketView(packetType, payload);
+        }
 
         public StringPacketView(PacketView packet)
         {
@@ -20,7 +30,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             ValueUtf8 = valueUtf8;
         }
 
@@ -28,7 +38,7 @@ namespace Multiplicity.Packets.Views
 
         public PacketTypes PacketType => Header.PacketType;
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public ReadOnlySpan<byte> ValueUtf8 { get; }
 
@@ -41,9 +51,13 @@ namespace Multiplicity.Packets.Views
         {
             return packetType == PacketTypes.ConnectRequest
                 || packetType == PacketTypes.Disconnect
-                || packetType == PacketTypes.SendPassword
+                || packetType == PacketTypes.PasswordSend
                 || packetType == PacketTypes.ClientUUID
                 || packetType == PacketTypes.HostToken;
         }
     }
 }
+
+
+
+

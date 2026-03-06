@@ -12,7 +12,7 @@ namespace Multiplicity.Packets
         private const short PayloadLength = 14;
 
 
-        public short NPCIndex { get; set; }
+        public short NpcIndex { get; set; }
 
         public float ExtraValue { get; set; }
 
@@ -36,7 +36,7 @@ namespace Multiplicity.Packets
         public SyncExtraValue(BinaryReader br)
             : base(br)
         {
-            this.NPCIndex = br.ReadInt16();
+            this.NpcIndex = br.ReadInt16();
             this.ExtraValue = br.ReadSingle();
             this.X = br.ReadSingle();
             this.Y = br.ReadSingle();
@@ -44,7 +44,7 @@ namespace Multiplicity.Packets
 
         public override string ToString()
         {
-            return $"[SyncExtraValue: NPCIndex = {NPCIndex} ExtraValue = {ExtraValue} X = {X} Y = {Y}]";
+            return $"[SyncExtraValue: NpcIndex = {NpcIndex} ExtraValue = {ExtraValue} X = {X} Y = {Y}]";
         }
 
         #region implemented abstract members of TerrariaPacket
@@ -57,7 +57,7 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             /*
-             * Length and ID headers get written in the base packet class.
+             * Length and Id headers get written in the base packet class.
              */
             if (includeHeader)
             {
@@ -74,7 +74,7 @@ namespace Multiplicity.Packets
              */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
-                br.Write(NPCIndex);
+                br.Write(NpcIndex);
                 br.Write(ExtraValue);
                 br.Write(X);
                 br.Write(Y);
@@ -85,3 +85,4 @@ namespace Multiplicity.Packets
 
     }
 }
+

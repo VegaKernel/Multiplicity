@@ -10,7 +10,7 @@ namespace Multiplicity.Packets
     {
         private const short FixedPayloadLength = 4;
 
-        public byte PlayerID { get; set; }
+        public byte PlayerId { get; set; }
         public ColorStruct MessageColor { get; set; }
         public string Message { get; set; }
 
@@ -23,7 +23,7 @@ namespace Multiplicity.Packets
         public ChatMessage(BinaryReader br)
             : base(br)
         {
-            PlayerID = br.ReadByte();
+            PlayerId = br.ReadByte();
             MessageColor = br.ReadColor();
             Message = br.ReadString();
         }
@@ -42,7 +42,7 @@ namespace Multiplicity.Packets
 
             using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                bw.Write(PlayerID);
+                bw.Write(PlayerId);
                 bw.Write(MessageColor);
                 bw.Write(Message ?? string.Empty);
             }
@@ -50,7 +50,8 @@ namespace Multiplicity.Packets
 
         public override string ToString()
         {
-            return $"[ChatMessage: PlayerID = {PlayerID} MessageColor = {MessageColor} Message = {Message}]";
+            return $"[ChatMessage: PlayerId = {PlayerId} MessageColor = {MessageColor} Message = {Message}]";
         }
     }
 }
+

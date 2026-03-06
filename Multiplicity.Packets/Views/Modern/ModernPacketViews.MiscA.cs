@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Buffers.Binary;
 
 namespace Multiplicity.Packets.Views
 {
     public readonly ref struct SyncRevengeMarkerView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public SyncRevengeMarkerView(PacketView packet)
         {
@@ -24,7 +24,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             UniqueId = uniqueId;
             LocationX = locationX;
             LocationY = locationY;
@@ -38,7 +38,7 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public int UniqueId { get; }
         public float LocationX { get; }
         public float LocationY { get; }
@@ -53,7 +53,7 @@ namespace Multiplicity.Packets.Views
 
     public readonly ref struct RemoveRevengeMarkerView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public RemoveRevengeMarkerView(PacketView packet)
         {
@@ -63,18 +63,18 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             UniqueId = uniqueId;
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public int UniqueId { get; }
     }
 
     public readonly ref struct LandGolfBallInCupView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public LandGolfBallInCupView(PacketView packet)
         {
@@ -88,7 +88,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             CupX = cupX;
             CupY = cupY;
@@ -97,7 +97,7 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public byte PlayerId { get; }
         public ushort CupX { get; }
         public ushort CupY { get; }
@@ -105,11 +105,11 @@ namespace Multiplicity.Packets.Views
         public ushort ShotY { get; }
     }
 
-    public readonly ref struct FishOutNpcView
+    public readonly ref struct FishOutNPCView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
-        public FishOutNpcView(PacketView packet)
+        public FishOutNPCView(PacketView packet)
         {
             packet.EnsureType(PacketTypes.FishOutNPC);
             PacketReader reader = packet.CreatePayloadReader();
@@ -119,33 +119,33 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             TileX = tileX;
             TileY = tileY;
             NpcNetId = npcNetId;
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public ushort TileX { get; }
         public ushort TileY { get; }
         public short NpcNetId { get; }
     }
 
-    public readonly ref struct TamperWithNpcView
+    public readonly ref struct TamperWithNPCView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
-        public TamperWithNpcView(PacketView packet)
+        public TamperWithNPCView(PacketView packet)
         {
             packet.EnsureType(PacketTypes.TamperWithNPC);
             PacketReader reader = packet.CreatePayloadReader();
             ushort npcId = reader.ReadUInt16();
-            TamperWithNpcActionType actionType = (TamperWithNpcActionType)reader.ReadByte();
+            TamperWithNPCActionType actionType = (TamperWithNPCActionType)reader.ReadByte();
             int immunityTime = 0;
             short playerId = 0;
 
-            if (actionType == TamperWithNpcActionType.GrantImmunity)
+            if (actionType == TamperWithNPCActionType.GrantImmunity)
             {
                 immunityTime = reader.ReadInt32();
                 playerId = reader.ReadInt16();
@@ -153,7 +153,7 @@ namespace Multiplicity.Packets.Views
 
             reader.EnsureEnd();
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             NpcId = npcId;
             ActionType = actionType;
             ImmunityTime = immunityTime;
@@ -161,12 +161,12 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public ushort NpcId { get; }
-        public TamperWithNpcActionType ActionType { get; }
+        public TamperWithNPCActionType ActionType { get; }
         public int ImmunityTime { get; }
         public short PlayerId { get; }
-        public bool HasImmunityPayload => ActionType == TamperWithNpcActionType.GrantImmunity;
+        public bool HasImmunityPayload => ActionType == TamperWithNPCActionType.GrantImmunity;
     }
 
     public readonly ref struct PlayLegacySoundView
@@ -175,7 +175,7 @@ namespace Multiplicity.Packets.Views
         private const byte HasVolumeFlag = 1 << 1;
         private const byte HasPitchOffsetFlag = 1 << 2;
 
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public PlayLegacySoundView(PacketView packet)
         {
@@ -206,7 +206,7 @@ namespace Multiplicity.Packets.Views
 
             reader.EnsureEnd();
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PositionX = positionX;
             PositionY = positionY;
             SoundIndex = soundIndex;
@@ -219,7 +219,7 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public float PositionX { get; }
         public float PositionY { get; }
         public ushort SoundIndex { get; }
@@ -233,7 +233,7 @@ namespace Multiplicity.Packets.Views
 
     public readonly ref struct UpdatePlayerLuckFactorsView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public UpdatePlayerLuckFactorsView(PacketView packet)
         {
@@ -251,7 +251,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             LadyBugLuckTimeLeft = ladyBugLuckTimeLeft;
             TorchLuck = torchLuck;
@@ -264,7 +264,7 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public byte PlayerId { get; }
         public int LadyBugLuckTimeLeft { get; }
         public float TorchLuck { get; }
@@ -281,7 +281,7 @@ namespace Multiplicity.Packets.Views
         private const int Rows = 2;
         private const int Columns = 3;
 
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
         private readonly ReadOnlySpan<byte> _monsterTypesPayload;
 
         public SyncCavernMonsterTypeView(PacketView packet)
@@ -292,12 +292,12 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             _monsterTypesPayload = monsterTypesPayload;
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public ushort GetMonsterType(int row, int column)
         {
@@ -316,3 +316,6 @@ namespace Multiplicity.Packets.Views
         }
     }
 }
+
+
+

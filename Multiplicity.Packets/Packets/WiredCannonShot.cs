@@ -15,7 +15,7 @@ namespace Multiplicity.Packets
         public short Y { get; set; }
         public short Angle { get; set; }
         public short Ammo { get; set; }
-        public byte PlayerID { get; set; }
+        public byte PlayerId { get; set; }
 
         public WiredCannonShot()
             : base((byte)PacketTypes.WiredCannonShot)
@@ -31,7 +31,7 @@ namespace Multiplicity.Packets
             Y = br.ReadInt16();
             Angle = br.ReadInt16();
             Ammo = br.ReadInt16();
-            PlayerID = br.ReadByte();
+            PlayerId = br.ReadByte();
         }
 
         public override short GetLength()
@@ -54,13 +54,14 @@ namespace Multiplicity.Packets
                 bw.Write(Y);
                 bw.Write(Angle);
                 bw.Write(Ammo);
-                bw.Write(PlayerID);
+                bw.Write(PlayerId);
             }
         }
 
         public override string ToString()
         {
-            return $"[WiredCannonShot: Damage = {Damage}, Knockback = {Knockback}, X = {X}, Y = {Y}, Angle = {Angle}, Ammo = {Ammo}, PlayerID = {PlayerID}]";
+            return $"[WiredCannonShot: Damage = {Damage}, Knockback = {Knockback}, X = {X}, Y = {Y}, Angle = {Angle}, Ammo = {Ammo}, PlayerId = {PlayerId}]";
         }
     }
 }
+

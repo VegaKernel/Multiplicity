@@ -4,7 +4,17 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct PlayerDeathV2View
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public PlayerDeathV2View(ReadOnlySpan<byte> payload)
+        : this(PacketView.FromPayload(PacketTypes.PlayerDeathV2, payload))
+        {
+        }
+
+        public static PlayerDeathV2View FromPayload(ReadOnlySpan<byte> payload)
+        {
+            return new PlayerDeathV2View(payload);
+        }
 
         public PlayerDeathV2View(PacketView packet)
         {
@@ -67,7 +77,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             DeathReasonFlags = deathReasonFlags;
             FromPlayerIndex = fromPlayerIndex;
@@ -85,7 +95,7 @@ namespace Multiplicity.Packets.Views
 
         public PacketHeader Header { get; }
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public byte PlayerId { get; }
 
@@ -128,3 +138,6 @@ namespace Multiplicity.Packets.Views
         }
     }
 }
+
+
+

@@ -14,7 +14,7 @@ namespace Multiplicity.Packets
         public short Stack { get; set; }
         public byte Prefix { get; set; }
         public WorldItemSyncFlags Flags { get; set; }
-        public short ItemNetID { get; set; }
+        public short ItemNetId { get; set; }
 
         protected WorldItemSyncPacketBase(byte id)
             : base(id)
@@ -32,7 +32,7 @@ namespace Multiplicity.Packets
             Stack = br.ReadInt16();
             Prefix = br.ReadByte();
             Flags = (WorldItemSyncFlags)br.ReadByte();
-            ItemNetID = br.ReadInt16();
+            ItemNetId = br.ReadInt16();
         }
 
         public override short GetLength()
@@ -57,8 +57,9 @@ namespace Multiplicity.Packets
                 bw.Write(Stack);
                 bw.Write(Prefix);
                 bw.Write((byte)Flags);
-                bw.Write(ItemNetID);
+                bw.Write(ItemNetId);
             }
         }
     }
 }
+

@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 
 namespace Multiplicity.Packets.Views
 {
     public readonly ref struct DeadPlayerView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public DeadPlayerView(PacketView packet)
         {
@@ -14,20 +14,20 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public byte PlayerId { get; }
     }
 
-    public readonly ref struct RequestNpcBuffRemovalView
+    public readonly ref struct RequestNPCBuffRemovalView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
-        public RequestNpcBuffRemovalView(PacketView packet)
+        public RequestNPCBuffRemovalView(PacketView packet)
         {
             packet.EnsureType(PacketTypes.RequestNPCBuffRemoval);
             PacketReader reader = packet.CreatePayloadReader();
@@ -36,20 +36,20 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             NpcId = npcId;
             BuffId = buffId;
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public short NpcId { get; }
         public ushort BuffId { get; }
     }
 
     public readonly ref struct SetCountsAsHostForGameplayView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public SetCountsAsHostForGameplayView(PacketView packet)
         {
@@ -60,20 +60,20 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             CountsAsHostForGameplay = countsAsHostForGameplay;
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public byte PlayerId { get; }
         public bool CountsAsHostForGameplay { get; }
     }
 
     public readonly ref struct SetMiscEventValuesView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public SetMiscEventValuesView(PacketView packet)
         {
@@ -84,20 +84,20 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             EventType = eventType;
             Value = value;
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public MiscEventValueType EventType { get; }
         public int Value { get; }
     }
 
     public readonly ref struct RequestLucyPopupView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public RequestLucyPopupView(PacketView packet)
         {
@@ -112,7 +112,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             MessageSource = messageSource;
             Variation = variation;
             VelocityX = velocityX;
@@ -122,7 +122,7 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public LucyPopupMessageSource MessageSource { get; }
         public byte Variation { get; }
         public float VelocityX { get; }
@@ -133,7 +133,7 @@ namespace Multiplicity.Packets.Views
 
     public readonly ref struct SyncProjectileTrackersView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public SyncProjectileTrackersView(PacketView packet)
         {
@@ -162,7 +162,7 @@ namespace Multiplicity.Packets.Views
 
             reader.EnsureEnd();
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             PiggyBankOwnerIndex = piggyBankOwnerIndex;
             PiggyBankIdentity = piggyBankIdentity;
@@ -173,7 +173,7 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public byte PlayerId { get; }
         public short PiggyBankOwnerIndex { get; }
         public short PiggyBankIdentity { get; }
@@ -187,7 +187,7 @@ namespace Multiplicity.Packets.Views
 
     public readonly ref struct ShimmerActionsView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public ShimmerActionsView(PacketView packet)
         {
@@ -205,7 +205,7 @@ namespace Multiplicity.Packets.Views
 
             reader.EnsureEnd();
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             Action = action;
             PositionX = positionX;
             PositionY = positionY;
@@ -213,7 +213,7 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public ShimmerActionKind Action { get; }
         public float PositionX { get; }
         public float PositionY { get; }
@@ -223,7 +223,7 @@ namespace Multiplicity.Packets.Views
 
     public readonly ref struct SyncLoadoutView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public SyncLoadoutView(PacketView packet)
         {
@@ -235,16 +235,19 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             LoadoutIndex = loadoutIndex;
             HiddenAccessoryVisibilityMask = hiddenAccessoryVisibilityMask;
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public byte PlayerId { get; }
         public byte LoadoutIndex { get; }
         public ushort HiddenAccessoryVisibilityMask { get; }
     }
 }
+
+
+

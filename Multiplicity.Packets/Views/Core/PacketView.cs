@@ -49,11 +49,35 @@ namespace Multiplicity.Packets.Views
 
         public PacketTypes PacketType => Header.PacketType;
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _hasPacketSpan ? _packetSpan : _payloadSpan;
+
+        public ReadOnlySpan<byte> PacketSpan => GetPacketSpan();
 
         public ReadOnlySpan<byte> PayloadSpan => _payloadSpan;
 
         public bool HasPacketSpan => _hasPacketSpan;
+
+        public bool TryGetPacketSpan(out ReadOnlySpan<byte> packetSpan)
+        {
+            if (_hasPacketSpan)
+            {
+                packetSpan = _packetSpan;
+                return true;
+            }
+
+            packetSpan = default;
+            return false;
+        }
+
+        public ReadOnlySpan<byte> GetPacketSpan()
+        {
+            if (!_hasPacketSpan)
+            {
+                throw new InvalidDataException("PacketView does not contain a full packet span. Only the payload span is available.");
+            }
+
+            return _packetSpan;
+        }
 
         public PacketReader CreatePayloadReader()
         {

@@ -1,0 +1,94 @@
+using System;
+using System.IO;
+using Multiplicity.Packets.Extensions;
+
+namespace Multiplicity.Packets
+{
+    /// <summary>
+    /// The NpcTeleportPortal (0x64) packet.
+    /// </summary>
+    public class NpcTeleportPortal : TerrariaPacket
+    {
+
+        public ushort NpcId { get; set; }
+
+        public short PortalColorIndex { get; set; }
+
+        public float NewPositionX { get; set; }
+
+        public float NewPositionY { get; set; }
+
+        public float VelocityX { get; set; }
+
+        public float VelocityY { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NpcTeleportPortal"/> class.
+        /// </summary>
+        public NpcTeleportPortal()
+            : base((byte)PacketTypes.NpcTeleportPortal)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NpcTeleportPortal"/> class.
+        /// </summary>
+        /// <param name="br">br</param>
+        public NpcTeleportPortal(BinaryReader br)
+            : base(br)
+        {
+            this.NpcId = br.ReadUInt16();
+            this.PortalColorIndex = br.ReadInt16();
+            this.NewPositionX = br.ReadSingle();
+            this.NewPositionY = br.ReadSingle();
+            this.VelocityX = br.ReadSingle();
+            this.VelocityY = br.ReadSingle();
+        }
+
+        public override string ToString()
+        {
+            return $"[NpcTeleportPortal: NpcId = {NpcId} PortalColorIndex = {PortalColorIndex} NewPositionX = {NewPositionX} NewPositionY = {NewPositionY} VelocityX = {VelocityX} VelocityY = {VelocityY}]";
+        }
+
+        #region implemented abstract members of TerrariaPacket
+
+        public override short GetLength()
+        {
+            return (short)(20);
+        }
+
+        public override void ToStream(Stream stream, bool includeHeader = true)
+        {
+            /*
+             * Length and Id headers get written in the base packet class.
+             */
+            if (includeHeader)
+            {
+                base.ToStream(stream, includeHeader);
+            }
+
+            /*
+             * Always make sure to not close the stream when serializing.
+             * 
+             * It is up to the caller to decide if the underlying stream
+             * gets closed.  If this is a network stream we do not want
+             * the regressions of unconditionally closing the TCP socket
+             * once the payload of data has been sent to the client.
+             */
+            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
+            {
+                br.Write(NpcId);
+                br.Write(PortalColorIndex);
+                br.Write(NewPositionX);
+                br.Write(NewPositionY);
+                br.Write(VelocityX);
+                br.Write(VelocityY);
+            }
+        }
+
+        #endregion
+
+    }
+}
+

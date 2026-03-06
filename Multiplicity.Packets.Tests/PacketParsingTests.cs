@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Multiplicity.Packets;
 using Multiplicity.Packets.Views;
 using Xunit;
@@ -12,7 +13,7 @@ namespace Multiplicity.Packets.Tests
         {
             PlayerInfo original = new PlayerInfo
             {
-                PlayerID = 7,
+                PlayerId = 7,
                 SkinVariant = 3,
                 VoiceVariant = 2,
                 VoicePitchOffset = 0.15f,
@@ -38,7 +39,7 @@ namespace Multiplicity.Packets.Tests
             TerrariaPacket parsedPacket = TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes);
             PlayerInfo parsed = Assert.IsType<PlayerInfo>(parsedPacket);
 
-            Assert.Equal(original.PlayerID, parsed.PlayerID);
+            Assert.Equal(original.PlayerId, parsed.PlayerId);
             Assert.Equal(original.Name, parsed.Name);
             Assert.Equal(original.HideVisibleAccessory, parsed.HideVisibleAccessory);
             Assert.Equal(original.DifficultyFlags, parsed.DifficultyFlags);
@@ -47,11 +48,11 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void PacketViewParser_TryParse_ConsumesFirstPacket_AndParsesUpdatePlayerView()
+        public void PacketViewParser_TryParse_ConsumesFirstPacket_AndParsesPlayerUpdateView()
         {
-            UpdatePlayer original = new UpdatePlayer
+            PlayerUpdate original = new PlayerUpdate
             {
-                PlayerID = 9,
+                PlayerId = 9,
                 ControlFlags = UpdatePlayerControlFlags.ControlJump | UpdatePlayerControlFlags.DirectionRight,
                 MovementFlags = UpdatePlayerMovementFlags.HasVelocity | UpdatePlayerMovementFlags.HasMount,
                 MiscFlags1 = UpdatePlayerMiscFlags1.HasPotionOfReturnPositions,
@@ -79,8 +80,8 @@ namespace Multiplicity.Packets.Tests
             Assert.True(result);
             Assert.Equal(packetBytes.Length, consumed);
 
-            UpdatePlayerView view = packetView.AsUpdatePlayerView();
-            Assert.Equal(original.PlayerID, view.PlayerId);
+            PlayerUpdateView view = packetView.AsPlayerUpdateView();
+            Assert.Equal(original.PlayerId, view.PlayerId);
             Assert.Equal(original.PositionX, view.PositionX);
             Assert.Equal(original.PositionY, view.PositionY);
             Assert.Equal(original.VelocityX, view.VelocityX);
@@ -164,7 +165,7 @@ namespace Multiplicity.Packets.Tests
         {
             ChatMessage original = new ChatMessage
             {
-                PlayerID = 1,
+                PlayerId = 1,
                 MessageColor = CreateColor(255, 100, 50),
                 Message = "hello"
             };
@@ -183,19 +184,19 @@ namespace Multiplicity.Packets.Tests
         {
             PlayerInfo original = new PlayerInfo
             {
-                PlayerID = 2,
+                PlayerId = 2,
                 Name = "PayloadOnly",
                 Hair = 7,
                 DifficultyFlags = PlayerDifficultyFlags.Creative
             };
 
             byte[] packetBytes = original.ToArray(includeHeader: true);
-            ReadOnlyMemory<byte> payload = packetBytes.AsMemory(TerrariaPacket.PACKET_HEADER_LEN);
+            ReadOnlyMemory<byte> payload = packetBytes.AsMemory(TerrariaPacket.PacketHeaderLength);
 
             TerrariaPacket parsedPacket = TerrariaPacket.DeserializePayload(PacketTypes.PlayerInfo, payload);
             PlayerInfo parsed = Assert.IsType<PlayerInfo>(parsedPacket);
 
-            Assert.Equal(original.PlayerID, parsed.PlayerID);
+            Assert.Equal(original.PlayerId, parsed.PlayerId);
             Assert.Equal(original.Name, parsed.Name);
             Assert.Equal(original.Hair, parsed.Hair);
             Assert.Equal(original.DifficultyFlags, parsed.DifficultyFlags);
@@ -204,9 +205,9 @@ namespace Multiplicity.Packets.Tests
         [Fact]
         public void PacketViewParser_ParsePayload_UpdatePlayer_ParsesTypedViewWithoutPacketHeader()
         {
-            UpdatePlayer original = new UpdatePlayer
+            PlayerUpdate original = new PlayerUpdate
             {
-                PlayerID = 4,
+                PlayerId = 4,
                 ControlFlags = UpdatePlayerControlFlags.ControlUseItem,
                 MovementFlags = UpdatePlayerMovementFlags.HasVelocity,
                 SelectedItem = 8,
@@ -218,20 +219,33 @@ namespace Multiplicity.Packets.Tests
 
             byte[] packetBytes = original.ToArray(includeHeader: true);
             PacketView packetView = PacketViewParser.ParsePayload(
-                PacketTypes.UpdatePlayer,
+                PacketTypes.PlayerUpdate,
                 packetBytes,
-                TerrariaPacket.PACKET_HEADER_LEN,
-                packetBytes.Length - TerrariaPacket.PACKET_HEADER_LEN);
+                TerrariaPacket.PacketHeaderLength,
+                packetBytes.Length - TerrariaPacket.PacketHeaderLength);
 
-            UpdatePlayerView view = packetView.AsUpdatePlayerView();
+            PlayerUpdateView view = packetView.AsPlayerUpdateView();
 
             Assert.False(packetView.HasPacketSpan);
-            Assert.Equal(PacketTypes.UpdatePlayer, view.Header.PacketType);
-            Assert.Equal(original.PlayerID, view.PlayerId);
+            Assert.Equal(PacketTypes.PlayerUpdate, view.Header.PacketType);
+            Assert.Equal(original.PlayerId, view.PlayerId);
             Assert.Equal(original.PositionX, view.PositionX);
             Assert.Equal(original.PositionY, view.PositionY);
             Assert.Equal(original.VelocityX, view.VelocityX);
             Assert.Equal(original.VelocityY, view.VelocityY);
+            Assert.Equal(packetBytes.Length - TerrariaPacket.PacketHeaderLength, view.SourceSpan.Length);
+
+            bool threw = false;
+            try
+            {
+                packetView.GetPacketSpan();
+            }
+            catch (InvalidDataException)
+            {
+                threw = true;
+            }
+
+            Assert.True(threw);
         }
 
         [Fact]
@@ -242,6 +256,57 @@ namespace Multiplicity.Packets.Tests
             bool result = PacketViewParser.TryParsePayload(PacketTypes.Ping, payload, 0, payload.Length, out PacketView _);
 
             Assert.False(result);
+        }
+
+        [Fact]
+        public void ProjectileNew_PayloadSerialization_RoundTripsWithoutHeader()
+        {
+            ProjectileNew original = new ProjectileNew
+            {
+                Identity = 42,
+                PositionX = 14.5f,
+                PositionY = 28.25f,
+                VelocityX = 1.75f,
+                VelocityY = -0.5f,
+                Owner = 3,
+                Type = 97,
+                AI0 = 2.25f,
+                Damage = 55
+            };
+
+            byte[] payload = original.ToPayloadArray();
+            Span<byte> copiedPayload = stackalloc byte[payload.Length];
+
+            original.CopyPayloadTo(copiedPayload);
+
+            Assert.Equal(payload, copiedPayload.ToArray());
+
+            ProjectileNew parsed = Assert.IsType<ProjectileNew>(
+                TerrariaPacket.DeserializePayload(PacketTypes.ProjectileNew, payload));
+            ProjectileNewView view = ProjectileNewView.FromPayload(payload);
+
+            Assert.Equal(original.Identity, parsed.Identity);
+            Assert.Equal(original.Identity, view.Identity);
+            Assert.Equal(original.Type, view.Type);
+            Assert.Equal(original.Damage, view.Damage);
+        }
+
+        [Fact]
+        public void StringPacketView_FromPayload_ParsesWithoutPacketHeader()
+        {
+            HostToken original = new HostToken
+            {
+                Token = "payload-token"
+            };
+
+            byte[] packetBytes = original.ToArray(includeHeader: true);
+            ReadOnlySpan<byte> payload = packetBytes.AsSpan(TerrariaPacket.PacketHeaderLength);
+
+            StringPacketView view = StringPacketView.FromPayload(PacketTypes.HostToken, payload);
+
+            Assert.Equal(PacketTypes.HostToken, view.PacketType);
+            Assert.Equal("payload-token", view.GetValue());
+            Assert.Equal(payload.Length, view.SourceSpan.Length);
         }
 
         private static ColorStruct CreateColor(byte r, byte g, byte b)
@@ -255,3 +320,5 @@ namespace Multiplicity.Packets.Tests
         }
     }
 }
+
+

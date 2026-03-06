@@ -32,7 +32,7 @@ namespace Multiplicity.Packets
         protected RawPayloadPacket(BinaryReader br)
             : base(br)
         {
-            PayloadMemory = br.ReadMemory(_length - PACKET_HEADER_LEN);
+            PayloadMemory = br.ReadMemory(_length - PacketHeaderLength);
         }
 
         public override short GetLength()
@@ -59,3 +59,4 @@ namespace Multiplicity.Packets
         }
     }
 }
+

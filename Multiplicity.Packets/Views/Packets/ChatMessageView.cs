@@ -5,7 +5,17 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct ChatMessageView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public ChatMessageView(ReadOnlySpan<byte> payload)
+        : this(PacketView.FromPayload(PacketTypes.ChatMessage, payload))
+        {
+        }
+
+        public static ChatMessageView FromPayload(ReadOnlySpan<byte> payload)
+        {
+            return new ChatMessageView(payload);
+        }
 
         public ChatMessageView(PacketView packet)
         {
@@ -18,7 +28,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             MessageColor = messageColor;
             MessageUtf8 = messageUtf8;
@@ -26,7 +36,7 @@ namespace Multiplicity.Packets.Views
 
         public PacketHeader Header { get; }
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public byte PlayerId { get; }
 
@@ -40,3 +50,6 @@ namespace Multiplicity.Packets.Views
         }
     }
 }
+
+
+

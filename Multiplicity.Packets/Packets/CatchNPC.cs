@@ -10,7 +10,7 @@ namespace Multiplicity.Packets
     public class CatchNPC : TerrariaPacket
     {
 
-        public short NPCID { get; set; }
+        public short NpcId { get; set; }
 
         public byte Who { get; set; }
 
@@ -30,13 +30,13 @@ namespace Multiplicity.Packets
         public CatchNPC(BinaryReader br)
             : base(br)
         {
-            this.NPCID = br.ReadInt16();
+            this.NpcId = br.ReadInt16();
             this.Who = br.ReadByte();
         }
 
         public override string ToString()
         {
-            return $"[CatchNPC: NPCID = {NPCID} Who = {Who}]";
+            return $"[CatchNPC: NpcId = {NpcId} Who = {Who}]";
         }
 
         #region implemented abstract members of TerrariaPacket
@@ -49,7 +49,7 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             /*
-             * Length and ID headers get written in the base packet class.
+             * Length and Id headers get written in the base packet class.
              */
             if (includeHeader)
             {
@@ -66,7 +66,7 @@ namespace Multiplicity.Packets
              */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
-                br.Write(NPCID);
+                br.Write(NpcId);
                 br.Write(Who);
             }
         }
@@ -75,3 +75,4 @@ namespace Multiplicity.Packets
 
     }
 }
+

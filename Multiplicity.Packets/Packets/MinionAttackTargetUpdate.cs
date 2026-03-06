@@ -10,7 +10,7 @@ namespace Multiplicity.Packets
     public class MinionAttackTargetUpdate : TerrariaPacket
     {
 
-        public byte PlayerID { get; set; }
+        public byte PlayerId { get; set; }
 
         public short MinionAttackTarget { get; set; }
 
@@ -30,13 +30,13 @@ namespace Multiplicity.Packets
         public MinionAttackTargetUpdate(BinaryReader br)
             : base(br)
         {
-            this.PlayerID = br.ReadByte();
+            this.PlayerId = br.ReadByte();
             this.MinionAttackTarget = br.ReadInt16();
         }
 
         public override string ToString()
         {
-            return $"[MinionAttackTargetUpdate: PlayerID = {PlayerID} MinionAttackTarget = {MinionAttackTarget}]";
+            return $"[MinionAttackTargetUpdate: PlayerId = {PlayerId} MinionAttackTarget = {MinionAttackTarget}]";
         }
 
         #region implemented abstract members of TerrariaPacket
@@ -49,7 +49,7 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             /*
-             * Length and ID headers get written in the base packet class.
+             * Length and Id headers get written in the base packet class.
              */
             if (includeHeader)
             {
@@ -66,7 +66,7 @@ namespace Multiplicity.Packets
              */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
-                br.Write(PlayerID);
+                br.Write(PlayerId);
                 br.Write(MinionAttackTarget);
             }
         }
@@ -75,3 +75,4 @@ namespace Multiplicity.Packets
 
     }
 }
+

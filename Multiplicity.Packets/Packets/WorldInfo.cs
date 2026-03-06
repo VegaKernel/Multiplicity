@@ -33,11 +33,11 @@ namespace Multiplicity.Packets
         public short SpawnY { get; set; }
         public short WorldSurface { get; set; }
         public short RockLayer { get; set; }
-        public int WorldID { get; set; }
+        public int WorldId { get; set; }
         public string WorldName { get; set; }
         public byte GameMode { get; set; }
         private byte[] _worldUniqueId;
-        public byte[] WorldUniqueID
+        public byte[] WorldUniqueId
         {
             get
             {
@@ -133,7 +133,7 @@ namespace Multiplicity.Packets
         public short OreTierAdamantite { get; set; }
 
         public sbyte InvasionType { get; set; }
-        public ulong LobbyID { get; set; }
+        public ulong LobbyId { get; set; }
         public float SandstormSeverity { get; set; }
 
         public WorldSpawnPoint[] ExtraSpawnPoints { get; set; }
@@ -182,7 +182,7 @@ namespace Multiplicity.Packets
             SpawnY = br.ReadInt16();
             WorldSurface = br.ReadInt16();
             RockLayer = br.ReadInt16();
-            WorldID = br.ReadInt32();
+            WorldId = br.ReadInt32();
             WorldName = br.ReadString();
             GameMode = br.ReadByte();
             WorldUniqueIdMemory = br.ReadMemory(WorldUniqueIdLength);
@@ -253,7 +253,7 @@ namespace Multiplicity.Packets
             OreTierAdamantite = br.ReadInt16();
 
             InvasionType = br.ReadSByte();
-            LobbyID = br.ReadUInt64();
+            LobbyId = br.ReadUInt64();
             SandstormSeverity = br.ReadSingle();
 
             byte extraSpawnCount = br.ReadByte();
@@ -299,12 +299,12 @@ namespace Multiplicity.Packets
                 bw.Write(SpawnY);
                 bw.Write(WorldSurface);
                 bw.Write(RockLayer);
-                bw.Write(WorldID);
+                bw.Write(WorldId);
                 bw.Write(WorldName ?? string.Empty);
                 bw.Write(GameMode);
 
                 bw.Write(PacketSerializationHelper.NormalizeFixedBuffer(
-                    WorldUniqueIdMemory.Length == WorldUniqueIdLength ? WorldUniqueIdMemory.ToArray() : WorldUniqueID,
+                    WorldUniqueIdMemory.Length == WorldUniqueIdLength ? WorldUniqueIdMemory.ToArray() : WorldUniqueId,
                     WorldUniqueIdLength));
 
                 bw.Write(WorldGeneratorVersion);
@@ -377,7 +377,7 @@ namespace Multiplicity.Packets
                 bw.Write(OreTierAdamantite);
 
                 bw.Write(InvasionType);
-                bw.Write(LobbyID);
+                bw.Write(LobbyId);
                 bw.Write(SandstormSeverity);
 
                 int extraSpawnCount = ExtraSpawnPoints?.Length ?? 0;
@@ -401,3 +401,4 @@ namespace Multiplicity.Packets
         }
     }
 }
+

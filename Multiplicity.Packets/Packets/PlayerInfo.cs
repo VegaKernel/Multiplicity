@@ -10,7 +10,7 @@ namespace Multiplicity.Packets
     {
         private const short FixedPayloadLength = 36;
 
-        public byte PlayerID { get; set; }
+        public byte PlayerId { get; set; }
         public byte SkinVariant { get; set; }
         public byte VoiceVariant { get; set; }
         public float VoicePitchOffset { get; set; }
@@ -39,7 +39,7 @@ namespace Multiplicity.Packets
         public PlayerInfo(BinaryReader br)
             : base(br)
         {
-            PlayerID = br.ReadByte();
+            PlayerId = br.ReadByte();
             SkinVariant = br.ReadByte();
             VoiceVariant = br.ReadByte();
             VoicePitchOffset = br.ReadSingle();
@@ -74,7 +74,7 @@ namespace Multiplicity.Packets
 
             using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                bw.Write(PlayerID);
+                bw.Write(PlayerId);
                 bw.Write(SkinVariant);
                 bw.Write(VoiceVariant);
                 bw.Write(VoicePitchOffset);
@@ -97,3 +97,4 @@ namespace Multiplicity.Packets
         }
     }
 }
+

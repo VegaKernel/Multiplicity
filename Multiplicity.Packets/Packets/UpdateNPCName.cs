@@ -9,7 +9,7 @@ namespace Multiplicity.Packets
     {
         private const short FixedPayloadLength = 2;
 
-        public short NPCID { get; set; }
+        public short NpcId { get; set; }
         public string Name { get; set; }
 
         public UpdateNPCName()
@@ -21,7 +21,7 @@ namespace Multiplicity.Packets
         public UpdateNPCName(BinaryReader br)
             : base(br)
         {
-            NPCID = br.ReadInt16();
+            NpcId = br.ReadInt16();
             Name = br.BaseStream.Length > br.BaseStream.Position ? br.ReadString() : string.Empty;
         }
 
@@ -44,7 +44,7 @@ namespace Multiplicity.Packets
 
             using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                bw.Write(NPCID);
+                bw.Write(NpcId);
                 if (!string.IsNullOrEmpty(Name))
                 {
                     bw.Write(Name);
@@ -54,7 +54,8 @@ namespace Multiplicity.Packets
 
         public override string ToString()
         {
-            return $"[UpdateNPCName: NPCID = {NPCID} Name = {Name}]";
+            return $"[UpdateNPCName: NpcId = {NpcId} Name = {Name}]";
         }
     }
 }
+

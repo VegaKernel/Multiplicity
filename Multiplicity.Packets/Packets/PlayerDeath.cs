@@ -9,10 +9,10 @@ namespace Multiplicity.Packets
     {
         private const short FixedPayloadLength = 5;
 
-        public byte PlayerID { get; set; }
+        public byte PlayerId { get; set; }
         public byte HitDirection { get; set; }
         public short Damage { get; set; }
-        public bool PVP { get; set; }
+        public bool Pvp { get; set; }
         public string DeathText { get; set; }
 
         public PlayerDeath()
@@ -24,10 +24,10 @@ namespace Multiplicity.Packets
         public PlayerDeath(BinaryReader br)
             : base(br)
         {
-            PlayerID = br.ReadByte();
+            PlayerId = br.ReadByte();
             HitDirection = br.ReadByte();
             Damage = br.ReadInt16();
-            PVP = br.ReadBoolean();
+            Pvp = br.ReadBoolean();
             DeathText = br.ReadString();
         }
 
@@ -45,17 +45,18 @@ namespace Multiplicity.Packets
 
             using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                bw.Write(PlayerID);
+                bw.Write(PlayerId);
                 bw.Write(HitDirection);
                 bw.Write(Damage);
-                bw.Write(PVP);
+                bw.Write(Pvp);
                 bw.Write(DeathText ?? string.Empty);
             }
         }
 
         public override string ToString()
         {
-            return $"[PlayerDeath: PlayerID = {PlayerID} HitDirection = {HitDirection} Damage = {Damage} PVP = {PVP} DeathText = {DeathText}]";
+            return $"[PlayerDeath: PlayerId = {PlayerId} HitDirection = {HitDirection} Damage = {Damage} Pvp = {Pvp} DeathText = {DeathText}]";
         }
     }
 }
+

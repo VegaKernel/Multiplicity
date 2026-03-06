@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 
 namespace Multiplicity.Packets.Views
 {
     public readonly ref struct EmptyPayloadPacketView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public EmptyPayloadPacketView(PacketView packet, PacketTypes expectedPacketType)
         {
@@ -13,18 +13,18 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PacketType = expectedPacketType;
         }
 
         public PacketHeader Header { get; }
         public PacketTypes PacketType { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
     }
 
     public readonly ref struct TileEntityItemSyncPacketView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public TileEntityItemSyncPacketView(PacketView packet, PacketTypes expectedPacketType)
         {
@@ -38,7 +38,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PacketType = expectedPacketType;
             TileX = tileX;
             TileY = tileY;
@@ -49,7 +49,7 @@ namespace Multiplicity.Packets.Views
 
         public PacketHeader Header { get; }
         public PacketTypes PacketType { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public short TileX { get; }
         public short TileY { get; }
         public short ItemType { get; }
@@ -59,7 +59,7 @@ namespace Multiplicity.Packets.Views
 
     public readonly ref struct EmojiView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public EmojiView(PacketView packet)
         {
@@ -70,20 +70,20 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             EmoteId = emoteId;
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public byte PlayerId { get; }
         public byte EmoteId { get; }
     }
 
     public readonly ref struct TileEntityDisplayDollItemSyncView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public TileEntityDisplayDollItemSyncView(PacketView packet)
         {
@@ -111,7 +111,7 @@ namespace Multiplicity.Packets.Views
 
             reader.EnsureEnd();
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             TileEntityId = tileEntityId;
             ItemIndex = itemIndex;
@@ -123,7 +123,7 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public byte PlayerId { get; }
         public int TileEntityId { get; }
         public byte ItemIndex { get; }
@@ -137,7 +137,7 @@ namespace Multiplicity.Packets.Views
 
     public readonly ref struct RequestTileEntityInteractionView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public RequestTileEntityInteractionView(PacketView packet)
         {
@@ -148,20 +148,20 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             TileEntityId = tileEntityId;
             PlayerId = playerId;
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public int TileEntityId { get; }
         public byte PlayerId { get; }
     }
 
     public readonly ref struct TileEntityHatRackItemSyncView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public TileEntityHatRackItemSyncView(PacketView packet)
         {
@@ -176,7 +176,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             TileEntityId = tileEntityId;
             EncodedSlot = encodedSlot;
@@ -186,7 +186,7 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public byte PlayerId { get; }
         public int TileEntityId { get; }
         public byte EncodedSlot { get; }
@@ -197,7 +197,7 @@ namespace Multiplicity.Packets.Views
 
     public readonly ref struct SyncTilePickingView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public SyncTilePickingView(PacketView packet)
         {
@@ -210,7 +210,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             TileX = tileX;
             TileY = tileY;
@@ -218,11 +218,13 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header { get; }
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public byte PlayerId { get; }
         public short TileX { get; }
         public short TileY { get; }
         public byte PickPower { get; }
     }
 }
+
+
 

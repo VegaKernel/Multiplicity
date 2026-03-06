@@ -10,7 +10,7 @@ namespace Multiplicity.Packets
     public class NotifyPlayerOfEvent : TerrariaPacket
     {
 
-        public short EventID { get; set; }
+        public short EventId { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NotifyPlayerOfEvent"/> class.
@@ -28,12 +28,12 @@ namespace Multiplicity.Packets
         public NotifyPlayerOfEvent(BinaryReader br)
             : base(br)
         {
-            this.EventID = br.ReadInt16();
+            this.EventId = br.ReadInt16();
         }
 
         public override string ToString()
         {
-            return $"[NotifyPlayerOfEvent: EventID = {EventID}]";
+            return $"[NotifyPlayerOfEvent: EventId = {EventId}]";
         }
 
         #region implemented abstract members of TerrariaPacket
@@ -46,7 +46,7 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             /*
-             * Length and ID headers get written in the base packet class.
+             * Length and Id headers get written in the base packet class.
              */
             if (includeHeader)
             {
@@ -63,7 +63,7 @@ namespace Multiplicity.Packets
              */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
-                br.Write(EventID);
+                br.Write(EventId);
             }
         }
 
@@ -71,3 +71,4 @@ namespace Multiplicity.Packets
 
     }
 }
+

@@ -12,11 +12,11 @@ namespace Multiplicity.Packets
 
         public PacketPayloadStream(byte packetId, ReadOnlyMemory<byte> payload)
         {
-            int totalLength = payload.Length + TerrariaPacket.PACKET_HEADER_LEN;
+            int totalLength = payload.Length + TerrariaPacket.PacketHeaderLength;
             if (totalLength > short.MaxValue)
             {
                 throw new InvalidDataException(
-                    $"Payload is too large to be represented as a Terraria packet. Maximum payload size is {short.MaxValue - TerrariaPacket.PACKET_HEADER_LEN} bytes, got {payload.Length}.");
+                    $"Payload is too large to be represented as a Terraria packet. Maximum payload size is {short.MaxValue - TerrariaPacket.PacketHeaderLength} bytes, got {payload.Length}.");
             }
 
             _packetId = packetId;
@@ -62,7 +62,7 @@ namespace Multiplicity.Packets
                 throw new EndOfStreamException();
             }
 
-            int payloadOffset = _position - TerrariaPacket.PACKET_HEADER_LEN;
+            int payloadOffset = _position - TerrariaPacket.PacketHeaderLength;
             if (payloadOffset >= 0 && payloadOffset + count <= _payload.Length)
             {
                 ReadOnlyMemory<byte> segment = _payload.Slice(payloadOffset, count);
@@ -98,13 +98,13 @@ namespace Multiplicity.Packets
 
             while (written < toRead)
             {
-                if (_position < TerrariaPacket.PACKET_HEADER_LEN)
+                if (_position < TerrariaPacket.PacketHeaderLength)
                 {
                     buffer[written++] = GetHeaderByte(_position++);
                     continue;
                 }
 
-                int payloadOffset = _position - TerrariaPacket.PACKET_HEADER_LEN;
+                int payloadOffset = _position - TerrariaPacket.PacketHeaderLength;
                 int payloadAvailable = _payload.Length - payloadOffset;
                 int chunkLength = Math.Min(toRead - written, payloadAvailable);
                 _payload.Span.Slice(payloadOffset, chunkLength).CopyTo(buffer.Slice(written, chunkLength));
@@ -122,12 +122,12 @@ namespace Multiplicity.Packets
                 return -1;
             }
 
-            if (_position < TerrariaPacket.PACKET_HEADER_LEN)
+            if (_position < TerrariaPacket.PacketHeaderLength)
             {
                 return GetHeaderByte(_position++);
             }
 
-            return _payload.Span[_position++ - TerrariaPacket.PACKET_HEADER_LEN];
+            return _payload.Span[_position++ - TerrariaPacket.PacketHeaderLength];
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -171,3 +171,4 @@ namespace Multiplicity.Packets
         }
     }
 }
+

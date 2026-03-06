@@ -11,7 +11,7 @@ namespace Multiplicity.Packets
     {
         private const short PayloadLength = 8;
 
-        public short ChestID { get; set; }
+        public short ChestId { get; set; }
 
         public byte ItemSlot { get; set; }
 
@@ -19,7 +19,7 @@ namespace Multiplicity.Packets
 
         public byte Prefix { get; set; }
 
-        public short ItemNetID { get; set; }
+        public short ItemNetId { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChestItem"/> class.
@@ -37,16 +37,16 @@ namespace Multiplicity.Packets
         public ChestItem(BinaryReader br)
             : base(br)
         {
-            this.ChestID = br.ReadInt16();
+            this.ChestId = br.ReadInt16();
             this.ItemSlot = br.ReadByte();
             this.Stack = br.ReadInt16();
             this.Prefix = br.ReadByte();
-            this.ItemNetID = br.ReadInt16();
+            this.ItemNetId = br.ReadInt16();
         }
 
         public override string ToString()
         {
-            return $"[ChestItem: ChestID = {ChestID} ItemSlot = {ItemSlot} Stack = {Stack} Prefix = {Prefix} ItemNetID = {ItemNetID}]";
+            return $"[ChestItem: ChestId = {ChestId} ItemSlot = {ItemSlot} Stack = {Stack} Prefix = {Prefix} ItemNetId = {ItemNetId}]";
         }
 
         #region implemented abstract members of TerrariaPacket
@@ -59,7 +59,7 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             /*
-             * Length and ID headers get written in the base packet class.
+             * Length and Id headers get written in the base packet class.
              */
             if (includeHeader)
             {
@@ -76,11 +76,11 @@ namespace Multiplicity.Packets
              */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
-                br.Write(ChestID);
+                br.Write(ChestId);
                 br.Write(ItemSlot);
                 br.Write(Stack);
                 br.Write(Prefix);
-                br.Write(ItemNetID);
+                br.Write(ItemNetId);
             }
         }
 
@@ -88,3 +88,4 @@ namespace Multiplicity.Packets
 
     }
 }
+

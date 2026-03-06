@@ -5,7 +5,17 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct WorldItemSyncView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public WorldItemSyncView(PacketTypes packetType, ReadOnlySpan<byte> payload)
+            : this(PacketView.FromPayload(packetType, payload))
+        {
+        }
+
+        public static WorldItemSyncView FromPayload(PacketTypes packetType, ReadOnlySpan<byte> payload)
+        {
+            return new WorldItemSyncView(packetType, payload);
+        }
 
         public WorldItemSyncView(PacketView packet)
         {
@@ -27,7 +37,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             ItemIndex = itemIndex;
             PositionX = positionX;
             PositionY = positionY;
@@ -43,7 +53,7 @@ namespace Multiplicity.Packets.Views
 
         public PacketTypes PacketType => Header.PacketType;
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public short ItemIndex { get; }
 
@@ -65,10 +75,13 @@ namespace Multiplicity.Packets.Views
 
         public static bool IsSupported(PacketTypes packetType)
         {
-            return packetType == PacketTypes.UpdateItemDrop
-                || packetType == PacketTypes.UpdateItemDrop2
+            return packetType == PacketTypes.ItemDrop
+                || packetType == PacketTypes.UpdateItemDrop
                 || packetType == PacketTypes.SyncItemsWithShimmer
                 || packetType == PacketTypes.SyncItemCannotBeTakenByEnemies;
         }
     }
 }
+
+
+

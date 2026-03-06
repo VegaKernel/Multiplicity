@@ -2,7 +2,7 @@
 
 `Multiplicity.Packets` - это низкоуровневая библиотека для чтения и формирования сетевых пакетов Terraria.
 
-NuGet package ID:
+NuGet package identifier:
 
 - `TZ.Multiplicity`
 
@@ -24,6 +24,7 @@ NuGet package ID:
 - поддержка протокола `317-318`;
 - zero-copy разбор через `ReadOnlySpan<byte>` для server hot-path;
 - typed views для часто используемых и modern packet types.
+- публичные имена `PacketTypes`, packet classes и packet views выровнены под `TerrariaApi.Server.PacketTypes` из TSAPI.
 
 ## Ограничения
 
@@ -92,7 +93,7 @@ using Multiplicity.Packets.Views;
 - `PacketViewParser`
 - `PacketView`
 - `PacketReader`
-- typed views вида `UpdatePlayerView`, `PlayerInfoView`, `ProjectileUpdateView` и т.д.
+- typed views вида `PlayerUpdateView`, `PlayerInfoView`, `ProjectileNewView` и т.д.
 
 `PacketView` работает поверх исходного буфера.  
 Это значит, что `ReadOnlySpan<byte>` внутри views живёт столько же, сколько живёт исходный packet slice.
@@ -109,27 +110,27 @@ using Multiplicity.Packets.Views;
 
 - базовые hot-path пакеты:
   - `PlayerInfo`
-  - `PlayerInventorySlot`
-  - `GetSection`
-  - `UpdatePlayer`
-  - `ProjectileUpdate`
-  - `NPCUpdate`
+  - `PlayerSlot`
+  - `TileGetSection`
+  - `PlayerUpdate`
+  - `ProjectileNew`
+  - `NpcUpdate`
   - `ChatMessage`
-  - `ModifyTile`
+  - `Tile`
   - `PlaceObject`
   - `LoadNetModule`
   - `WorldItemSync`
   - `PlayerHurtV2`
   - `PlayerDeathV2`
 - player state пакеты:
-  - `SpawnPlayer`
+  - `PlayerSpawn`
   - `PlayerActive`
-  - `PlayerHP`
+  - `PlayerHp`
   - `PlayerMana`
   - `PlayerTeam`
-  - `TogglePVP`
-  - `PlayerZone`
-  - `PlayerItemAnimation`
+  - `TogglePvp`
+  - `Zones`
+  - `PlayerAnimation`
   - `PlayerDamage`
 - modern typed packets:
   - `Emoji`
@@ -182,11 +183,11 @@ TerrariaPacket packet = TerrariaPacket.Deserialize(receiveBuffer, 0, receiveBuff
 switch (packet)
 {
     case PlayerInfo playerInfo:
-        Console.WriteLine($"Player #{playerInfo.PlayerID}: {playerInfo.Name}");
+        Console.WriteLine($"Player #{playerInfo.PlayerId}: {playerInfo.Name}");
         break;
 
-    case UpdatePlayer updatePlayer:
-        Console.WriteLine($"Player #{updatePlayer.PlayerID}: X={updatePlayer.PositionX}, Y={updatePlayer.PositionY}");
+    case PlayerUpdate updatePlayer:
+        Console.WriteLine($"Player #{updatePlayer.PlayerId}: X={updatePlayer.PositionX}, Y={updatePlayer.PositionY}");
         break;
 }
 ```
@@ -200,16 +201,16 @@ switch (packet)
 ```csharp
 using Multiplicity.Packets;
 
-PacketTypes packetType = PacketTypes.ProjectileUpdate;
+PacketTypes packetType = PacketTypes.ProjectileNew;
 byte[] readBuffer = GetReceiveBuffer();
 int offset = payloadOffset;
 int length = payloadLength;
 
 TerrariaPacket packet = TerrariaPacket.DeserializePayload(packetType, readBuffer, offset, length);
 
-if (packet is ProjectileUpdate projectile)
+if (packet is ProjectileNew projectile)
 {
-    Console.WriteLine($"Projectile #{projectile.ProjectileID}: type={projectile.Type}, owner={projectile.Owner}");
+    Console.WriteLine($"Projectile #{projectile.Identity}: type={projectile.Type}, owner={projectile.Owner}");
 }
 ```
 
@@ -227,9 +228,9 @@ if (PacketViewParser.TryParse(buffer, out PacketView packetView, out int consume
 {
     switch (packetView.PacketType)
     {
-        case PacketTypes.UpdatePlayer:
+        case PacketTypes.PlayerUpdate:
         {
-            UpdatePlayerView view = packetView.AsUpdatePlayerView();
+            PlayerUpdateView view = packetView.AsPlayerUpdateView();
             Console.WriteLine($"Player #{view.PlayerId}: X={view.PositionX}, Y={view.PositionY}");
             break;
         }
@@ -258,14 +259,21 @@ if (PacketViewParser.TryParse(buffer, out PacketView packetView, out int consume
 using Multiplicity.Packets;
 using Multiplicity.Packets.Views;
 
-PacketTypes packetType = PacketTypes.UpdatePlayer;
+PacketTypes packetType = PacketTypes.PlayerUpdate;
 ReadOnlySpan<byte> payload = receiveBuffer.AsSpan(payloadOffset, payloadLength);
 
 PacketView packetView = PacketViewParser.ParsePayload(packetType, payload);
-UpdatePlayerView view = packetView.AsUpdatePlayerView();
+PlayerUpdateView view = packetView.AsPlayerUpdateView();
 
 Console.WriteLine($"Player #{view.PlayerId}: X={view.PositionX}, Y={view.PositionY}");
 ```
+
+Важно:
+
+- у payload-only `PacketView` нет полного Terraria header;
+- `packetView.HasPacketSpan` в таком случае будет `false`;
+- `packetView.GetPacketSpan()` бросит исключение;
+- если нужен исходный slice без различия packet/payload, используй `packetView.SourceSpan` или `view.SourceSpan`.
 
 Это основной сценарий для серверных inbound-хуков, где тип пакета уже известен, а лишний `MemoryStream/BinaryReader` не нужен.
 
@@ -276,7 +284,7 @@ using Multiplicity.Packets;
 
 var packet = new ChatMessage
 {
-    PlayerID = 255,
+    PlayerId = 255,
     Message = "Hello from Multiplicity",
     MessageColor = new ColorStruct
     {
@@ -299,6 +307,22 @@ using Stream stream = GetNetworkStream();
 
 var packet = new Ping();
 packet.ToStream(stream, includeHeader: true);
+```
+
+Если нужно сформировать только payload без Terraria header:
+
+```csharp
+using Multiplicity.Packets;
+
+var packet = new ProjectileNew
+{
+    Identity = 42,
+    Type = 12,
+    Owner = 1
+};
+
+byte[] payload = packet.ToPayloadArray();
+SendPayloadOnly(payload);
 ```
 
 ## Пример 4. Работа со строковыми packet views без лишней аллокации
@@ -350,3 +374,4 @@ if (PacketViewParser.TryParse(buffer, out PacketView packetView, out _)
 - object-model для удобной логики и сериализации;
 - zero-copy views для производительного server-side разбора;
 - typed packet coverage для протокола Terraria `317-318`.
+

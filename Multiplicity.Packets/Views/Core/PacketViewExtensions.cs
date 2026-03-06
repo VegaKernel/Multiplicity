@@ -1,4 +1,4 @@
-﻿namespace Multiplicity.Packets.Views
+namespace Multiplicity.Packets.Views
 {
     public static class PacketViewExtensions
     {
@@ -7,9 +7,9 @@
             return new StringPacketView(packet);
         }
 
-        public static GetSectionView AsGetSectionView(this PacketView packet)
+        public static TileGetSectionView AsTileGetSectionView(this PacketView packet)
         {
-            return new GetSectionView(packet);
+            return new TileGetSectionView(packet);
         }
 
         public static PlayerInfoView AsPlayerInfoView(this PacketView packet)
@@ -17,19 +17,19 @@
             return new PlayerInfoView(packet);
         }
 
-        public static PlayerInventorySlotView AsPlayerInventorySlotView(this PacketView packet)
+        public static PlayerSlotView AsPlayerSlotView(this PacketView packet)
         {
-            return new PlayerInventorySlotView(packet);
+            return new PlayerSlotView(packet);
         }
 
-        public static SpawnPlayerView AsSpawnPlayerView(this PacketView packet)
+        public static PlayerSpawnView AsPlayerSpawnView(this PacketView packet)
         {
-            return new SpawnPlayerView(packet);
+            return new PlayerSpawnView(packet);
         }
 
-        public static UpdatePlayerView AsUpdatePlayerView(this PacketView packet)
+        public static PlayerUpdateView AsPlayerUpdateView(this PacketView packet)
         {
-            return new UpdatePlayerView(packet);
+            return new PlayerUpdateView(packet);
         }
 
         public static PlayerActiveView AsPlayerActiveView(this PacketView packet)
@@ -42,9 +42,9 @@
             return new PlayerHpView(packet);
         }
 
-        public static ModifyTileView AsModifyTileView(this PacketView packet)
+        public static TileView AsTileView(this PacketView packet)
         {
-            return new ModifyTileView(packet);
+            return new TileView(packet);
         }
 
         public static ChatMessageView AsChatMessageView(this PacketView packet)
@@ -57,9 +57,9 @@
             return new PlayerDamageView(packet);
         }
 
-        public static ProjectileUpdateView AsProjectileUpdateView(this PacketView packet)
+        public static ProjectileNewView AsProjectileNewView(this PacketView packet)
         {
-            return new ProjectileUpdateView(packet);
+            return new ProjectileNewView(packet);
         }
 
         public static TogglePvpView AsTogglePvpView(this PacketView packet)
@@ -67,14 +67,14 @@
             return new TogglePvpView(packet);
         }
 
-        public static PlayerZoneView AsPlayerZoneView(this PacketView packet)
+        public static ZonesView AsZonesView(this PacketView packet)
         {
-            return new PlayerZoneView(packet);
+            return new ZonesView(packet);
         }
 
-        public static PlayerItemAnimationView AsPlayerItemAnimationView(this PacketView packet)
+        public static PlayerAnimationView AsPlayerAnimationView(this PacketView packet)
         {
-            return new PlayerItemAnimationView(packet);
+            return new PlayerAnimationView(packet);
         }
 
         public static PlayerManaView AsPlayerManaView(this PacketView packet)
@@ -166,14 +166,14 @@
             return new EmptyPayloadPacketView(packet, PacketTypes.FinishedConnectingToServer);
         }
 
-        public static FishOutNpcView AsFishOutNpcView(this PacketView packet)
+        public static FishOutNPCView AsFishOutNPCView(this PacketView packet)
         {
-            return new FishOutNpcView(packet);
+            return new FishOutNPCView(packet);
         }
 
-        public static TamperWithNpcView AsTamperWithNpcView(this PacketView packet)
+        public static TamperWithNPCView AsTamperWithNPCView(this PacketView packet)
         {
-            return new TamperWithNpcView(packet);
+            return new TamperWithNPCView(packet);
         }
 
         public static PlayLegacySoundView AsPlayLegacySoundView(this PacketView packet)
@@ -201,9 +201,9 @@
             return new SyncCavernMonsterTypeView(packet);
         }
 
-        public static RequestNpcBuffRemovalView AsRequestNpcBuffRemovalView(this PacketView packet)
+        public static RequestNPCBuffRemovalView AsRequestNPCBuffRemovalView(this PacketView packet)
         {
-            return new RequestNpcBuffRemovalView(packet);
+            return new RequestNPCBuffRemovalView(packet);
         }
 
         public static EmptyPayloadPacketView AsClientSyncedInventoryView(this PacketView packet)
@@ -251,7 +251,7 @@
             return new SyncLoadoutView(packet);
         }
 
-        public static TileEntityItemSyncPacketView AsTeDeadCellsDisplayJarView(this PacketView packet)
+        public static TileEntityItemSyncPacketView AsTEDeadCellsDisplayJarView(this PacketView packet)
         {
             return new TileEntityItemSyncPacketView(packet, PacketTypes.TEDeadCellsDisplayJar);
         }
@@ -281,14 +281,14 @@
             return new EmptyPayloadPacketView(packet, PacketTypes.Ping);
         }
 
-        public static TeLeashedEntityAnchorPlaceItemView AsTeLeashedEntityAnchorPlaceItemView(this PacketView packet)
+        public static TELeashedEntityAnchorPlaceItemView AsTELeashedEntityAnchorPlaceItemView(this PacketView packet)
         {
-            return new TeLeashedEntityAnchorPlaceItemView(packet);
+            return new TELeashedEntityAnchorPlaceItemView(packet);
         }
 
-        public static TeamChangeFromUiView AsTeamChangeFromUiView(this PacketView packet)
+        public static TeamChangeFromUIView AsTeamChangeFromUIView(this PacketView packet)
         {
-            return new TeamChangeFromUiView(packet);
+            return new TeamChangeFromUIView(packet);
         }
 
         public static ExtraSpawnSectionLoadedView AsExtraSpawnSectionLoadedView(this PacketView packet)
@@ -307,4 +307,5 @@
         }
     }
 }
+
 

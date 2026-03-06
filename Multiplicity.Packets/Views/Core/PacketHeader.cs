@@ -4,7 +4,7 @@ namespace Multiplicity.Packets.Views
 {
     public readonly struct PacketHeader
     {
-        public const int Size = TerrariaPacket.PACKET_HEADER_LEN;
+        public const int Size = TerrariaPacket.PacketHeaderLength;
 
         public PacketHeader(ushort packetLength, byte rawPacketId)
         {
@@ -49,3 +49,4 @@ namespace Multiplicity.Packets.Views
         }
     }
 }
+

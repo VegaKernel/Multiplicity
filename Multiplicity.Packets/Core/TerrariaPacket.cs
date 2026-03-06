@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,7 @@ namespace Multiplicity.Packets
     /// </summary>
     public abstract class TerrariaPacket : TerrariaNetworkObject
     {
-        public const short PACKET_HEADER_LEN = 3;
+        public const short PacketHeaderLength = 3;
         public byte[] TestRawBuffer { get; set; }
 
         protected short _length = 0;
@@ -23,82 +23,82 @@ namespace Multiplicity.Packets
         /// should make sure that they return a valid packet structure when passed a
         /// BinaryReader to deserialize from.
         /// </summary>
-        public static Dictionary<PacketTypes, Func<BinaryReader, TerrariaPacket>> deserializerMap = new Dictionary<PacketTypes, Func<BinaryReader, TerrariaPacket>>() {
+        public static Dictionary<PacketTypes, Func<BinaryReader, TerrariaPacket>> DeserializerMap = new Dictionary<PacketTypes, Func<BinaryReader, TerrariaPacket>>() {
             /*001*/ { PacketTypes.ConnectRequest, (br) => new ConnectRequest(br) },
             /*002*/ { PacketTypes.Disconnect, (br) => new Disconnect(br) },
             /*003*/ { PacketTypes.ContinueConnecting, (br) => new ContinueConnecting(br) },
             /*004*/ { PacketTypes.PlayerInfo, (br) => new PlayerInfo(br) },
-            /*005*/ { PacketTypes.PlayerInventorySlot, (br) => new PlayerInventorySlot(br) },
+            /*005*/ { PacketTypes.PlayerSlot, (br) => new PlayerSlot(br) },
             /*006*/ { PacketTypes.ContinueConnecting2, (br) => new ContinueConnecting2(br) },
             /*007*/ { PacketTypes.WorldInfo, (br) => new WorldInfo(br) },
-            /*008*/ { PacketTypes.GetSection, (br) => new GetSection(br) },
+            /*008*/ { PacketTypes.TileGetSection, (br) => new TileGetSection(br) },
             /*009*/ { PacketTypes.Status, (br) => new Status(br) },
-            /*010*/ { PacketTypes.SendSection, (br) => new SendSection(br) },
-            /*011*/ { PacketTypes.SectionTileFrame, (br) => new SectionTileFrame(br) },
-            /*012*/ { PacketTypes.SpawnPlayer, (br) => new SpawnPlayer(br) },
-            /*013*/ { PacketTypes.UpdatePlayer, (br) => new UpdatePlayer(br) },
+            /*010*/ { PacketTypes.TileSendSection, (br) => new TileSendSection(br) },
+            /*011*/ { PacketTypes.TileFrameSection, (br) => new TileFrameSection(br) },
+            /*012*/ { PacketTypes.PlayerSpawn, (br) => new PlayerSpawn(br) },
+            /*013*/ { PacketTypes.PlayerUpdate, (br) => new PlayerUpdate(br) },
             /*014*/ { PacketTypes.PlayerActive, (br) => new PlayerActive(br) },
             /*015*/ { PacketTypes.Null, (br) => new Null(br) },
-            /*016*/ { PacketTypes.PlayerHP, (br) => new PlayerHP(br) },
-            /*017*/ { PacketTypes.ModifyTile, (br) => new ModifyTile(br) },
-            /*018*/ { PacketTypes.Time, (br) => new Time(br) },
-            /*019*/ { PacketTypes.DoorToggle, (br) => new DoorToggle(br) },
-            /*020*/ { PacketTypes.SendTileSquare, (br) => new SendTileSquare(br) },
-            /*021*/ { PacketTypes.UpdateItemDrop, (br) => new UpdateItemDrop(br) },
-            /*022*/ { PacketTypes.UpdateItemOwner, (br) => new UpdateItemOwner(br) },
-            /*023*/ { PacketTypes.NPCUpdate, (br) => new NPCUpdate(br) },
-            /*024*/ { PacketTypes.StrikeNPCwithHeldItem, (br) => new StrikeNPCwithHeldItem(br) },
+            /*016*/ { PacketTypes.PlayerHp, (br) => new PlayerHp(br) },
+            /*017*/ { PacketTypes.Tile, (br) => new Tile(br) },
+            /*018*/ { PacketTypes.TimeSet, (br) => new TimeSet(br) },
+            /*019*/ { PacketTypes.DoorUse, (br) => new DoorUse(br) },
+            /*020*/ { PacketTypes.TileSendSquare, (br) => new TileSendSquare(br) },
+            /*021*/ { PacketTypes.ItemDrop, (br) => new ItemDrop(br) },
+            /*022*/ { PacketTypes.ItemOwner, (br) => new ItemOwner(br) },
+            /*023*/ { PacketTypes.NpcUpdate, (br) => new NpcUpdate(br) },
+            /*024*/ { PacketTypes.NpcItemStrike, (br) => new NpcItemStrike(br) },
             /*025*/ { PacketTypes.ChatMessage, (br) => new ChatMessage(br) },
             /*026*/ { PacketTypes.PlayerDamage, (br) => new PlayerDamage(br) },
-            /*027*/ { PacketTypes.ProjectileUpdate, (br) => new ProjectileUpdate(br) },
-            /*028*/ { PacketTypes.NPCStrike, (br) => new NPCStrike(br) },
-            /*029*/ { PacketTypes.DestroyProjectile, (br) => new DestroyProjectile(br) },
-            /*030*/ { PacketTypes.TogglePVP, (br) => new TogglePVP(br) },
-            /*031*/ { PacketTypes.GetChestContents, (br) => new GetChestContents(br) },
+            /*027*/ { PacketTypes.ProjectileNew, (br) => new ProjectileNew(br) },
+            /*028*/ { PacketTypes.NpcStrike, (br) => new NpcStrike(br) },
+            /*029*/ { PacketTypes.ProjectileDestroy, (br) => new ProjectileDestroy(br) },
+            /*030*/ { PacketTypes.TogglePvp, (br) => new TogglePvp(br) },
+            /*031*/ { PacketTypes.ChestGetContents, (br) => new ChestGetContents(br) },
             /*032*/ { PacketTypes.ChestItem, (br) => new ChestItem(br) },
-            /*033*/ { PacketTypes.SetChestName, (br) => new SetChestName(br) },
+            /*033*/ { PacketTypes.ChestOpen, (br) => new ChestOpen(br) },
             /*034*/ { PacketTypes.PlaceChest, (br) => new PlaceChest(br) },
-            /*035*/ { PacketTypes.HealEffect, (br) => new HealEffect(br) },
-            /*036*/ { PacketTypes.PlayerZone, (br) => new PlayerZone(br) },
-            /*037*/ { PacketTypes.RequestPassword, (br) => new RequestPassword(br) },
-            /*038*/ { PacketTypes.SendPassword, (br) => new SendPassword(br) },
+            /*035*/ { PacketTypes.EffectHeal, (br) => new EffectHeal(br) },
+            /*036*/ { PacketTypes.Zones, (br) => new Zones(br) },
+            /*037*/ { PacketTypes.PasswordRequired, (br) => new PasswordRequired(br) },
+            /*038*/ { PacketTypes.PasswordSend, (br) => new PasswordSend(br) },
             /*039*/ { PacketTypes.RemoveItemOwner, (br) => new RemoveItemOwner(br) },
-            /*040*/ { PacketTypes.SetActiveNPC, (br) => new SetActiveNPC(br) },
-            /*041*/ { PacketTypes.PlayerItemAnimation, (br) => new PlayerItemAnimation(br) },
+            /*040*/ { PacketTypes.NpcTalk, (br) => new NpcTalk(br) },
+            /*041*/ { PacketTypes.PlayerAnimation, (br) => new PlayerAnimation(br) },
             /*042*/ { PacketTypes.PlayerMana, (br) => new PlayerMana(br) },
-            /*043*/ { PacketTypes.ManaEffect, (br) => new ManaEffect(br) },
+            /*043*/ { PacketTypes.EffectMana, (br) => new EffectMana(br) },
             /*044*/ { PacketTypes.PlayerDeath, (br) => new PlayerDeath(br) },
             /*045*/ { PacketTypes.PlayerTeam, (br) => new PlayerTeam(br) },
-            /*046*/ { PacketTypes.RequestSign, (br) => new RequestSign(br) },
-            /*047*/ { PacketTypes.UpdateSign, (br) => new UpdateSign(br) },
-            /*048*/ { PacketTypes.SetLiquid, (br) => new SetLiquid(br) },
-            /*049*/ { PacketTypes.CompleteConnectionandSpawn, (br) => new CompleteConnectionandSpawn(br) },
-            /*050*/ { PacketTypes.UpdatePlayerBuff, (br) => new UpdatePlayerBuff(br) },
-            /*051*/ { PacketTypes.SpecialNPCEffect, (br) => new SpecialNPCEffect(br) },
-            /*052*/ { PacketTypes.Unlock, (br) => new Unlock(br) },
-            /*053*/ { PacketTypes.AddNPCBuff, (br) => new AddNPCBuff(br) },
-            /*054*/ { PacketTypes.UpdateNPCBuff, (br) => new UpdateNPCBuff(br) },
-            /*055*/ { PacketTypes.AddPlayerBuff, (br) => new AddPlayerBuff(br) },
+            /*046*/ { PacketTypes.SignRead, (br) => new SignRead(br) },
+            /*047*/ { PacketTypes.SignNew, (br) => new SignNew(br) },
+            /*048*/ { PacketTypes.LiquidSet, (br) => new LiquidSet(br) },
+            /*049*/ { PacketTypes.PlayerSpawnSelf, (br) => new PlayerSpawnSelf(br) },
+            /*050*/ { PacketTypes.PlayerBuff, (br) => new PlayerBuff(br) },
+            /*051*/ { PacketTypes.NpcSpecial, (br) => new NpcSpecial(br) },
+            /*052*/ { PacketTypes.ChestUnlock, (br) => new ChestUnlock(br) },
+            /*053*/ { PacketTypes.NpcAddBuff, (br) => new NpcAddBuff(br) },
+            /*054*/ { PacketTypes.NpcUpdateBuff, (br) => new NpcUpdateBuff(br) },
+            /*055*/ { PacketTypes.PlayerAddBuff, (br) => new PlayerAddBuff(br) },
             /*056*/ { PacketTypes.UpdateNPCName, (br) => new UpdateNPCName(br) },
             /*057*/ { PacketTypes.UpdateGoodEvil, (br) => new UpdateGoodEvil(br) },
-            /*058*/ { PacketTypes.PlayMusicItem, (br) => new PlayMusicItem(br) },
+            /*058*/ { PacketTypes.PlayHarp, (br) => new PlayHarp(br) },
             /*059*/ { PacketTypes.HitSwitch, (br) => new HitSwitch(br) },
-            /*060*/ { PacketTypes.NPCHomeUpdate, (br) => new NPCHomeUpdate(br) },
-            /*061*/ { PacketTypes.SpawnBossInvasion, (br) => new SpawnBossInvasion(br) },
+            /*060*/ { PacketTypes.UpdateNPCHome, (br) => new UpdateNPCHome(br) },
+            /*061*/ { PacketTypes.SpawnBossorInvasion, (br) => new SpawnBossorInvasion(br) },
             /*062*/ { PacketTypes.PlayerDodge, (br) => new PlayerDodge(br) },
             /*063*/ { PacketTypes.PaintTile, (br) => new PaintTile(br) },
             /*064*/ { PacketTypes.PaintWall, (br) => new PaintWall(br) },
-            /*065*/ { PacketTypes.PlayerNPCTeleport, (br) => new PlayerNPCTeleport(br) },
-            /*066*/ { PacketTypes.HealOtherPlayer, (br) => new HealOtherPlayer(br) },
+            /*065*/ { PacketTypes.Teleport, (br) => new Teleport(br) },
+            /*066*/ { PacketTypes.PlayerHealOther, (br) => new PlayerHealOther(br) },
             /*067*/ { PacketTypes.Placeholder, (br) => new Placeholder(br) },
             /*068*/ { PacketTypes.ClientUUID, (br) => new ClientUUID(br) },
-            /*069*/ { PacketTypes.GetChestName, (br) => new GetChestName(br) },
+            /*069*/ { PacketTypes.ChestName, (br) => new ChestName(br) },
             /*070*/ { PacketTypes.CatchNPC, (br) => new CatchNPC(br) },
             /*071*/ { PacketTypes.ReleaseNPC, (br) => new ReleaseNPC(br) },
             /*072*/ { PacketTypes.TravellingMerchantInventory, (br) => new TravellingMerchantInventory(br) },
             /*073*/ { PacketTypes.TeleportationPotion, (br) => new TeleportationPotion(br) },
             /*074*/ { PacketTypes.AnglerQuest, (br) => new AnglerQuest(br) },
-            /*075*/ { PacketTypes.CompleteAnglerQuestToday, (br) => new CompleteAnglerQuestToday(br) },
+            /*075*/ { PacketTypes.CompleteAnglerQuest, (br) => new CompleteAnglerQuest(br) },
             /*076*/ { PacketTypes.NumberOfAnglerQuestsCompleted, (br) => new NumberOfAnglerQuestsCompleted(br) },
             /*077*/ { PacketTypes.CreateTemporaryAnimation, (br) => new CreateTemporaryAnimation(br) },
             /*078*/ { PacketTypes.ReportInvasionProgress, (br) => new ReportInvasionProgress(br) },
@@ -106,43 +106,43 @@ namespace Multiplicity.Packets
             /*080*/ { PacketTypes.SyncPlayerChestIndex, (br) => new SyncPlayerChestIndex(br) },
             /*081*/ { PacketTypes.CreateCombatText, (br) => new CreateCombatText(br) },
             /*082*/ { PacketTypes.LoadNetModule, (br) => new LoadNetModule(br) },
-            /*083*/ { PacketTypes.SetNPCKillCount, (br) => new SetNPCKillCount(br) },
-            /*084*/ { PacketTypes.SetPlayerStealth, (br) => new SetPlayerStealth(br) },
+            /*083*/ { PacketTypes.NpcKillCount, (br) => new NpcKillCount(br) },
+            /*084*/ { PacketTypes.PlayerStealth, (br) => new PlayerStealth(br) },
             /*085*/ { PacketTypes.ForceItemIntoNearestChest, (br) => new ForceItemIntoNearestChest(br) },
             /*086*/ { PacketTypes.UpdateTileEntity, (br) => new UpdateTileEntity(br) },
             /*087*/ { PacketTypes.PlaceTileEntity, (br) => new PlaceTileEntity(br) },
-            /*088*/ { PacketTypes.AlterItemDrop, (br) => new AlterItemDrop(br) },
+            /*088*/ { PacketTypes.TweakItem, (br) => new TweakItem(br) },
             /*089*/ { PacketTypes.PlaceItemFrame, (br) => new PlaceItemFrame(br) },
-            /*090*/ { PacketTypes.UpdateItemDrop2, (br) => new UpdateItemDrop2(br) },
-            /*091*/ { PacketTypes.SyncEmoteBubble, (br) => new SyncEmoteBubble(br) },
+            /*090*/ { PacketTypes.UpdateItemDrop, (br) => new UpdateItemDrop(br) },
+            /*091*/ { PacketTypes.EmoteBubble, (br) => new EmoteBubble(br) },
             /*092*/ { PacketTypes.SyncExtraValue, (br) => new SyncExtraValue(br) },
             /*093*/ { PacketTypes.SocialHandshake, (br) => new SocialHandshake(br) },
-            /*094*/ { PacketTypes.Deprecated, (br) => new Deprecated(br) },
+            /*094*/ { PacketTypes.DebugCommands, (br) => new DebugCommands(br) },
             /*095*/ { PacketTypes.KillPortal, (br) => new KillPortal(br) },
-            /*096*/ { PacketTypes.PlayerTeleportThroughPortal, (br) => new PlayerTeleportThroughPortal(br) },
-            /*097*/ { PacketTypes.NotifyPlayerNPCKilled, (br) => new NotifyPlayerNPCKilled(br) },
+            /*096*/ { PacketTypes.PlayerTeleportPortal, (br) => new PlayerTeleportPortal(br) },
+            /*097*/ { PacketTypes.NotifyPlayerNpcKilled, (br) => new NotifyPlayerNpcKilled(br) },
             /*098*/ { PacketTypes.NotifyPlayerOfEvent, (br) => new NotifyPlayerOfEvent(br) },
             /*099*/ { PacketTypes.UpdateMinionTarget, (br) => new UpdateMinionTarget(br) },
-            /*100*/ { PacketTypes.NPCTeleportThroughPortal, (br) => new NPCTeleportThroughPortal(br) },
+            /*100*/ { PacketTypes.NpcTeleportPortal, (br) => new NpcTeleportPortal(br) },
             /*101*/ { PacketTypes.UpdateShieldStrengths, (br) => new UpdateShieldStrengths(br) },
-            /*102*/ { PacketTypes.NebulaLevelUpRequest, (br) => new NebulaLevelUpRequest(br) },
-            /*103*/ { PacketTypes.UpdateMoonLordCountdown, (br) => new UpdateMoonLordCountdown(br) },
-            /*104*/ { PacketTypes.SetNPCShopItem, (br) => new SetNPCShopItem(br) },
-            /*105*/ { PacketTypes.ToggleGemLock, (br) => new ToggleGemLock(br) },
-            /*106*/ { PacketTypes.PoofofSmoke, (br) => new PoofofSmoke(br) },
-            /*107*/ { PacketTypes.ChatMessagev2, (br) => new ChatMessagev2(br) },
+            /*102*/ { PacketTypes.NebulaLevelUp, (br) => new NebulaLevelUp(br) },
+            /*103*/ { PacketTypes.MoonLordCountdown, (br) => new MoonLordCountdown(br) },
+            /*104*/ { PacketTypes.NpcShopItem, (br) => new NpcShopItem(br) },
+            /*105*/ { PacketTypes.GemLockToggle, (br) => new GemLockToggle(br) },
+            /*106*/ { PacketTypes.PoofOfSmoke, (br) => new PoofOfSmoke(br) },
+            /*107*/ { PacketTypes.SmartTextMessage, (br) => new SmartTextMessage(br) },
             /*108*/ { PacketTypes.WiredCannonShot, (br) => new WiredCannonShot(br) },
             /*109*/ { PacketTypes.MassWireOperation, (br) => new MassWireOperation(br) },
-            /*110*/ { PacketTypes.MassWireOperationConsume, (br) => new MassWireOperationConsume(br) },
-            /*111*/ { PacketTypes.ToggleBirthdayParty, (br) => new ToggleBirthdayParty(br) },
-            /*112*/ { PacketTypes.GrowFX, (br) => new GrowFX(br) },
+            /*110*/ { PacketTypes.MassWireOperationPay, (br) => new MassWireOperationPay(br) },
+            /*111*/ { PacketTypes.ToggleParty, (br) => new ToggleParty(br) },
+            /*112*/ { PacketTypes.TreeGrowFX, (br) => new TreeGrowFX(br) },
             /*113*/ { PacketTypes.CrystalInvasionStart, (br) => new CrystalInvasionStart(br) },
             /*114*/ { PacketTypes.CrystalInvasionWipeAll, (br) => new CrystalInvasionWipeAll(br) },
             /*115*/ { PacketTypes.MinionAttackTargetUpdate, (br) => new MinionAttackTargetUpdate(br) },
             /*116*/ { PacketTypes.CrystalInvasionSendWaitTime, (br) => new CrystalInvasionSendWaitTime(br) },
             /*117*/ { PacketTypes.PlayerHurtV2, (br) => new PlayerHurtV2(br) },
             /*118*/ { PacketTypes.PlayerDeathV2, (br) => new PlayerDeathV2(br) },
-            /*119*/ { PacketTypes.CombatTextString, (br) => new CombatTextString(br) },
+            /*119*/ { PacketTypes.CreateCombatTextExtended, (br) => new CreateCombatTextExtended(br) },
             /*120*/ { PacketTypes.Emoji, (br) => new Emoji(br) },
             /*121*/ { PacketTypes.TileEntityDisplayDollItemSync, (br) => new TileEntityDisplayDollItemSync(br) },
             /*122*/ { PacketTypes.RequestTileEntityInteraction, (br) => new RequestTileEntityInteraction(br) },
@@ -190,9 +190,9 @@ namespace Multiplicity.Packets
         };
 
         /// <summary>
-        /// Gets or sets the Packet ID.
+        /// Gets or sets the packet identifier.
         /// </summary>
-        public byte ID { get; protected set; }
+        public byte Id { get; protected set; }
 
         /// <summary>
         /// Gets the type of the packet.
@@ -201,7 +201,7 @@ namespace Multiplicity.Packets
         {
             get
             {
-                return (PacketTypes)this.ID;
+                return (PacketTypes)this.Id;
             }
         }
 
@@ -216,7 +216,7 @@ namespace Multiplicity.Packets
         protected TerrariaPacket(BinaryReader br)
         {
             _length = br.ReadInt16();
-            this.ID = br.ReadByte();
+            this.Id = br.ReadByte();
         }
 
         /// <summary>
@@ -225,25 +225,25 @@ namespace Multiplicity.Packets
         /// <param name="id">Identifier.</param>
         protected TerrariaPacket(byte id)
         {
-            this.ID = id;
+            this.Id = id;
         }
 
         /// <summary>
         /// Deserializes a packet from the specified binary reader and returns a TerrariaPacket 
-        /// derivative according to the deserializer methods in deserializerMap.
+        /// derivative according to the deserializer methods in DeserializerMap.
         /// </summary>
         /// <param name="br">
         /// An instance of a BinaryReader which contains a binary terraria packet payload in 
         /// which to deserialize an object from
         /// </param>
         /// <param name="id">
-        /// Packet identifier that is used to find the deserializer method via deserializerMap
+        /// Packet identifier that is used to find the deserializer method via DeserializerMap
         /// </param>
         public static TerrariaPacket Deserialize(BinaryReader br, byte id)
         {
             br.BaseStream.Seek(0, SeekOrigin.Begin);
 
-            if (!deserializerMap.TryGetValue((PacketTypes)id, out Func<BinaryReader, TerrariaPacket> deserializer))
+            if (!DeserializerMap.TryGetValue((PacketTypes)id, out Func<BinaryReader, TerrariaPacket> deserializer))
             {
                 return new UnknownPacket(br);
             }
@@ -361,7 +361,7 @@ namespace Multiplicity.Packets
 
         /// <summary>
         /// Deserializes a packet from the specified binary reader and returns a TerrariaPacket 
-        /// derivative according to the deserializer methods in deserializerMap.
+        /// derivative according to the deserializer methods in DeserializerMap.
         /// </summary>
         /// <param name="br">
         /// An instance of a BinaryReader which contains a binary terraria packet payload in 
@@ -377,15 +377,15 @@ namespace Multiplicity.Packets
 
         private static void ValidatePacketBuffer(ReadOnlyMemory<byte> packetBuffer)
         {
-            if (packetBuffer.Length < PACKET_HEADER_LEN)
+            if (packetBuffer.Length < PacketHeaderLength)
             {
-                throw new InvalidDataException($"Packet buffer is too short. Expected at least {PACKET_HEADER_LEN} bytes, got {packetBuffer.Length}.");
+                throw new InvalidDataException($"Packet buffer is too short. Expected at least {PacketHeaderLength} bytes, got {packetBuffer.Length}.");
             }
 
             short declaredLength = BinaryPrimitives.ReadInt16LittleEndian(packetBuffer.Span);
-            if (declaredLength < PACKET_HEADER_LEN)
+            if (declaredLength < PacketHeaderLength)
             {
-                throw new InvalidDataException($"Invalid packet header length {declaredLength}. Minimum valid length is {PACKET_HEADER_LEN}.");
+                throw new InvalidDataException($"Invalid packet header length {declaredLength}. Minimum valid length is {PacketHeaderLength}.");
             }
 
             if (declaredLength != packetBuffer.Length)
@@ -396,10 +396,10 @@ namespace Multiplicity.Packets
 
         private static void ValidatePayloadBuffer(ReadOnlyMemory<byte> payloadBuffer)
         {
-            if (payloadBuffer.Length > short.MaxValue - PACKET_HEADER_LEN)
+            if (payloadBuffer.Length > short.MaxValue - PacketHeaderLength)
             {
                 throw new InvalidDataException(
-                    $"Payload buffer is too large. Maximum payload size is {short.MaxValue - PACKET_HEADER_LEN} bytes, got {payloadBuffer.Length}.");
+                    $"Payload buffer is too large. Maximum payload size is {short.MaxValue - PacketHeaderLength} bytes, got {payloadBuffer.Length}.");
             }
         }
 
@@ -419,11 +419,13 @@ namespace Multiplicity.Packets
 
           using (BinaryWriter br = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
           {
-            br.Write((short)(GetLength() + PACKET_HEADER_LEN));
-            br.Write(ID);
+            br.Write((short)(GetLength() + PacketHeaderLength));
+            br.Write(Id);
           }
         }
 	}
 }
+
+
 
 

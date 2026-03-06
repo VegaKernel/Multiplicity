@@ -4,7 +4,17 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct PlayerManaView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public PlayerManaView(ReadOnlySpan<byte> payload)
+        : this(PacketView.FromPayload(PacketTypes.PlayerMana, payload))
+        {
+        }
+
+        public static PlayerManaView FromPayload(ReadOnlySpan<byte> payload)
+        {
+            return new PlayerManaView(payload);
+        }
 
         public PlayerManaView(PacketView packet)
         {
@@ -17,7 +27,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             Mana = mana;
             MaxMana = maxMana;
@@ -25,7 +35,7 @@ namespace Multiplicity.Packets.Views
 
         public PacketHeader Header { get; }
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public byte PlayerId { get; }
 
@@ -34,3 +44,6 @@ namespace Multiplicity.Packets.Views
         public short MaxMana { get; }
     }
 }
+
+
+

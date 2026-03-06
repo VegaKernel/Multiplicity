@@ -4,11 +4,21 @@ namespace Multiplicity.Packets.Views
 {
     public readonly ref struct PlayerHpView
     {
-        private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _sourceSpan;
+
+        public PlayerHpView(ReadOnlySpan<byte> payload)
+        : this(PacketView.FromPayload(PacketTypes.PlayerHp, payload))
+        {
+        }
+
+        public static PlayerHpView FromPayload(ReadOnlySpan<byte> payload)
+        {
+            return new PlayerHpView(payload);
+        }
 
         public PlayerHpView(PacketView packet)
         {
-            packet.EnsureType(PacketTypes.PlayerHP);
+            packet.EnsureType(PacketTypes.PlayerHp);
 
             PacketReader reader = packet.CreatePayloadReader();
             byte playerId = reader.ReadByte();
@@ -17,7 +27,7 @@ namespace Multiplicity.Packets.Views
             reader.EnsureEnd();
 
             Header = packet.Header;
-            _packetSpan = packet.PacketSpan;
+            _sourceSpan = packet.SourceSpan;
             PlayerId = playerId;
             Hp = hp;
             MaxHp = maxHp;
@@ -25,7 +35,7 @@ namespace Multiplicity.Packets.Views
 
         public PacketHeader Header { get; }
 
-        public ReadOnlySpan<byte> PacketSpan => _packetSpan;
+        public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
 
         public byte PlayerId { get; }
 
@@ -34,3 +44,7 @@ namespace Multiplicity.Packets.Views
         public short MaxHp { get; }
     }
 }
+
+
+
+
