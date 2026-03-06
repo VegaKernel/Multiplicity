@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Multiplicity.Packets
 {
-    internal sealed class ReadOnlyMemoryStream : Stream
+    internal sealed class ReadOnlyMemoryStream : Stream, IPacketMemorySource
     {
         private readonly ReadOnlyMemory<byte> _buffer;
         private int _position;

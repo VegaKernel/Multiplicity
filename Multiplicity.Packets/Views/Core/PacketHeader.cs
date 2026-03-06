@@ -25,5 +25,27 @@ namespace Multiplicity.Packets.Views
         public PacketTypes PacketType { get; }
 
         public int PayloadLength => PacketLength - Size;
+
+        public static PacketHeader FromPayload(PacketTypes packetType, int payloadLength)
+        {
+            return FromPayload((byte)packetType, payloadLength);
+        }
+
+        public static PacketHeader FromPayload(byte rawPacketId, int payloadLength)
+        {
+            if (payloadLength < 0)
+            {
+                throw new InvalidDataException($"Payload length {payloadLength} cannot be negative.");
+            }
+
+            int packetLength = payloadLength + Size;
+            if (packetLength > ushort.MaxValue)
+            {
+                throw new InvalidDataException(
+                    $"Payload length {payloadLength} is too large to fit into a Terraria packet header.");
+            }
+
+            return new PacketHeader((ushort)packetLength, rawPacketId);
+        }
     }
 }

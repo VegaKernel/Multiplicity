@@ -6,6 +6,8 @@ namespace Multiplicity.Packets.Views
     public readonly ref struct PacketView
     {
         private readonly ReadOnlySpan<byte> _packetSpan;
+        private readonly ReadOnlySpan<byte> _payloadSpan;
+        private readonly bool _hasPacketSpan;
 
         public PacketView(PacketHeader header, ReadOnlySpan<byte> packetSpan)
         {
@@ -16,6 +18,31 @@ namespace Multiplicity.Packets.Views
 
             Header = header;
             _packetSpan = packetSpan;
+            _payloadSpan = packetSpan.Slice(PacketHeader.Size, header.PayloadLength);
+            _hasPacketSpan = true;
+        }
+
+        private PacketView(PacketHeader header, ReadOnlySpan<byte> packetSpan, ReadOnlySpan<byte> payloadSpan, bool hasPacketSpan)
+        {
+            if (payloadSpan.Length != header.PayloadLength)
+            {
+                throw new InvalidDataException($"Payload span length {payloadSpan.Length} does not match header payload length {header.PayloadLength}.");
+            }
+
+            Header = header;
+            _packetSpan = packetSpan;
+            _payloadSpan = payloadSpan;
+            _hasPacketSpan = hasPacketSpan;
+        }
+
+        public static PacketView FromPayload(PacketTypes packetType, ReadOnlySpan<byte> payloadSpan)
+        {
+            return new PacketView(PacketHeader.FromPayload(packetType, payloadSpan.Length), default, payloadSpan, false);
+        }
+
+        public static PacketView FromPayload(byte rawPacketId, ReadOnlySpan<byte> payloadSpan)
+        {
+            return new PacketView(PacketHeader.FromPayload(rawPacketId, payloadSpan.Length), default, payloadSpan, false);
         }
 
         public PacketHeader Header { get; }
@@ -24,7 +51,9 @@ namespace Multiplicity.Packets.Views
 
         public ReadOnlySpan<byte> PacketSpan => _packetSpan;
 
-        public ReadOnlySpan<byte> PayloadSpan => _packetSpan.Slice(PacketHeader.Size, Header.PayloadLength);
+        public ReadOnlySpan<byte> PayloadSpan => _payloadSpan;
+
+        public bool HasPacketSpan => _hasPacketSpan;
 
         public PacketReader CreatePayloadReader()
         {

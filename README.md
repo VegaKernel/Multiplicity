@@ -70,6 +70,8 @@ using Multiplicity.Packets;
 - `TerrariaPacket.Deserialize(BinaryReader br, byte id)`
 - `TerrariaPacket.Deserialize(ReadOnlyMemory<byte> packetBuffer)`
 - `TerrariaPacket.Deserialize(byte[] buffer, int offset, int length)`
+- `TerrariaPacket.DeserializePayload(PacketTypes packetType, ReadOnlyMemory<byte> payloadBuffer)`
+- `TerrariaPacket.DeserializePayload(PacketTypes packetType, byte[] buffer, int offset, int length)`
 
 ### 2. Packet views / zero-copy layer
 
@@ -94,6 +96,12 @@ using Multiplicity.Packets.Views;
 
 `PacketView` работает поверх исходного буфера.  
 Это значит, что `ReadOnlySpan<byte>` внутри views живёт столько же, сколько живёт исходный packet slice.
+
+Для server-side `NetGetData`, где у тебя часто есть только payload без Terraria header, есть отдельный вход:
+
+- `PacketViewParser.ParsePayload(PacketTypes packetType, ReadOnlySpan<byte> payloadBuffer)`
+- `PacketViewParser.ParsePayload(PacketTypes packetType, byte[] buffer, int offset, int length)`
+- `PacketViewParser.TryParsePayload(...)`
 
 ## Покрытие typed views
 
@@ -185,6 +193,26 @@ switch (packet)
 
 Этот вариант проще для логики, где пакет потом нужно хранить, менять и сериализовать назад.
 
+## Пример 1.1. Разобрать только payload, если тип пакета уже известен
+
+Это полезно для `TSAPI/TShock NetGetData`, где хук уже дал `MsgID`, `Index` и `Length`, а в буфере лежит только payload-срез:
+
+```csharp
+using Multiplicity.Packets;
+
+PacketTypes packetType = PacketTypes.ProjectileUpdate;
+byte[] readBuffer = GetReceiveBuffer();
+int offset = payloadOffset;
+int length = payloadLength;
+
+TerrariaPacket packet = TerrariaPacket.DeserializePayload(packetType, readBuffer, offset, length);
+
+if (packet is ProjectileUpdate projectile)
+{
+    Console.WriteLine($"Projectile #{projectile.ProjectileID}: type={projectile.Type}, owner={projectile.Owner}");
+}
+```
+
 ## Пример 2. Zero-copy разбор входящего буфера
 
 Когда пакет приходит в server receive buffer и важна производительность:
@@ -223,6 +251,23 @@ if (PacketViewParser.TryParse(buffer, out PacketView packetView, out int consume
 - весь пакет не копируется;
 - `TerrariaPacket`-объект не создаётся;
 - строки можно не материализовывать до последнего момента.
+
+## Пример 2.1. Zero-copy разбор только payload без Terraria header
+
+```csharp
+using Multiplicity.Packets;
+using Multiplicity.Packets.Views;
+
+PacketTypes packetType = PacketTypes.UpdatePlayer;
+ReadOnlySpan<byte> payload = receiveBuffer.AsSpan(payloadOffset, payloadLength);
+
+PacketView packetView = PacketViewParser.ParsePayload(packetType, payload);
+UpdatePlayerView view = packetView.AsUpdatePlayerView();
+
+Console.WriteLine($"Player #{view.PlayerId}: X={view.PositionX}, Y={view.PositionY}");
+```
+
+Это основной сценарий для серверных inbound-хуков, где тип пакета уже известен, а лишний `MemoryStream/BinaryReader` не нужен.
 
 ## Пример 3. Сформировать пакет и отправить
 

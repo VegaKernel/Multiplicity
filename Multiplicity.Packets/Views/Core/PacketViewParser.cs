@@ -77,5 +77,63 @@ namespace Multiplicity.Packets.Views
 
             return packetView;
         }
+
+        public static bool TryParsePayload(PacketTypes packetType, ReadOnlySpan<byte> payloadBuffer, out PacketView packetView)
+        {
+            try
+            {
+                packetView = PacketView.FromPayload(packetType, payloadBuffer);
+                return true;
+            }
+            catch (InvalidDataException)
+            {
+                packetView = default;
+                return false;
+            }
+        }
+
+        public static bool TryParsePayload(byte rawPacketId, ReadOnlySpan<byte> payloadBuffer, out PacketView packetView)
+        {
+            try
+            {
+                packetView = PacketView.FromPayload(rawPacketId, payloadBuffer);
+                return true;
+            }
+            catch (InvalidDataException)
+            {
+                packetView = default;
+                return false;
+            }
+        }
+
+        public static bool TryParsePayload(PacketTypes packetType, byte[] buffer, int offset, int length, out PacketView packetView)
+        {
+            return TryParsePayload(packetType, new ReadOnlySpan<byte>(buffer, offset, length), out packetView);
+        }
+
+        public static bool TryParsePayload(byte rawPacketId, byte[] buffer, int offset, int length, out PacketView packetView)
+        {
+            return TryParsePayload(rawPacketId, new ReadOnlySpan<byte>(buffer, offset, length), out packetView);
+        }
+
+        public static PacketView ParsePayload(PacketTypes packetType, ReadOnlySpan<byte> payloadBuffer)
+        {
+            return PacketView.FromPayload(packetType, payloadBuffer);
+        }
+
+        public static PacketView ParsePayload(byte rawPacketId, ReadOnlySpan<byte> payloadBuffer)
+        {
+            return PacketView.FromPayload(rawPacketId, payloadBuffer);
+        }
+
+        public static PacketView ParsePayload(PacketTypes packetType, byte[] buffer, int offset, int length)
+        {
+            return ParsePayload(packetType, new ReadOnlySpan<byte>(buffer, offset, length));
+        }
+
+        public static PacketView ParsePayload(byte rawPacketId, byte[] buffer, int offset, int length)
+        {
+            return ParsePayload(rawPacketId, new ReadOnlySpan<byte>(buffer, offset, length));
+        }
     }
 }

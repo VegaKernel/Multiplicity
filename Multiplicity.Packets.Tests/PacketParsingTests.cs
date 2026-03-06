@@ -178,6 +178,72 @@ namespace Multiplicity.Packets.Tests
             Assert.Equal(0, consumed);
         }
 
+        [Fact]
+        public void DeserializePayload_PlayerInfo_ParsesWithoutPacketHeader()
+        {
+            PlayerInfo original = new PlayerInfo
+            {
+                PlayerID = 2,
+                Name = "PayloadOnly",
+                Hair = 7,
+                DifficultyFlags = PlayerDifficultyFlags.Creative
+            };
+
+            byte[] packetBytes = original.ToArray(includeHeader: true);
+            ReadOnlyMemory<byte> payload = packetBytes.AsMemory(TerrariaPacket.PACKET_HEADER_LEN);
+
+            TerrariaPacket parsedPacket = TerrariaPacket.DeserializePayload(PacketTypes.PlayerInfo, payload);
+            PlayerInfo parsed = Assert.IsType<PlayerInfo>(parsedPacket);
+
+            Assert.Equal(original.PlayerID, parsed.PlayerID);
+            Assert.Equal(original.Name, parsed.Name);
+            Assert.Equal(original.Hair, parsed.Hair);
+            Assert.Equal(original.DifficultyFlags, parsed.DifficultyFlags);
+        }
+
+        [Fact]
+        public void PacketViewParser_ParsePayload_UpdatePlayer_ParsesTypedViewWithoutPacketHeader()
+        {
+            UpdatePlayer original = new UpdatePlayer
+            {
+                PlayerID = 4,
+                ControlFlags = UpdatePlayerControlFlags.ControlUseItem,
+                MovementFlags = UpdatePlayerMovementFlags.HasVelocity,
+                SelectedItem = 8,
+                PositionX = 321.5f,
+                PositionY = 654.25f,
+                VelocityX = -1.25f,
+                VelocityY = 2.75f
+            };
+
+            byte[] packetBytes = original.ToArray(includeHeader: true);
+            PacketView packetView = PacketViewParser.ParsePayload(
+                PacketTypes.UpdatePlayer,
+                packetBytes,
+                TerrariaPacket.PACKET_HEADER_LEN,
+                packetBytes.Length - TerrariaPacket.PACKET_HEADER_LEN);
+
+            UpdatePlayerView view = packetView.AsUpdatePlayerView();
+
+            Assert.False(packetView.HasPacketSpan);
+            Assert.Equal(PacketTypes.UpdatePlayer, view.Header.PacketType);
+            Assert.Equal(original.PlayerID, view.PlayerId);
+            Assert.Equal(original.PositionX, view.PositionX);
+            Assert.Equal(original.PositionY, view.PositionY);
+            Assert.Equal(original.VelocityX, view.VelocityX);
+            Assert.Equal(original.VelocityY, view.VelocityY);
+        }
+
+        [Fact]
+        public void PacketViewParser_TryParsePayload_ReturnsFalse_ForTooLargePayload()
+        {
+            byte[] payload = new byte[ushort.MaxValue];
+
+            bool result = PacketViewParser.TryParsePayload(PacketTypes.Ping, payload, 0, payload.Length, out PacketView _);
+
+            Assert.False(result);
+        }
+
         private static ColorStruct CreateColor(byte r, byte g, byte b)
         {
             return new ColorStruct

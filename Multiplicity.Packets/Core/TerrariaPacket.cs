@@ -263,6 +263,30 @@ namespace Multiplicity.Packets
             return Deserialize(new ReadOnlyMemory<byte>(packetBuffer, offset, length));
         }
 
+        public static TerrariaPacket DeserializePayload(PacketTypes packetType, ReadOnlyMemory<byte> payloadBuffer)
+        {
+            ValidatePayloadBuffer(payloadBuffer);
+            using PacketBinaryReader br = new PacketBinaryReader(packetType, payloadBuffer);
+            return Deserialize(br, (byte)packetType);
+        }
+
+        public static TerrariaPacket DeserializePayload(byte packetId, ReadOnlyMemory<byte> payloadBuffer)
+        {
+            ValidatePayloadBuffer(payloadBuffer);
+            using PacketBinaryReader br = new PacketBinaryReader(packetId, payloadBuffer);
+            return Deserialize(br, packetId);
+        }
+
+        public static TerrariaPacket DeserializePayload(PacketTypes packetType, byte[] payloadBuffer, int offset, int length)
+        {
+            return DeserializePayload(packetType, new ReadOnlyMemory<byte>(payloadBuffer, offset, length));
+        }
+
+        public static TerrariaPacket DeserializePayload(byte packetId, byte[] payloadBuffer, int offset, int length)
+        {
+            return DeserializePayload(packetId, new ReadOnlyMemory<byte>(payloadBuffer, offset, length));
+        }
+
         public static bool TryDeserialize(ReadOnlyMemory<byte> packetBuffer, out TerrariaPacket packet)
         {
             packet = null;
@@ -285,6 +309,54 @@ namespace Multiplicity.Packets
         public static bool TryDeserialize(byte[] packetBuffer, int offset, int length, out TerrariaPacket packet)
         {
             return TryDeserialize(new ReadOnlyMemory<byte>(packetBuffer, offset, length), out packet);
+        }
+
+        public static bool TryDeserializePayload(PacketTypes packetType, ReadOnlyMemory<byte> payloadBuffer, out TerrariaPacket packet)
+        {
+            packet = null;
+
+            try
+            {
+                packet = DeserializePayload(packetType, payloadBuffer);
+                return true;
+            }
+            catch (InvalidDataException)
+            {
+                return false;
+            }
+            catch (EndOfStreamException)
+            {
+                return false;
+            }
+        }
+
+        public static bool TryDeserializePayload(byte packetId, ReadOnlyMemory<byte> payloadBuffer, out TerrariaPacket packet)
+        {
+            packet = null;
+
+            try
+            {
+                packet = DeserializePayload(packetId, payloadBuffer);
+                return true;
+            }
+            catch (InvalidDataException)
+            {
+                return false;
+            }
+            catch (EndOfStreamException)
+            {
+                return false;
+            }
+        }
+
+        public static bool TryDeserializePayload(PacketTypes packetType, byte[] payloadBuffer, int offset, int length, out TerrariaPacket packet)
+        {
+            return TryDeserializePayload(packetType, new ReadOnlyMemory<byte>(payloadBuffer, offset, length), out packet);
+        }
+
+        public static bool TryDeserializePayload(byte packetId, byte[] payloadBuffer, int offset, int length, out TerrariaPacket packet)
+        {
+            return TryDeserializePayload(packetId, new ReadOnlyMemory<byte>(payloadBuffer, offset, length), out packet);
         }
 
         /// <summary>
@@ -319,6 +391,15 @@ namespace Multiplicity.Packets
             if (declaredLength != packetBuffer.Length)
             {
                 throw new InvalidDataException($"Packet buffer length mismatch. Header says {declaredLength} bytes, actual slice is {packetBuffer.Length} bytes.");
+            }
+        }
+
+        private static void ValidatePayloadBuffer(ReadOnlyMemory<byte> payloadBuffer)
+        {
+            if (payloadBuffer.Length > short.MaxValue - PACKET_HEADER_LEN)
+            {
+                throw new InvalidDataException(
+                    $"Payload buffer is too large. Maximum payload size is {short.MaxValue - PACKET_HEADER_LEN} bytes, got {payloadBuffer.Length}.");
             }
         }
 
