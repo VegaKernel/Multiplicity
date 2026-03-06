@@ -281,15 +281,23 @@ Console.WriteLine($"Player #{view.PlayerId}: X={view.PositionX}, Y={view.Positio
 ```csharp
 using Multiplicity.Packets;
 
-var packet = new ChatMessage
+var packet = new LoadNetModule
 {
-    PlayerId = 255,
-    Message = "Hello from Multiplicity",
-    MessageColor = new ColorStruct
+    LoadedModule = new NetTextModule
     {
-        R = 255,
-        G = 240,
-        B = 120
+        PayloadKind = NetTextModulePayloadKind.ServerChatMessage,
+        AuthorId = 255,
+        ServerText = new NetworkText
+        {
+            Text = "Hello from Multiplicity",
+            TextMode = NetworkText.Mode.Literal
+        },
+        MessageColor = new ColorStruct
+        {
+            R = 255,
+            G = 240,
+            B = 120
+        }
     }
 };
 

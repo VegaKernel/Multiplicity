@@ -11,6 +11,19 @@ namespace Multiplicity.Packets
         public static readonly Dictionary<NetworkModuleTypes, Func<BinaryReader, TerrariaNetModule>> DeserializerMap =
             new Dictionary<NetworkModuleTypes, Func<BinaryReader, TerrariaNetModule>>
             {
+                { NetworkModuleTypes.NetPingModule, br => new NetPingModule(br) },
+                { NetworkModuleTypes.NetAmbienceModule, br => new NetAmbienceModule(br) },
+                { NetworkModuleTypes.NetBestiaryModule, br => new NetBestiaryModule(br) },
+                { NetworkModuleTypes.NetCreativePowersModule, br => new NetCreativePowersModule(br) },
+                { NetworkModuleTypes.NetCreativeUnlocksPlayerReportModule, br => new NetCreativeUnlocksPlayerReportModule(br) },
+                { NetworkModuleTypes.NetTeleportPylonModule, br => new NetTeleportPylonModule(br) },
+                { NetworkModuleTypes.NetParticlesModule, br => new NetParticlesModule(br) },
+                { NetworkModuleTypes.NetCreativePowerPermissionsModule, br => new NetCreativePowerPermissionsModule(br) },
+                { NetworkModuleTypes.NetBannersModule, br => new NetBannersModule(br) },
+                { NetworkModuleTypes.NetCraftingRequestsModule, br => new NetCraftingRequestsModule(br) },
+                { NetworkModuleTypes.TagEffectModule, br => new TagEffectModule(br) },
+                { NetworkModuleTypes.LeashedEntityModule, br => new LeashedEntityModule(br) },
+                { NetworkModuleTypes.UnbreakableWallScanModule, br => new UnbreakableWallScanModule(br) },
                 { NetworkModuleTypes.NetLiquidModule, br => new NetLiquidModule(br) },
                 { NetworkModuleTypes.NetTextModule, br => new NetTextModule(br) }
             };

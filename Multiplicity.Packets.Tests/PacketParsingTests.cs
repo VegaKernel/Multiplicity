@@ -126,7 +126,7 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void GenericTileEntityItemSyncView_ParsesWeaponsRackTryPlacing()
+        public void WeaponsRackTryPlacingView_ParsesWeaponsRackTryPlacing()
         {
             WeaponsRackTryPlacing original = new WeaponsRackTryPlacing
             {
@@ -138,9 +138,9 @@ namespace Multiplicity.Packets.Tests
             };
 
             PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
-            TileEntityItemSyncPacketView view = packetView.AsWeaponsRackTryPlacingView();
+            WeaponsRackTryPlacingView view = packetView.AsWeaponsRackTryPlacingView();
 
-            Assert.Equal(PacketTypes.WeaponsRackTryPlacing, view.PacketType);
+            Assert.Equal(PacketTypes.WeaponsRackTryPlacing, view.Header.PacketType);
             Assert.Equal((short)100, view.TileX);
             Assert.Equal((short)101, view.TileY);
             Assert.Equal((short)2000, view.ItemType);
@@ -149,14 +149,13 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void GenericEmptyPayloadView_ParsesPing()
+        public void PingView_ParsesPing()
         {
             Ping original = new Ping();
 
             PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
-            EmptyPayloadPacketView view = packetView.AsPingView();
+            PingView view = packetView.AsPingView();
 
-            Assert.Equal(PacketTypes.Ping, view.PacketType);
             Assert.Equal(PacketTypes.Ping, view.Header.PacketType);
         }
 
@@ -307,6 +306,215 @@ namespace Multiplicity.Packets.Tests
             Assert.Equal(PacketTypes.HostToken, view.PacketType);
             Assert.Equal("payload-token", view.GetValue());
             Assert.Equal(payload.Length, view.SourceSpan.Length);
+        }
+
+        [Fact]
+        public void TerrariaNetModule_Deserialize_NetPingModule_RoundTrips()
+        {
+            NetPingModule original = new NetPingModule
+            {
+                PositionX = 12.5f,
+                PositionY = 64.25f
+            };
+
+            byte[] bytes = original.ToArray(includeHeader: true);
+            NetPingModule parsed = Assert.IsType<NetPingModule>(TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
+
+            Assert.Equal(original.PositionX, parsed.PositionX);
+            Assert.Equal(original.PositionY, parsed.PositionY);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void LoadNetModule_Deserializes_TeleportPylonModule()
+        {
+            LoadNetModule packet = new LoadNetModule
+            {
+                LoadedModule = new NetTeleportPylonModule
+                {
+                    MessageType = NetTeleportPylonMessageType.PlayerRequestsTeleport,
+                    TileX = 400,
+                    TileY = 401,
+                    PylonType = 7
+                }
+            };
+
+            byte[] bytes = packet.ToArray(includeHeader: true);
+            LoadNetModule parsed = Assert.IsType<LoadNetModule>(TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
+            NetTeleportPylonModule module = Assert.IsType<NetTeleportPylonModule>(parsed.LoadedModule);
+
+            Assert.Equal(NetTeleportPylonMessageType.PlayerRequestsTeleport, module.MessageType);
+            Assert.Equal((short)400, module.TileX);
+            Assert.Equal((short)401, module.TileY);
+            Assert.Equal((byte)7, module.PylonType);
+        }
+
+        [Fact]
+        public void TerrariaNetModule_Deserialize_CraftingRequest_RoundTripsRequestPayload()
+        {
+            NetCraftingRequestsModule original = new NetCraftingRequestsModule();
+            original.Items.Add(new CraftingRequestItem { ItemIdOrRecipeGroup = 12, Stack = 3 });
+            original.Items.Add(new CraftingRequestItem { ItemIdOrRecipeGroup = 6001, Stack = 99 });
+            original.ChestIndices.Add(4);
+            original.ChestIndices.Add(17);
+
+            byte[] bytes = original.ToArray(includeHeader: true);
+            NetCraftingRequestsModule parsed = Assert.IsType<NetCraftingRequestsModule>(TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
+
+            Assert.Equal(NetCraftingRequestsPayloadKind.Request, parsed.PayloadKind);
+            Assert.Equal(2, parsed.Items.Count);
+            Assert.Equal(6001, parsed.Items[1].ItemIdOrRecipeGroup);
+            Assert.Equal(99, parsed.Items[1].Stack);
+            Assert.Equal(new[] { 4, 17 }, parsed.ChestIndices);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void TerrariaNetModule_Deserialize_TagEffectFullState_PreservesSparseArrays()
+        {
+            TagEffectModule original = new TagEffectModule
+            {
+                PlayerId = 5,
+                MessageType = TagEffectMessageType.FullState,
+                EffectType = 14,
+                IncludeProcTimeEntries = true
+            };
+            original.TimeEntries.Add(new TagEffectNpcTimeEntry { NpcIndex = 2, TimeLeft = 120 });
+            original.TimeEntries.Add(new TagEffectNpcTimeEntry { NpcIndex = 9, TimeLeft = 45 });
+            original.ProcTimeEntries.Add(new TagEffectNpcTimeEntry { NpcIndex = 7, TimeLeft = 18 });
+
+            byte[] bytes = original.ToArray(includeHeader: true);
+            TagEffectModule parsed = Assert.IsType<TagEffectModule>(TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
+
+            Assert.Equal((byte)5, parsed.PlayerId);
+            Assert.Equal(TagEffectMessageType.FullState, parsed.MessageType);
+            Assert.Equal((short)14, parsed.EffectType);
+            Assert.True(parsed.IncludeProcTimeEntries);
+            Assert.Equal(2, parsed.TimeEntries.Count);
+            Assert.Equal((byte)9, parsed.TimeEntries[1].NpcIndex);
+            Assert.Equal(45, parsed.TimeEntries[1].TimeLeft);
+            Assert.Single(parsed.ProcTimeEntries);
+            Assert.Equal((byte)7, parsed.ProcTimeEntries[0].NpcIndex);
+            Assert.Equal(18, parsed.ProcTimeEntries[0].TimeLeft);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void TerrariaNetModule_Deserialize_LeashedEntityFullSync_PreservesEnvelopeAndPayload()
+        {
+            LeashedEntityModule original = new LeashedEntityModule
+            {
+                MessageType = LeashedEntityMessageType.FullSync,
+                Slot = 321,
+                EntityType = 11,
+                AnchorX = 1200,
+                AnchorY = 1300,
+                EntityPayload = new byte[] { 1, 2, 3, 4, 5 }
+            };
+
+            byte[] bytes = original.ToArray(includeHeader: true);
+            LeashedEntityModule parsed = Assert.IsType<LeashedEntityModule>(TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
+
+            Assert.Equal(LeashedEntityMessageType.FullSync, parsed.MessageType);
+            Assert.Equal(321, parsed.Slot);
+            Assert.Equal(11, parsed.EntityType);
+            Assert.Equal((short)1200, parsed.AnchorX);
+            Assert.Equal((short)1300, parsed.AnchorY);
+            Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, parsed.EntityPayload);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void LoadNetModuleView_AsNetPingModuleView_ParsesModulePayload()
+        {
+            LoadNetModule original = new LoadNetModule
+            {
+                LoadedModule = new NetPingModule
+                {
+                    PositionX = 44.5f,
+                    PositionY = 88.25f
+                }
+            };
+
+            PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
+            LoadNetModuleView moduleView = packetView.AsLoadNetModuleView();
+            NetPingModuleView pingView = moduleView.AsNetPingModuleView();
+
+            Assert.Equal(NetworkModuleTypes.NetPingModule, moduleView.ModuleType);
+            Assert.Equal(44.5f, pingView.PositionX);
+            Assert.Equal(88.25f, pingView.PositionY);
+        }
+
+        [Fact]
+        public void LoadNetModuleView_AsNetTextModuleView_ParsesClientMessage()
+        {
+            LoadNetModule original = new LoadNetModule
+            {
+                LoadedModule = new NetTextModule
+                {
+                    PayloadKind = NetTextModulePayloadKind.ClientChatMessage,
+                    CommandName = "say",
+                    ChatMessage = "hello"
+                }
+            };
+
+            PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
+            NetTextModuleView textView = packetView.AsLoadNetModuleView().AsNetTextModuleView();
+
+            Assert.Equal(NetTextModulePayloadKind.ClientChatMessage, textView.PayloadKind);
+            Assert.Equal("say", textView.CommandName);
+            Assert.Equal("hello", textView.ChatMessage);
+        }
+
+        [Fact]
+        public void LoadNetModuleView_AsNetCraftingRequestsModuleView_ParsesRequestCollections()
+        {
+            LoadNetModule original = new LoadNetModule
+            {
+                LoadedModule = new NetCraftingRequestsModule()
+            };
+
+            NetCraftingRequestsModule craftingModule = (NetCraftingRequestsModule)original.LoadedModule;
+            craftingModule.Items.Add(new CraftingRequestItem { ItemIdOrRecipeGroup = 123, Stack = 2 });
+            craftingModule.Items.Add(new CraftingRequestItem { ItemIdOrRecipeGroup = 456, Stack = 8 });
+            craftingModule.ChestIndices.Add(7);
+            craftingModule.ChestIndices.Add(9);
+
+            PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
+            NetCraftingRequestsModuleView craftingView = packetView.AsLoadNetModuleView().AsNetCraftingRequestsModuleView();
+
+            Assert.Equal(NetCraftingRequestsPayloadKind.Request, craftingView.PayloadKind);
+            Assert.Equal(2, craftingView.Items.Count);
+            Assert.Equal(456, craftingView.Items[1].ItemIdOrRecipeGroup);
+            Assert.Equal(8, craftingView.Items[1].Stack);
+            Assert.Equal(new[] { 7, 9 }, craftingView.ChestIndices);
+        }
+
+        [Fact]
+        public void LoadNetModuleView_AsLeashedEntityModuleView_ParsesEnvelopeFields()
+        {
+            LoadNetModule original = new LoadNetModule
+            {
+                LoadedModule = new LeashedEntityModule
+                {
+                    MessageType = LeashedEntityMessageType.FullSync,
+                    Slot = 15,
+                    EntityType = 4,
+                    AnchorX = 320,
+                    AnchorY = 640,
+                    EntityPayload = new byte[] { 9, 8, 7 }
+                }
+            };
+
+            PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
+            LeashedEntityModuleView leashedView = packetView.AsLoadNetModuleView().AsLeashedEntityModuleView();
+
+            Assert.Equal(LeashedEntityMessageType.FullSync, leashedView.MessageType);
+            Assert.Equal(15, leashedView.Slot);
+            Assert.Equal(4, leashedView.EntityType);
+            Assert.Equal((short)320, leashedView.AnchorX);
+            Assert.Equal((short)640, leashedView.AnchorY);
+            Assert.Equal(new byte[] { 9, 8, 7 }, leashedView.EntityPayloadSpan.ToArray());
         }
 
         private static ColorStruct CreateColor(byte r, byte g, byte b)

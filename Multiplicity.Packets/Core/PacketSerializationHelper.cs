@@ -13,18 +13,7 @@ namespace Multiplicity.Packets
             return Get7BitEncodedIntLength(byteCount) + byteCount;
         }
 
-        public static byte[] NormalizeFixedBuffer(byte[] source, int expectedLength)
-        {
-            byte[] buffer = new byte[expectedLength];
-            if (source != null)
-            {
-                Buffer.BlockCopy(source, 0, buffer, 0, Math.Min(source.Length, expectedLength));
-            }
-
-            return buffer;
-        }
-
-        private static int Get7BitEncodedIntLength(int value)
+        public static int Get7BitEncodedIntLength(int value)
         {
             uint encodedValue = (uint)value;
             int length = 1;
@@ -36,6 +25,17 @@ namespace Multiplicity.Packets
             }
 
             return length;
+        }
+
+        public static byte[] NormalizeFixedBuffer(byte[] source, int expectedLength)
+        {
+            byte[] buffer = new byte[expectedLength];
+            if (source != null)
+            {
+                Buffer.BlockCopy(source, 0, buffer, 0, Math.Min(source.Length, expectedLength));
+            }
+
+            return buffer;
         }
     }
 }
