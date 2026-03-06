@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.IO;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -79,6 +80,18 @@ namespace Multiplicity.Packets.Views
         public float ReadSingle()
         {
             return BitConverter.Int32BitsToSingle(ReadInt32());
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 ReadVector2()
+        {
+            return new Vector2(ReadSingle(), ReadSingle());
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 ReadPackedVector2()
+        {
+            return PackedVector2Codec.Unpack(ReadUInt32());
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

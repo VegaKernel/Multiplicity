@@ -1,4 +1,5 @@
 using System;
+using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
 {
@@ -67,5 +68,10 @@ namespace Multiplicity.Packets.Views
         public ushort ClaimAmount { get; }
         public bool ClaimGranted { get; }
         public ReadOnlySpan<byte> FullStatePayloadSpan { get; }
+        public bool HasFullState => MessageType == NetBannersMessageType.FullState;
+
+        public BannerSystemState GetFullState() => HasFullState
+            ? BannerSystemState.Parse(FullStatePayloadSpan)
+            : throw new InvalidOperationException("NetBannersModuleView does not contain a FullState payload.");
     }
 }

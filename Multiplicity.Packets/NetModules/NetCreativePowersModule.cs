@@ -1,46 +1,49 @@
 using System;
 using System.IO;
+using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets
 {
     public sealed class NetCreativePowersModule : TerrariaNetModule
     {
-        private byte[] _powerPayload;
-
         public ushort PowerId { get; set; }
+
+        public CreativePowerId PowerType
+        {
+            get => (CreativePowerId)PowerId;
+            set => PowerId = (ushort)value;
+        }
+
+        public CreativePowerPayload PowerData { get; set; }
 
         public byte[] PowerPayload
         {
-            get
-            {
-                return _powerPayload ??= PowerPayloadMemory.ToArray();
-            }
-            set
-            {
-                _powerPayload = value;
-                PowerPayloadMemory = value ?? Array.Empty<byte>();
-            }
+            get => PowerData.ToPayloadArray();
+            set => PowerData = new RawCreativePowerPayload { Payload = value ?? Array.Empty<byte>() };
         }
 
-        public ReadOnlyMemory<byte> PowerPayloadMemory { get; set; }
+        public ReadOnlyMemory<byte> PowerPayloadMemory
+        {
+            get => PowerData.ToPayloadArray();
+            set => PowerData = new RawCreativePowerPayload { Payload = value.ToArray() };
+        }
 
         public NetCreativePowersModule()
             : base(NetworkModuleTypes.NetCreativePowersModule)
         {
-            PowerPayloadMemory = ReadOnlyMemory<byte>.Empty;
-            _powerPayload = Array.Empty<byte>();
+            PowerData = new RawCreativePowerPayload();
         }
 
         public NetCreativePowersModule(BinaryReader br)
             : base(br)
         {
             PowerId = br.ReadUInt16();
-            PowerPayloadMemory = br.ReadRemainingMemory();
+            PowerData = CreativePowerPayloadSerializer.Deserialize(PowerType, br.ReadRemainingMemory().Span);
         }
 
         public override short GetLength()
         {
-            return (short)(sizeof(ushort) + PowerPayloadMemory.Length);
+            return checked((short)(sizeof(ushort) + PowerData.GetPayloadLength()));
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
@@ -52,10 +55,7 @@ namespace Multiplicity.Packets
 
             using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
             bw.Write(PowerId);
-            if (PowerPayloadMemory.Length > 0)
-            {
-                stream.Write(PowerPayloadMemory.Span);
-            }
+            PowerData.Write(bw);
         }
     }
 }

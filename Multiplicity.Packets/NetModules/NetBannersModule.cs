@@ -1,12 +1,12 @@
 using System;
 using System.IO;
+using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets
 {
     public sealed class NetBannersModule : TerrariaNetModule
     {
         private const short MessageTypeLength = sizeof(byte);
-        private byte[] _fullStatePayload;
 
         public NetBannersMessageType MessageType { get; set; }
 
@@ -20,36 +20,35 @@ namespace Multiplicity.Packets
 
         public bool ClaimGranted { get; set; }
 
+        public BannerSystemState FullStateData { get; set; }
+
         public byte[] FullStatePayload
         {
-            get
-            {
-                return _fullStatePayload ??= FullStatePayloadMemory.ToArray();
-            }
-            set
-            {
-                _fullStatePayload = value;
-                FullStatePayloadMemory = value ?? Array.Empty<byte>();
-            }
+            get => FullStateData.ToPayloadArray();
+            set => FullStateData = BannerSystemState.Parse(value ?? Array.Empty<byte>());
         }
 
-        public ReadOnlyMemory<byte> FullStatePayloadMemory { get; set; }
+        public ReadOnlyMemory<byte> FullStatePayloadMemory
+        {
+            get => FullStateData.ToPayloadArray();
+            set => FullStateData = BannerSystemState.Parse(value.Span);
+        }
 
         public NetBannersModule()
             : base(NetworkModuleTypes.NetBannersModule)
         {
-            FullStatePayloadMemory = ReadOnlyMemory<byte>.Empty;
-            _fullStatePayload = Array.Empty<byte>();
+            FullStateData = new BannerSystemState();
         }
 
         public NetBannersModule(BinaryReader br)
             : base(br)
         {
             MessageType = (NetBannersMessageType)br.ReadByte();
+            FullStateData = new BannerSystemState();
             switch (MessageType)
             {
                 case NetBannersMessageType.FullState:
-                    FullStatePayloadMemory = br.ReadRemainingMemory();
+                    FullStateData = new BannerSystemState(br);
                     break;
                 case NetBannersMessageType.KillCountUpdate:
                     BannerId = br.ReadInt16();
@@ -75,7 +74,7 @@ namespace Multiplicity.Packets
         {
             return MessageType switch
             {
-                NetBannersMessageType.FullState => (short)(MessageTypeLength + FullStatePayloadMemory.Length),
+                NetBannersMessageType.FullState => checked((short)(MessageTypeLength + FullStateData.GetPayloadLength())),
                 NetBannersMessageType.KillCountUpdate => (short)(MessageTypeLength + sizeof(short) + sizeof(int)),
                 NetBannersMessageType.ClaimCountUpdate => (short)(MessageTypeLength + sizeof(short) + sizeof(ushort)),
                 NetBannersMessageType.ClaimRequest => (short)(MessageTypeLength + sizeof(short) + sizeof(ushort)),
@@ -97,10 +96,7 @@ namespace Multiplicity.Packets
             switch (MessageType)
             {
                 case NetBannersMessageType.FullState:
-                    if (FullStatePayloadMemory.Length > 0)
-                    {
-                        stream.Write(FullStatePayloadMemory.Span);
-                    }
+                    FullStateData.Write(bw);
                     break;
                 case NetBannersMessageType.KillCountUpdate:
                     bw.Write(BannerId);

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Multiplicity.Packets;
+using Multiplicity.Packets.Models;
 using Multiplicity.Packets.Views;
 using Xunit;
 
@@ -406,7 +407,7 @@ namespace Multiplicity.Packets.Tests
             {
                 MessageType = LeashedEntityMessageType.FullSync,
                 Slot = 321,
-                EntityType = 11,
+                EntityType = 200,
                 AnchorX = 1200,
                 AnchorY = 1300,
                 EntityPayload = new byte[] { 1, 2, 3, 4, 5 }
@@ -417,7 +418,7 @@ namespace Multiplicity.Packets.Tests
 
             Assert.Equal(LeashedEntityMessageType.FullSync, parsed.MessageType);
             Assert.Equal(321, parsed.Slot);
-            Assert.Equal(11, parsed.EntityType);
+            Assert.Equal(200, parsed.EntityType);
             Assert.Equal((short)1200, parsed.AnchorX);
             Assert.Equal((short)1300, parsed.AnchorY);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, parsed.EntityPayload);
@@ -515,6 +516,171 @@ namespace Multiplicity.Packets.Tests
             Assert.Equal((short)320, leashedView.AnchorX);
             Assert.Equal((short)640, leashedView.AnchorY);
             Assert.Equal(new byte[] { 9, 8, 7 }, leashedView.EntityPayloadSpan.ToArray());
+        }
+
+        [Fact]
+        public void TerrariaNetModule_Deserialize_NetBannersFullState_RoundTripsTypedState()
+        {
+            NetBannersModule original = new NetBannersModule
+            {
+                MessageType = NetBannersMessageType.FullState,
+                FullStateData = new BannerSystemState
+                {
+                    KillCounts = new[] { 4, 8, 15, 16, 23, 42 },
+                    ClaimableBanners = new ushort[] { 2, 5, 9 }
+                }
+            };
+
+            byte[] bytes = original.ToArray(includeHeader: true);
+            NetBannersModule parsed = Assert.IsType<NetBannersModule>(TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
+
+            Assert.Equal(NetBannersMessageType.FullState, parsed.MessageType);
+            Assert.Equal(new[] { 4, 8, 15, 16, 23, 42 }, parsed.FullStateData.KillCounts);
+            Assert.Equal(new ushort[] { 2, 5, 9 }, parsed.FullStateData.ClaimableBanners);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void LoadNetModuleView_AsNetBannersModuleView_ParsesFullState()
+        {
+            LoadNetModule original = new LoadNetModule
+            {
+                LoadedModule = new NetBannersModule
+                {
+                    MessageType = NetBannersMessageType.FullState,
+                    FullStateData = new BannerSystemState
+                    {
+                        KillCounts = new[] { 1, 3, 5 },
+                        ClaimableBanners = new ushort[] { 7, 11 }
+                    }
+                }
+            };
+
+            PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
+            BannerSystemState state = packetView.AsLoadNetModuleView().AsNetBannersModuleView().GetFullState();
+
+            Assert.Equal(new[] { 1, 3, 5 }, state.KillCounts);
+            Assert.Equal(new ushort[] { 7, 11 }, state.ClaimableBanners);
+        }
+
+        [Fact]
+        public void TerrariaNetModule_Deserialize_NetCreativePowers_PerPlayerToggle_RoundTripsTypedPayload()
+        {
+            NetCreativePowersModule original = new NetCreativePowersModule
+            {
+                PowerType = CreativePowerId.GodmodePower,
+                PowerData = new CreativePowerPerPlayerTogglePayload
+                {
+                    MessageType = CreativePowerPerPlayerToggleMessageType.SyncEveryone,
+                    PlayerStateBytes = new byte[] { 0b_0000_0101, 0b_1000_0000 }
+                }
+            };
+
+            byte[] bytes = original.ToArray(includeHeader: true);
+            NetCreativePowersModule parsed = Assert.IsType<NetCreativePowersModule>(TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
+            CreativePowerPerPlayerTogglePayload payload = Assert.IsType<CreativePowerPerPlayerTogglePayload>(parsed.PowerData);
+
+            Assert.Equal(CreativePowerId.GodmodePower, parsed.PowerType);
+            Assert.Equal(CreativePowerPerPlayerToggleMessageType.SyncEveryone, payload.MessageType);
+            Assert.True(payload.GetEnabledState(0));
+            Assert.False(payload.GetEnabledState(1));
+            Assert.True(payload.GetEnabledState(2));
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void LoadNetModuleView_AsNetCreativePowersModuleView_ParsesSharedSliderPayload()
+        {
+            LoadNetModule original = new LoadNetModule
+            {
+                LoadedModule = new NetCreativePowersModule
+                {
+                    PowerType = CreativePowerId.ModifyTimeRate,
+                    PowerData = new CreativePowerSharedSliderPayload
+                    {
+                        Value = 0.75f
+                    }
+                }
+            };
+
+            PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
+            NetCreativePowersModuleView view = packetView.AsLoadNetModuleView().AsNetCreativePowersModuleView();
+            CreativePowerSharedSliderPayload payload = Assert.IsType<CreativePowerSharedSliderPayload>(view.GetPayload());
+
+            Assert.Equal(CreativePowerId.ModifyTimeRate, view.PowerType);
+            Assert.Equal(CreativePowerPayloadKind.SharedSlider, view.PayloadKind);
+            Assert.Equal(0.75f, payload.Value);
+        }
+
+        [Fact]
+        public void TerrariaNetModule_Deserialize_LeashedEntityFullSync_RoundTripsTypedKitePayload()
+        {
+            LeashedEntityModule original = new LeashedEntityModule
+            {
+                MessageType = LeashedEntityMessageType.FullSync,
+                Slot = 12,
+                EntityKind = LeashedEntityType.Kite,
+                AnchorX = 1440,
+                AnchorY = 1660,
+                EntityData = new LeashedKitePayload
+                {
+                    ProjectileType = 88,
+                    Position = new System.Numerics.Vector2(10.5f, 20.25f),
+                    Velocity = new System.Numerics.Vector2(1.5f, -0.75f),
+                    RotationByte = 64,
+                    WindTarget = 0.8f,
+                    CloudAlpha = 0.3f,
+                    TimeCounter = 5.5f
+                }
+            };
+
+            byte[] bytes = original.ToArray(includeHeader: true);
+            LeashedEntityModule parsed = Assert.IsType<LeashedEntityModule>(TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
+            LeashedKitePayload payload = Assert.IsType<LeashedKitePayload>(parsed.EntityData);
+
+            Assert.Equal(LeashedEntityType.Kite, parsed.EntityKind);
+            Assert.Equal(88, payload.ProjectileType);
+            Assert.Equal(10.5f, payload.Position.X);
+            Assert.Equal(20.25f, payload.Position.Y);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void LoadNetModuleView_AsLeashedEntityModuleView_ParsesNormalButterflyPayload()
+        {
+            LoadNetModule original = new LoadNetModule
+            {
+                LoadedModule = new LeashedEntityModule
+                {
+                    MessageType = LeashedEntityMessageType.FullSync,
+                    Slot = 27,
+                    EntityKind = LeashedEntityType.NormalButterfly,
+                    AnchorX = 320,
+                    AnchorY = 512,
+                    EntityData = new NormalButterflyLeashedCritterPayload
+                    {
+                        NpcType = 222,
+                        Size = new System.Numerics.Vector2(16f, 18f),
+                        PositionOffset = new System.Numerics.Vector2(2.25f, -1.5f),
+                        FacingRight = true,
+                        RandomState = 123456789,
+                        WaitTime = 44,
+                        State = 3,
+                        TargetOffsetX = -2,
+                        TargetOffsetY = 5,
+                        Variant = 6
+                    }
+                }
+            };
+
+            PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
+            LeashedEntityModuleView view = packetView.AsLoadNetModuleView().AsLeashedEntityModuleView();
+            NormalButterflyLeashedCritterPayload payload = Assert.IsType<NormalButterflyLeashedCritterPayload>(view.GetPayload());
+
+            Assert.Equal(LeashedEntityType.NormalButterfly, view.EntityKind);
+            Assert.Equal(222, payload.NpcType);
+            Assert.True(payload.FacingRight);
+            Assert.Equal((byte)6, payload.Variant);
         }
 
         private static ColorStruct CreateColor(byte r, byte g, byte b)

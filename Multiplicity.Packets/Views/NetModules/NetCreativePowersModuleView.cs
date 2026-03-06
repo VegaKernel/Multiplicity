@@ -1,4 +1,5 @@
 using System;
+using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
 {
@@ -24,7 +25,10 @@ namespace Multiplicity.Packets.Views
 
         public ReadOnlySpan<byte> SourceSpan => _sourceSpan;
         public ushort PowerId { get; }
+        public CreativePowerId PowerType => (CreativePowerId)PowerId;
+        public CreativePowerPayloadKind PayloadKind => CreativePowerPayloadSerializer.GetPayloadKind(PowerType);
         public ReadOnlySpan<byte> PowerPayloadSpan { get; }
         public PacketReader CreatePowerPayloadReader() => new PacketReader(PowerPayloadSpan);
+        public CreativePowerPayload GetPayload() => CreativePowerPayloadSerializer.Deserialize(PowerType, PowerPayloadSpan);
     }
 }

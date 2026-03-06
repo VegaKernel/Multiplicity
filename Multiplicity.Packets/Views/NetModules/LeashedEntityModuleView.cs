@@ -1,4 +1,5 @@
 using System;
+using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
 {
@@ -51,9 +52,15 @@ namespace Multiplicity.Packets.Views
         public LeashedEntityMessageType MessageType { get; }
         public int Slot { get; }
         public int EntityType { get; }
+        public LeashedEntityType EntityKind => (LeashedEntityType)EntityType;
         public short AnchorX { get; }
         public short AnchorY { get; }
         public ReadOnlySpan<byte> EntityPayloadSpan { get; }
+        public bool HasEntityPayload => MessageType != LeashedEntityMessageType.Remove;
         public PacketReader CreateEntityPayloadReader() => new PacketReader(EntityPayloadSpan);
+
+        public LeashedEntityPayload GetPayload() => HasEntityPayload
+            ? LeashedEntityPayloadSerializer.Deserialize(EntityKind, MessageType == LeashedEntityMessageType.FullSync, EntityPayloadSpan)
+            : throw new InvalidOperationException("LeashedEntityModuleView does not contain an entity payload.");
     }
 }

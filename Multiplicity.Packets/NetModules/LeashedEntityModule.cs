@@ -1,42 +1,45 @@
 using System;
 using System.IO;
+using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets
 {
     public sealed class LeashedEntityModule : TerrariaNetModule
     {
-        private byte[] _entityPayload;
-
         public LeashedEntityMessageType MessageType { get; set; }
 
         public int Slot { get; set; }
 
         public int EntityType { get; set; }
 
+        public LeashedEntityType EntityKind
+        {
+            get => (LeashedEntityType)EntityType;
+            set => EntityType = (int)value;
+        }
+
         public short AnchorX { get; set; }
 
         public short AnchorY { get; set; }
 
+        public LeashedEntityPayload EntityData { get; set; }
+
         public byte[] EntityPayload
         {
-            get
-            {
-                return _entityPayload ??= EntityPayloadMemory.ToArray();
-            }
-            set
-            {
-                _entityPayload = value;
-                EntityPayloadMemory = value ?? Array.Empty<byte>();
-            }
+            get => EntityData.ToPayloadArray(MessageType == LeashedEntityMessageType.FullSync);
+            set => EntityData = new RawLeashedEntityPayload { Payload = value ?? Array.Empty<byte>() };
         }
 
-        public ReadOnlyMemory<byte> EntityPayloadMemory { get; set; }
+        public ReadOnlyMemory<byte> EntityPayloadMemory
+        {
+            get => EntityData.ToPayloadArray(MessageType == LeashedEntityMessageType.FullSync);
+            set => EntityData = new RawLeashedEntityPayload { Payload = value.ToArray() };
+        }
 
         public LeashedEntityModule()
             : base(NetworkModuleTypes.LeashedEntityModule)
         {
-            EntityPayloadMemory = ReadOnlyMemory<byte>.Empty;
-            _entityPayload = Array.Empty<byte>();
+            EntityData = new RawLeashedEntityPayload();
         }
 
         public LeashedEntityModule(BinaryReader br)
@@ -44,6 +47,7 @@ namespace Multiplicity.Packets
         {
             MessageType = (LeashedEntityMessageType)br.ReadByte();
             Slot = br.Read7BitEncodedInt();
+            EntityData = new RawLeashedEntityPayload();
 
             switch (MessageType)
             {
@@ -51,11 +55,11 @@ namespace Multiplicity.Packets
                     EntityType = br.Read7BitEncodedInt();
                     AnchorX = br.ReadInt16();
                     AnchorY = br.ReadInt16();
-                    EntityPayloadMemory = br.ReadRemainingMemory();
+                    EntityData = LeashedEntityPayloadSerializer.Deserialize(EntityKind, fullSync: true, br.ReadRemainingMemory().Span);
                     break;
                 case LeashedEntityMessageType.PartialSync:
                     EntityType = br.Read7BitEncodedInt();
-                    EntityPayloadMemory = br.ReadRemainingMemory();
+                    EntityData = LeashedEntityPayloadSerializer.Deserialize(EntityKind, fullSync: false, br.ReadRemainingMemory().Span);
                     break;
             }
         }
@@ -68,11 +72,11 @@ namespace Multiplicity.Packets
                 case LeashedEntityMessageType.FullSync:
                     length += PacketSerializationHelper.Get7BitEncodedIntLength(EntityType);
                     length += sizeof(short) * 2;
-                    length += EntityPayloadMemory.Length;
+                    length += EntityData.GetPayloadLength(fullSync: true);
                     break;
                 case LeashedEntityMessageType.PartialSync:
                     length += PacketSerializationHelper.Get7BitEncodedIntLength(EntityType);
-                    length += EntityPayloadMemory.Length;
+                    length += EntityData.GetPayloadLength(fullSync: false);
                     break;
             }
 
@@ -96,17 +100,11 @@ namespace Multiplicity.Packets
                     bw.Write7BitEncodedInt(EntityType);
                     bw.Write(AnchorX);
                     bw.Write(AnchorY);
-                    if (EntityPayloadMemory.Length > 0)
-                    {
-                        stream.Write(EntityPayloadMemory.Span);
-                    }
+                    EntityData.Write(bw, fullSync: true);
                     break;
                 case LeashedEntityMessageType.PartialSync:
                     bw.Write7BitEncodedInt(EntityType);
-                    if (EntityPayloadMemory.Length > 0)
-                    {
-                        stream.Write(EntityPayloadMemory.Span);
-                    }
+                    EntityData.Write(bw, fullSync: false);
                     break;
             }
         }
