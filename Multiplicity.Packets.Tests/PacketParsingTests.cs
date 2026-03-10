@@ -250,6 +250,52 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
+        public void PaintTileView_ParsesColorAndCoat()
+        {
+            PaintTile original = new PaintTile
+            {
+                X = 123,
+                Y = 456,
+                Color = 7,
+                Coat = 2
+            };
+
+            PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
+            PaintTileView view = packetView.AsPaintTileView();
+            PaintTile parsed = Assert.IsType<PaintTile>(TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)original.ToArray(includeHeader: true)));
+
+            Assert.Equal((short)123, view.X);
+            Assert.Equal((short)456, view.Y);
+            Assert.Equal((byte)7, view.Color);
+            Assert.Equal((byte)2, view.Coat);
+            Assert.Equal((byte)2, parsed.Coat);
+            Assert.Equal(original.ToArray(includeHeader: true), parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void PaintWallView_ParsesColorAndCoat()
+        {
+            PaintWall original = new PaintWall
+            {
+                X = 321,
+                Y = 654,
+                Color = 9,
+                Coat = 1
+            };
+
+            PacketView packetView = PacketViewParser.ParseExact(original.ToArray(includeHeader: true));
+            PaintWallView view = packetView.AsPaintWallView();
+            PaintWall parsed = Assert.IsType<PaintWall>(TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)original.ToArray(includeHeader: true)));
+
+            Assert.Equal((short)321, view.X);
+            Assert.Equal((short)654, view.Y);
+            Assert.Equal((byte)9, view.Color);
+            Assert.Equal((byte)1, view.Coat);
+            Assert.Equal((byte)1, parsed.Coat);
+            Assert.Equal(original.ToArray(includeHeader: true), parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
         public void PacketViewParser_TryParsePayload_ReturnsFalse_ForTooLargePayload()
         {
             byte[] payload = new byte[ushort.MaxValue];

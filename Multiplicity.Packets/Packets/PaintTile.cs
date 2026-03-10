@@ -16,6 +16,8 @@ namespace Multiplicity.Packets
 
         public byte Color { get; set; }
 
+        public byte Coat { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PaintTile"/> class.
         /// </summary>
@@ -35,18 +37,19 @@ namespace Multiplicity.Packets
             this.X = br.ReadInt16();
             this.Y = br.ReadInt16();
             this.Color = br.ReadByte();
+            this.Coat = br.ReadByte();
         }
 
         public override string ToString()
         {
-            return $"[PaintTile: X = {X} Y = {Y} Color = {Color}]";
+            return $"[PaintTile: X = {X} Y = {Y} Color = {Color} Coat = {Coat}]";
         }
 
         #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(5);
+            return (short)(6);
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
@@ -72,6 +75,7 @@ namespace Multiplicity.Packets
                 br.Write(X);
                 br.Write(Y);
                 br.Write(Color);
+                br.Write(Coat);
             }
         }
 

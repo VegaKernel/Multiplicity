@@ -35,6 +35,8 @@ namespace Multiplicity.Packets.Views
         public short Y => _packetObject.Y;
 
         public byte Color => _packetObject.Color;
+
+        public byte Coat => _packetObject.Coat;
     }
 }
 
