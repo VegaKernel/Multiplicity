@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 
 namespace Multiplicity.Packets
 {
@@ -12,6 +13,8 @@ namespace Multiplicity.Packets
     {
         public const short PacketHeaderLength = 3;
         public byte[] TestRawBuffer { get; set; }
+        private static readonly Lazy<IReadOnlyDictionary<PacketTypes, PacketPayloadMetadata>> PayloadMetadataMap =
+            new Lazy<IReadOnlyDictionary<PacketTypes, PacketPayloadMetadata>>(BuildPayloadMetadataMap, isThreadSafe: true);
 
         protected short _length = 0;
 
@@ -359,6 +362,38 @@ namespace Multiplicity.Packets
             return TryDeserializePayload(packetId, new ReadOnlyMemory<byte>(payloadBuffer, offset, length), out packet);
         }
 
+        public static PacketPayloadMetadata GetPayloadMetadata(PacketTypes packetType)
+        {
+            if (!TryGetPayloadMetadata(packetType, out PacketPayloadMetadata metadata))
+            {
+                throw new KeyNotFoundException($"Packet metadata for {packetType} is not registered.");
+            }
+
+            return metadata;
+        }
+
+        public static bool TryGetPayloadMetadata(PacketTypes packetType, out PacketPayloadMetadata metadata)
+        {
+            return PayloadMetadataMap.Value.TryGetValue(packetType, out metadata);
+        }
+
+        public static short GetDefaultPayloadLength(PacketTypes packetType)
+        {
+            return GetPayloadMetadata(packetType).DefaultPayloadLength;
+        }
+
+        public static bool TryGetFixedPayloadLength(PacketTypes packetType, out short payloadLength)
+        {
+            if (TryGetPayloadMetadata(packetType, out PacketPayloadMetadata metadata) && metadata.FixedPayloadLength.HasValue)
+            {
+                payloadLength = metadata.FixedPayloadLength.Value;
+                return true;
+            }
+
+            payloadLength = 0;
+            return false;
+        }
+
         /// <summary>
         /// Deserializes a packet from the specified binary reader and returns a TerrariaPacket 
         /// derivative according to the deserializer methods in DeserializerMap.
@@ -401,6 +436,85 @@ namespace Multiplicity.Packets
                 throw new InvalidDataException(
                     $"Payload buffer is too large. Maximum payload size is {short.MaxValue - PacketHeaderLength} bytes, got {payloadBuffer.Length}.");
             }
+        }
+
+        private static IReadOnlyDictionary<PacketTypes, PacketPayloadMetadata> BuildPayloadMetadataMap()
+        {
+            Dictionary<PacketTypes, PacketPayloadMetadata> map = new Dictionary<PacketTypes, PacketPayloadMetadata>();
+            Type packetBaseType = typeof(TerrariaPacket);
+            Type[] types = packetBaseType.Assembly.GetTypes();
+
+            for (int i = 0; i < types.Length; i++)
+            {
+                Type type = types[i];
+                if (type.IsAbstract || !packetBaseType.IsAssignableFrom(type))
+                {
+                    continue;
+                }
+
+                ConstructorInfo ctor = type.GetConstructor(
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                    binder: null,
+                    types: Type.EmptyTypes,
+                    modifiers: null);
+                if (ctor == null)
+                {
+                    continue;
+                }
+
+                TerrariaPacket packet;
+                try
+                {
+                    packet = (TerrariaPacket)ctor.Invoke(null);
+                }
+                catch
+                {
+                    continue;
+                }
+
+                short? fixedPayloadLength = TryResolveFixedPayloadLength(type, out short resolvedLength)
+                    ? resolvedLength
+                    : null;
+
+                map[packet.PacketType] = new PacketPayloadMetadata(
+                    packet.PacketType,
+                    type,
+                    packet.GetLength(),
+                    fixedPayloadLength);
+            }
+
+            return map;
+        }
+
+        private static bool TryResolveFixedPayloadLength(Type packetType, out short payloadLength)
+        {
+            if (TryFindLengthConstant(packetType, "FixedPayloadLength", out _))
+            {
+                payloadLength = 0;
+                return false;
+            }
+
+            return TryFindLengthConstant(packetType, "PayloadLength", out payloadLength);
+        }
+
+        private static bool TryFindLengthConstant(Type type, string fieldName, out short payloadLength)
+        {
+            for (Type current = type; current != null && typeof(TerrariaPacket).IsAssignableFrom(current); current = current.BaseType)
+            {
+                FieldInfo field = current.GetField(
+                    fieldName,
+                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                if (field == null || !field.IsLiteral || field.FieldType != typeof(short))
+                {
+                    continue;
+                }
+
+                payloadLength = (short)field.GetRawConstantValue();
+                return true;
+            }
+
+            payloadLength = 0;
+            return false;
         }
 
         /// <summary>

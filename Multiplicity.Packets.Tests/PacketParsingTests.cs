@@ -293,6 +293,97 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
+        public void PayloadMetadata_ItemDrop_ReportsFixedPayloadLength()
+        {
+            PacketPayloadMetadata metadata = TerrariaPacket.GetPayloadMetadata(PacketTypes.ItemDrop);
+
+            Assert.Equal(PacketTypes.ItemDrop, metadata.PacketType);
+            Assert.Equal(typeof(ItemDrop), metadata.PacketClrType);
+            Assert.Equal((short)24, metadata.DefaultPayloadLength);
+            Assert.True(metadata.HasFixedPayloadLength);
+            Assert.Equal((short)24, metadata.FixedPayloadLength);
+            Assert.True(TerrariaPacket.TryGetFixedPayloadLength(PacketTypes.ItemDrop, out short payloadLength));
+            Assert.Equal((short)24, payloadLength);
+        }
+
+        [Fact]
+        public void PayloadMetadata_HostToken_ReportsDefaultLengthButNoFixedLength()
+        {
+            PacketPayloadMetadata metadata = TerrariaPacket.GetPayloadMetadata(PacketTypes.HostToken);
+
+            Assert.Equal(PacketTypes.HostToken, metadata.PacketType);
+            Assert.Equal(typeof(HostToken), metadata.PacketClrType);
+            Assert.Equal(new HostToken().GetLength(), metadata.DefaultPayloadLength);
+            Assert.False(metadata.HasFixedPayloadLength);
+            Assert.False(TerrariaPacket.TryGetFixedPayloadLength(PacketTypes.HostToken, out _));
+        }
+
+        [Fact]
+        public void PacketViewParser_TryParsePayload_WithConsumed_TrimsFixedPayloadFromTrailingBytes()
+        {
+            ItemDrop original = new ItemDrop
+            {
+                ItemIndex = 12,
+                PositionX = 14.5f,
+                PositionY = 28.25f,
+                VelocityX = 1.5f,
+                VelocityY = -2.5f,
+                Stack = 3,
+                Prefix = 4,
+                Flags = WorldItemSyncFlags.KeepTime,
+                ItemNetId = 71
+            };
+
+            byte[] payload = original.ToPayloadArray();
+            byte[] extendedPayload = new byte[payload.Length + 1];
+            Buffer.BlockCopy(payload, 0, extendedPayload, 0, payload.Length);
+            extendedPayload[^1] = 0x7F;
+
+            bool result = PacketViewParser.TryParsePayload(
+                PacketTypes.ItemDrop,
+                extendedPayload,
+                0,
+                out PacketView packetView,
+                out int consumed);
+
+            Assert.True(result);
+            Assert.Equal(payload.Length, consumed);
+            Assert.Equal(payload.Length, packetView.PayloadSpan.Length);
+
+            ItemDropView view = packetView.AsItemDropView();
+            Assert.Equal(original.ItemIndex, view.ItemIndex);
+            Assert.Equal(original.Stack, view.Stack);
+            Assert.Equal(original.ItemNetId, view.ItemNetId);
+        }
+
+        [Fact]
+        public void PacketViewParser_TryParsePayload_WithConsumed_UsesVariablePacketParser()
+        {
+            HostToken original = new HostToken
+            {
+                Token = "payload-token"
+            };
+
+            byte[] payload = original.ToPayloadArray();
+            byte[] extendedPayload = new byte[payload.Length + 3];
+            Buffer.BlockCopy(payload, 0, extendedPayload, 0, payload.Length);
+            extendedPayload[^3] = 1;
+            extendedPayload[^2] = 2;
+            extendedPayload[^1] = 3;
+
+            bool result = PacketViewParser.TryParsePayload(
+                PacketTypes.HostToken,
+                extendedPayload,
+                0,
+                out PacketView packetView,
+                out int consumed);
+
+            Assert.True(result);
+            Assert.Equal(payload.Length, consumed);
+            Assert.Equal("payload-token", packetView.AsStringPacketView().GetValue());
+        }
+
+        [Fact]
         public void StringPacketView_FromPayload_ParsesWithoutPacketHeader()
         {
             HostToken original = new HostToken

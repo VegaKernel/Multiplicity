@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.IO;
+using Multiplicity.Packets;
 
 namespace Multiplicity.Packets.Views
 {
@@ -82,7 +83,14 @@ namespace Multiplicity.Packets.Views
         {
             try
             {
-                packetView = PacketView.FromPayload(packetType, payloadBuffer);
+                if (!TryParsePayload(packetType, payloadBuffer, out PacketView parsedView, out int consumed) ||
+                    consumed != payloadBuffer.Length)
+                {
+                    packetView = default;
+                    return false;
+                }
+
+                packetView = parsedView;
                 return true;
             }
             catch (InvalidDataException)
@@ -96,12 +104,105 @@ namespace Multiplicity.Packets.Views
         {
             try
             {
-                packetView = PacketView.FromPayload(rawPacketId, payloadBuffer);
+                if (!TryParsePayload(rawPacketId, payloadBuffer, out PacketView parsedView, out int consumed) ||
+                    consumed != payloadBuffer.Length)
+                {
+                    packetView = default;
+                    return false;
+                }
+
+                packetView = parsedView;
                 return true;
             }
             catch (InvalidDataException)
             {
                 packetView = default;
+                return false;
+            }
+        }
+
+        public static bool TryParsePayload(PacketTypes packetType, ReadOnlySpan<byte> payloadBuffer, out PacketView packetView, out int consumed)
+        {
+            if (TerrariaPacket.TryGetFixedPayloadLength(packetType, out short fixedPayloadLength))
+            {
+                if (payloadBuffer.Length < fixedPayloadLength)
+                {
+                    packetView = default;
+                    consumed = 0;
+                    return false;
+                }
+
+                packetView = PacketView.FromPayload(packetType, payloadBuffer.Slice(0, fixedPayloadLength));
+                consumed = fixedPayloadLength;
+                return true;
+            }
+
+            ReadOnlyMemory<byte> payloadMemory = payloadBuffer.ToArray();
+            return TryParsePayload(packetType, payloadMemory, out packetView, out consumed);
+        }
+
+        public static bool TryParsePayload(byte rawPacketId, ReadOnlySpan<byte> payloadBuffer, out PacketView packetView, out int consumed)
+        {
+            if (TerrariaPacket.TryGetFixedPayloadLength((PacketTypes)rawPacketId, out short fixedPayloadLength))
+            {
+                if (payloadBuffer.Length < fixedPayloadLength)
+                {
+                    packetView = default;
+                    consumed = 0;
+                    return false;
+                }
+
+                packetView = PacketView.FromPayload(rawPacketId, payloadBuffer.Slice(0, fixedPayloadLength));
+                consumed = fixedPayloadLength;
+                return true;
+            }
+
+            ReadOnlyMemory<byte> payloadMemory = payloadBuffer.ToArray();
+            return TryParsePayload(rawPacketId, payloadMemory, out packetView, out consumed);
+        }
+
+        public static bool TryParsePayload(PacketTypes packetType, ReadOnlyMemory<byte> payloadBuffer, out PacketView packetView, out int consumed)
+        {
+            return TryParsePayload((byte)packetType, payloadBuffer, out packetView, out consumed);
+        }
+
+        public static bool TryParsePayload(byte rawPacketId, ReadOnlyMemory<byte> payloadBuffer, out PacketView packetView, out int consumed)
+        {
+            packetView = default;
+            consumed = 0;
+
+            if (TerrariaPacket.TryGetFixedPayloadLength((PacketTypes)rawPacketId, out short fixedPayloadLength))
+            {
+                if (payloadBuffer.Length < fixedPayloadLength)
+                {
+                    return false;
+                }
+
+                packetView = PacketView.FromPayload(rawPacketId, payloadBuffer.Slice(0, fixedPayloadLength).Span);
+                consumed = fixedPayloadLength;
+                return true;
+            }
+
+            try
+            {
+                using PacketBinaryReader reader = new PacketBinaryReader(rawPacketId, payloadBuffer);
+                _ = TerrariaPacket.Deserialize(reader, rawPacketId);
+                int payloadConsumed = checked((int)reader.BaseStream.Position - TerrariaPacket.PacketHeaderLength);
+                if (payloadConsumed < 0 || payloadBuffer.Length < payloadConsumed)
+                {
+                    return false;
+                }
+
+                packetView = PacketView.FromPayload(rawPacketId, payloadBuffer.Slice(0, payloadConsumed).Span);
+                consumed = payloadConsumed;
+                return true;
+            }
+            catch (InvalidDataException)
+            {
+                return false;
+            }
+            catch (EndOfStreamException)
+            {
                 return false;
             }
         }
@@ -114,6 +215,16 @@ namespace Multiplicity.Packets.Views
         public static bool TryParsePayload(byte rawPacketId, byte[] buffer, int offset, int length, out PacketView packetView)
         {
             return TryParsePayload(rawPacketId, new ReadOnlySpan<byte>(buffer, offset, length), out packetView);
+        }
+
+        public static bool TryParsePayload(PacketTypes packetType, byte[] buffer, int offset, out PacketView packetView, out int consumed)
+        {
+            return TryParsePayload(packetType, new ReadOnlyMemory<byte>(buffer, offset, buffer.Length - offset), out packetView, out consumed);
+        }
+
+        public static bool TryParsePayload(byte rawPacketId, byte[] buffer, int offset, out PacketView packetView, out int consumed)
+        {
+            return TryParsePayload(rawPacketId, new ReadOnlyMemory<byte>(buffer, offset, buffer.Length - offset), out packetView, out consumed);
         }
 
         public static PacketView ParsePayload(PacketTypes packetType, ReadOnlySpan<byte> payloadBuffer)
