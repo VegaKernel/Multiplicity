@@ -384,6 +384,102 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
+        public void PacketViewParser_TryParsePayloadBounded_AllowsTrailingBytes_ForFixedPayload()
+        {
+            ItemDrop original = new ItemDrop
+            {
+                ItemIndex = 21,
+                PositionX = 3.5f,
+                PositionY = 8.25f,
+                VelocityX = 1.25f,
+                VelocityY = -4.5f,
+                Stack = 6,
+                Prefix = 2,
+                Flags = WorldItemSyncFlags.KeepTime,
+                ItemNetId = 73
+            };
+
+            byte[] payload = original.ToPayloadArray();
+            byte[] extendedPayload = new byte[payload.Length + 2];
+            Buffer.BlockCopy(payload, 0, extendedPayload, 0, payload.Length);
+            extendedPayload[^2] = 0x44;
+            extendedPayload[^1] = 0x55;
+
+            bool exactResult = PacketViewParser.TryParsePayload(PacketTypes.ItemDrop, extendedPayload, 0, extendedPayload.Length, out PacketView _);
+            bool boundedResult = PacketViewParser.TryParsePayloadBounded(
+                PacketTypes.ItemDrop,
+                extendedPayload,
+                0,
+                extendedPayload.Length,
+                out PacketView packetView,
+                out int consumed);
+
+            Assert.False(exactResult);
+            Assert.True(boundedResult);
+            Assert.Equal(payload.Length, consumed);
+            Assert.Equal(original.ItemIndex, packetView.AsItemDropView().ItemIndex);
+        }
+
+        [Fact]
+        public void PacketViewParser_TryParsePayloadBounded_AllowsTrailingBytes_ForVariablePayload()
+        {
+            HostToken original = new HostToken
+            {
+                Token = "bounded-payload"
+            };
+
+            byte[] payload = original.ToPayloadArray();
+            byte[] extendedPayload = new byte[payload.Length + 2];
+            Buffer.BlockCopy(payload, 0, extendedPayload, 0, payload.Length);
+            extendedPayload[^2] = 0x21;
+            extendedPayload[^1] = 0x22;
+
+            bool exactResult = PacketViewParser.TryParsePayload(PacketTypes.HostToken, extendedPayload, 0, extendedPayload.Length, out PacketView _);
+            bool boundedResult = PacketViewParser.TryParsePayloadBounded(
+                PacketTypes.HostToken,
+                extendedPayload,
+                0,
+                extendedPayload.Length,
+                out PacketView packetView,
+                out int consumed);
+
+            Assert.False(exactResult);
+            Assert.True(boundedResult);
+            Assert.Equal(payload.Length, consumed);
+            Assert.Equal(original.Token, packetView.AsStringPacketView().GetValue());
+        }
+
+        [Fact]
+        public void PacketViewParser_TryParsePayloadBounded_ReturnsFalse_WhenConsumedExceedsAvailableLength()
+        {
+            ItemDrop original = new ItemDrop
+            {
+                ItemIndex = 5,
+                PositionX = 1f,
+                PositionY = 2f,
+                VelocityX = 3f,
+                VelocityY = 4f,
+                Stack = 1,
+                Prefix = 0,
+                Flags = WorldItemSyncFlags.None,
+                ItemNetId = 9
+            };
+
+            byte[] payload = original.ToPayloadArray();
+
+            bool result = PacketViewParser.TryParsePayloadBounded(
+                PacketTypes.ItemDrop,
+                payload,
+                0,
+                payload.Length - 1,
+                out PacketView _,
+                out int consumed);
+
+            Assert.False(result);
+            Assert.Equal(0, consumed);
+        }
+
+        [Fact]
         public void StringPacketView_FromPayload_ParsesWithoutPacketHeader()
         {
             HostToken original = new HostToken

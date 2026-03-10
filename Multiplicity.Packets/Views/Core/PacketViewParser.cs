@@ -207,14 +207,124 @@ namespace Multiplicity.Packets.Views
             }
         }
 
+        /// <summary>
+        /// Tries to parse a payload slice and requires the provided <paramref name="length"/> to match
+        /// the parsed payload length exactly.
+        /// Use this overload only when <paramref name="length"/> is the exact payload length, not an upper bound.
+        /// </summary>
         public static bool TryParsePayload(PacketTypes packetType, byte[] buffer, int offset, int length, out PacketView packetView)
         {
             return TryParsePayload(packetType, new ReadOnlySpan<byte>(buffer, offset, length), out packetView);
         }
 
+        /// <summary>
+        /// Tries to parse a payload slice and requires the provided <paramref name="length"/> to match
+        /// the parsed payload length exactly.
+        /// Use this overload only when <paramref name="length"/> is the exact payload length, not an upper bound.
+        /// </summary>
         public static bool TryParsePayload(byte rawPacketId, byte[] buffer, int offset, int length, out PacketView packetView)
         {
             return TryParsePayload(rawPacketId, new ReadOnlySpan<byte>(buffer, offset, length), out packetView);
+        }
+
+        /// <summary>
+        /// Tries to parse a payload from the start of a larger payload window and succeeds as long as the parsed
+        /// payload fits within <paramref name="availableLength"/>.
+        /// This is intended for hook-style APIs where the available window may include trailing bytes after the current payload.
+        /// </summary>
+        public static bool TryParsePayloadBounded(PacketTypes packetType, ReadOnlySpan<byte> payloadBuffer, int availableLength, out PacketView packetView)
+        {
+            try
+            {
+                if (!TryParsePayloadBounded(packetType, payloadBuffer, availableLength, out PacketView parsedView, out _))
+                {
+                    packetView = default;
+                    return false;
+                }
+
+                packetView = parsedView;
+                return true;
+            }
+            catch (InvalidDataException)
+            {
+                packetView = default;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Tries to parse a payload from the start of a larger payload window and succeeds as long as the parsed
+        /// payload fits within <paramref name="availableLength"/>.
+        /// This is intended for hook-style APIs where the available window may include trailing bytes after the current payload.
+        /// </summary>
+        public static bool TryParsePayloadBounded(byte rawPacketId, ReadOnlySpan<byte> payloadBuffer, int availableLength, out PacketView packetView)
+        {
+            try
+            {
+                if (!TryParsePayloadBounded(rawPacketId, payloadBuffer, availableLength, out PacketView parsedView, out _))
+                {
+                    packetView = default;
+                    return false;
+                }
+
+                packetView = parsedView;
+                return true;
+            }
+            catch (InvalidDataException)
+            {
+                packetView = default;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Tries to parse a payload from the start of a larger payload window and reports the number of payload bytes consumed.
+        /// This accepts trailing bytes past the parsed payload as long as <paramref name="consumed"/> does not exceed <paramref name="availableLength"/>.
+        /// </summary>
+        public static bool TryParsePayloadBounded(PacketTypes packetType, ReadOnlySpan<byte> payloadBuffer, int availableLength, out PacketView packetView, out int consumed)
+        {
+            packetView = default;
+            consumed = 0;
+
+            if (availableLength < 0 || payloadBuffer.Length < availableLength)
+            {
+                return false;
+            }
+
+            if (!TryParsePayload(packetType, payloadBuffer, out PacketView parsedView, out int parsedConsumed) ||
+                parsedConsumed > availableLength)
+            {
+                return false;
+            }
+
+            packetView = parsedView;
+            consumed = parsedConsumed;
+            return true;
+        }
+
+        /// <summary>
+        /// Tries to parse a payload from the start of a larger payload window and reports the number of payload bytes consumed.
+        /// This accepts trailing bytes past the parsed payload as long as <paramref name="consumed"/> does not exceed <paramref name="availableLength"/>.
+        /// </summary>
+        public static bool TryParsePayloadBounded(byte rawPacketId, ReadOnlySpan<byte> payloadBuffer, int availableLength, out PacketView packetView, out int consumed)
+        {
+            packetView = default;
+            consumed = 0;
+
+            if (availableLength < 0 || payloadBuffer.Length < availableLength)
+            {
+                return false;
+            }
+
+            if (!TryParsePayload(rawPacketId, payloadBuffer, out PacketView parsedView, out int parsedConsumed) ||
+                parsedConsumed > availableLength)
+            {
+                return false;
+            }
+
+            packetView = parsedView;
+            consumed = parsedConsumed;
+            return true;
         }
 
         public static bool TryParsePayload(PacketTypes packetType, byte[] buffer, int offset, out PacketView packetView, out int consumed)
@@ -225,6 +335,60 @@ namespace Multiplicity.Packets.Views
         public static bool TryParsePayload(byte rawPacketId, byte[] buffer, int offset, out PacketView packetView, out int consumed)
         {
             return TryParsePayload(rawPacketId, new ReadOnlyMemory<byte>(buffer, offset, buffer.Length - offset), out packetView, out consumed);
+        }
+
+        /// <summary>
+        /// Tries to parse a payload from the start of a larger buffer and succeeds as long as the parsed payload
+        /// fits within <paramref name="availableLength"/>.
+        /// This is intended for APIs that expose an offset plus an upper-bound payload window.
+        /// </summary>
+        public static bool TryParsePayloadBounded(PacketTypes packetType, byte[] buffer, int offset, int availableLength, out PacketView packetView)
+        {
+            return TryParsePayloadBounded(packetType, buffer, offset, availableLength, out packetView, out _);
+        }
+
+        /// <summary>
+        /// Tries to parse a payload from the start of a larger buffer and succeeds as long as the parsed payload
+        /// fits within <paramref name="availableLength"/>.
+        /// This is intended for APIs that expose an offset plus an upper-bound payload window.
+        /// </summary>
+        public static bool TryParsePayloadBounded(byte rawPacketId, byte[] buffer, int offset, int availableLength, out PacketView packetView)
+        {
+            return TryParsePayloadBounded(rawPacketId, buffer, offset, availableLength, out packetView, out _);
+        }
+
+        /// <summary>
+        /// Tries to parse a payload from the start of a larger buffer and reports the number of payload bytes consumed.
+        /// This accepts trailing bytes past the parsed payload as long as <paramref name="consumed"/> does not exceed <paramref name="availableLength"/>.
+        /// </summary>
+        public static bool TryParsePayloadBounded(PacketTypes packetType, byte[] buffer, int offset, int availableLength, out PacketView packetView, out int consumed)
+        {
+            packetView = default;
+            consumed = 0;
+
+            if (buffer == null || offset < 0 || offset > buffer.Length)
+            {
+                return false;
+            }
+
+            return TryParsePayloadBounded(packetType, new ReadOnlySpan<byte>(buffer, offset, buffer.Length - offset), availableLength, out packetView, out consumed);
+        }
+
+        /// <summary>
+        /// Tries to parse a payload from the start of a larger buffer and reports the number of payload bytes consumed.
+        /// This accepts trailing bytes past the parsed payload as long as <paramref name="consumed"/> does not exceed <paramref name="availableLength"/>.
+        /// </summary>
+        public static bool TryParsePayloadBounded(byte rawPacketId, byte[] buffer, int offset, int availableLength, out PacketView packetView, out int consumed)
+        {
+            packetView = default;
+            consumed = 0;
+
+            if (buffer == null || offset < 0 || offset > buffer.Length)
+            {
+                return false;
+            }
+
+            return TryParsePayloadBounded(rawPacketId, new ReadOnlySpan<byte>(buffer, offset, buffer.Length - offset), availableLength, out packetView, out consumed);
         }
 
         public static PacketView ParsePayload(PacketTypes packetType, ReadOnlySpan<byte> payloadBuffer)

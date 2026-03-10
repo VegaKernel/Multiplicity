@@ -102,6 +102,11 @@ using Multiplicity.Packets.Views;
 - `PacketViewParser.ParsePayload(PacketTypes packetType, ReadOnlySpan<byte> payloadBuffer)`
 - `PacketViewParser.ParsePayload(PacketTypes packetType, byte[] buffer, int offset, int length)`
 - `PacketViewParser.TryParsePayload(...)`
+- `PacketViewParser.TryParsePayloadBounded(...)` for upper-bound payload windows such as `NetGetData`
+
+Important:
+- `TryParsePayload(..., buffer, offset, length, ...)` treats `length` as an exact payload length.
+- `TryParsePayloadBounded(...)` treats `availableLength` as an upper bound and allows trailing bytes after the parsed payload.
 
 ## Покрытие typed views
 
