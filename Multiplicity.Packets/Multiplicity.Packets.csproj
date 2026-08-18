@@ -2,10 +2,11 @@
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <PackageId>TZ.Multiplicity</PackageId>
+    <Version>2.6.0</Version>
     <AssemblyName>Multiplicity.Packets</AssemblyName>
     <RootNamespace>Multiplicity.Packets</RootNamespace>
     <Authors>TerraZ-Team</Authors>
-    <Description>Low-level Terraria packet serialization/deserialization library with typed packet models and zero-copy packet views for protocol 317-318.</Description>
+    <Description>Low-level Terraria packet serialization/deserialization library with typed packet models and zero-copy packet views for protocol 319 (Terraria 1.4.5.6).</Description>
     <PackageTags>Terraria;Packets;Networking;TShock;TZ</PackageTags>
     <PackageProjectUrl>https://github.com/TerraZ-Team/Multiplicity</PackageProjectUrl>
     <RepositoryUrl>https://github.com/TerraZ-Team/Multiplicity</RepositoryUrl>
