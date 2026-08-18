@@ -11,10 +11,12 @@ namespace Multiplicity.Packets
     {
         public const int Protocol317 = 317;
         public const int Protocol318 = 318;
+        public const int Protocol319 = 319;
+        public const int CurrentProtocol = Protocol319;
         public const string VersionPrefix = "Terraria";
 
         /// <summary>
-        /// Gets or sets the protocol banner string. Example: "Terraria318".
+        /// Gets or sets the protocol banner string. Example: "Terraria319".
         /// </summary>
         public string Version { get; set; }
 
@@ -24,7 +26,7 @@ namespace Multiplicity.Packets
         public ConnectRequest()
             : base((byte)PacketTypes.ConnectRequest)
         {
-            Version = BuildVersion(Protocol318);
+            Version = BuildVersion(CurrentProtocol);
         }
 
         /// <summary>
@@ -66,7 +68,7 @@ namespace Multiplicity.Packets
 
             /*
              * Always make sure to not close the stream when serializing.
-             * 
+             *
              * It is up to the caller to decide if the underlying stream
              * gets closed.  If this is a network stream we do not want
              * the regressions of unconditionally closing the TCP socket
@@ -79,6 +81,5 @@ namespace Multiplicity.Packets
         }
 
         #endregion
-
     }
 }
