@@ -328,3 +328,69 @@ using Stream stream = GetNetworkStream();
 var packet = new Ping();
 packet.ToStream(stream, includeHeader: true);
 ```
+
+Если нужно сформировать только payload без Terraria header:
+
+```csharp
+using Multiplicity.Packets;
+
+var packet = new ProjectileNew
+{
+    Identity = 42,
+    Type = 12,
+    Owner = 1
+};
+
+byte[] payload = packet.ToPayloadArray();
+SendPayloadOnly(payload);
+```
+
+## Пример 4. Работа со строковыми packet views без лишней аллокации
+
+```csharp
+using Multiplicity.Packets;
+using Multiplicity.Packets.Views;
+
+if (PacketViewParser.TryParse(buffer, out PacketView packetView, out _)
+    && packetView.PacketType == PacketTypes.HostToken)
+{
+    Utf8StringPacketView view = new Utf8StringPacketView(packetView, PacketTypes.HostToken);
+
+    // Если нужна строка:
+    string token = view.GetString();
+
+    // Если нужна только проверка/сравнение, можно работать с Utf8Bytes
+    ReadOnlySpan<byte> utf8 = view.Utf8Bytes;
+}
+```
+
+## Когда какой слой использовать
+
+Используй `TerrariaPacket`, если:
+
+- важна простота;
+- пакет нужно мутировать;
+- пакет нужно сериализовать обратно;
+- горячий путь не критичен.
+
+Используй `PacketView`, если:
+
+- это `NetGetData` / receive hot-path;
+- нужно быстро читать 1-2 поля и принимать решение;
+- хочется минимум аллокаций;
+- не нужен полноценный объект пакета.
+
+## Полезные файлы в проекте
+
+- [TerrariaPacket.cs](C:\Users\Xekep\Documents\GitHub\Multiplicity\Multiplicity.Packets\Core\TerrariaPacket.cs)
+- [PacketViewParser.cs](C:\Users\Xekep\Documents\GitHub\Multiplicity\Multiplicity.Packets\Views\Core\PacketViewParser.cs)
+- [PacketReader.cs](C:\Users\Xekep\Documents\GitHub\Multiplicity\Multiplicity.Packets\Views\Core\PacketReader.cs)
+- [PacketViewExtensions.cs](C:\Users\Xekep\Documents\GitHub\Multiplicity\Multiplicity.Packets\Views\Core\PacketViewExtensions.cs)
+
+## Итог
+
+`Multiplicity.Packets` сейчас даёт:
+
+- object-model для удобной логики и сериализации;
+- zero-copy views для производительного server-side разбора;
+- typed packet coverage для desktop-протокола Terraria `319`.
