@@ -1,4 +1,5 @@
 using System;
+using Multiplicity.Packets;
 using Multiplicity.Packets.Views;
 using Xunit;
 
@@ -19,7 +20,8 @@ namespace Multiplicity.Packets.Tests
             byte[] bytes = packet.ToArray(includeHeader: true);
             ConnectRequest parsed = Assert.IsType<ConnectRequest>(
                 TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
-            ConnectRequestView view = PacketViewParser.ParseExact(bytes).AsConnectRequestView();
+            PacketView packetView = PacketViewParser.ParseExact(bytes);
+            ConnectRequestView view = packetView.AsConnectRequestView();
 
             Assert.Equal("Terraria319", parsed.Version);
             Assert.Equal("Terraria319", view.Version);
@@ -47,7 +49,8 @@ namespace Multiplicity.Packets.Tests
 
             KillPortal parsed = Assert.IsType<KillPortal>(
                 TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
-            KillPortalView view = PacketViewParser.ParseExact(bytes).AsKillPortalView();
+            PacketView packetView = PacketViewParser.ParseExact(bytes);
+            KillPortalView view = packetView.AsKillPortalView();
 
             Assert.Equal((ushort)0x1234, parsed.PlayerId);
             Assert.Equal((byte)7, parsed.PortalColor);
