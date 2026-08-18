@@ -30,8 +30,11 @@ namespace Multiplicity.Packets.Views
 
         public KillPortal Packet => _packetObject;
 
-        public ushort ProjectileIndex => _packetObject.ProjectileIndex;
+        public ushort PlayerId => _packetObject.PlayerId;
+
+        public byte PortalColor => _packetObject.PortalColor;
+
+        [Obsolete("Packet 95 contains the portal owner player id, not a projectile index. Use PlayerId instead.")]
+        public ushort ProjectileIndex => PlayerId;
     }
 }
-
-
