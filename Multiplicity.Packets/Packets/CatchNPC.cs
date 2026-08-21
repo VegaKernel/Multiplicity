@@ -17,7 +17,6 @@ namespace Multiplicity.Packets
             : base(br)
         {
             NpcId = br.ReadInt16();
-            CheckLength();
         }
 
         public override short GetLength()
