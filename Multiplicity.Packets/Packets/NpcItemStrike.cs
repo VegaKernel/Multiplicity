@@ -1,78 +1,42 @@
 using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The NpcItemStrike (0x18) packet.
+    /// Packet id 24 is UnusedMeleeStrike in Terraria 1.4.5.7 / protocol 325.
+    /// Vanilla treats receiving it as an invariant violation.
     /// </summary>
-    public class NpcItemStrike : TerrariaPacket
+    public sealed class NpcItemStrike : TerrariaPacket
     {
-
         public short NpcId { get; set; }
-
         public byte PlayerId { get; set; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NpcItemStrike"/> class.
-        /// </summary>
         public NpcItemStrike()
             : base((byte)PacketTypes.NpcItemStrike)
         {
-
+            throw new NotSupportedException("Packet 24 (UnusedMeleeStrike) is not valid in Terraria protocol 325.");
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NpcItemStrike"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public NpcItemStrike(BinaryReader br)
             : base(br)
         {
-            this.NpcId = br.ReadInt16();
-            this.PlayerId = br.ReadByte();
+            throw new InvalidDataException("Packet 24 (UnusedMeleeStrike) is not valid in Terraria protocol 325.");
         }
-
-        public override string ToString()
-        {
-            return $"[NpcItemStrike: NpcId = {NpcId} PlayerId = {PlayerId}]";
-        }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(3);
+            return 0;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
-            if (includeHeader)
-            {
-                base.ToStream(stream, includeHeader);
-            }
-
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
-            {
-                br.Write(NpcId);
-                br.Write(PlayerId);
-            }
+            throw new NotSupportedException("Packet 24 (UnusedMeleeStrike) cannot be sent in Terraria protocol 325.");
         }
 
-        #endregion
-
+        public override string ToString()
+        {
+            return "[UnusedMeleeStrike: unsupported in protocol 325]";
+        }
     }
 }
-

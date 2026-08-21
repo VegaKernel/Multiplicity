@@ -16,7 +16,7 @@ namespace Multiplicity.Packets
     }
 
     /// <summary>
-    /// The WorldInfo (0x07) packet for protocol 317/318.
+    /// The WorldInfo (0x07) packet for Terraria 1.4.5.7 / protocol 325.
     /// </summary>
     public class WorldInfo : TerrariaPacket
     {
@@ -39,10 +39,7 @@ namespace Multiplicity.Packets
         private byte[] _worldUniqueId;
         public byte[] WorldUniqueId
         {
-            get
-            {
-                return _worldUniqueId ??= WorldUniqueIdMemory.ToArray();
-            }
+            get => _worldUniqueId ??= WorldUniqueIdMemory.ToArray();
             set
             {
                 _worldUniqueId = value;
@@ -66,14 +63,11 @@ namespace Multiplicity.Packets
         public byte OceanBackground { get; set; }
         public byte MushroomBackground { get; set; }
         public byte UnderworldBackground { get; set; }
-
         public byte IceBackStyle { get; set; }
         public byte JungleBackStyle { get; set; }
         public byte HellBackStyle { get; set; }
-
         public float WindSpeedSet { get; set; }
         public byte CloudNumber { get; set; }
-
         public int Tree1 { get; set; }
         public int Tree2 { get; set; }
         public int Tree3 { get; set; }
@@ -81,7 +75,6 @@ namespace Multiplicity.Packets
         public byte TreeStyle2 { get; set; }
         public byte TreeStyle3 { get; set; }
         public byte TreeStyle4 { get; set; }
-
         public int CaveBack1 { get; set; }
         public int CaveBack2 { get; set; }
         public int CaveBack3 { get; set; }
@@ -90,14 +83,10 @@ namespace Multiplicity.Packets
         public byte CaveBackStyle3 { get; set; }
         public byte CaveBackStyle4 { get; set; }
 
-        // WorldGen.TreeTops.SyncSend sends exactly 13 bytes in protocol 317/318.
         private byte[] _treeTopVariations;
         public byte[] TreeTopVariations
         {
-            get
-            {
-                return _treeTopVariations ??= TreeTopVariationsMemory.ToArray();
-            }
+            get => _treeTopVariations ??= TreeTopVariationsMemory.ToArray();
             set
             {
                 _treeTopVariations = value;
@@ -105,10 +94,9 @@ namespace Multiplicity.Packets
             }
         }
         public ReadOnlyMemory<byte> TreeTopVariationsMemory { get; set; }
-
         public float Rain { get; set; }
 
-        // Event flags blocks (BitsByte 6..16 in NetMessage.SendData(7)).
+        // BitsByte blocks written by NetMessage.SendData(7).
         public byte EventInfo { get; set; }
         public byte EventInfo2 { get; set; }
         public byte EventInfo3 { get; set; }
@@ -120,10 +108,14 @@ namespace Multiplicity.Packets
         public byte EventInfo9 { get; set; }
         public byte EventInfo10 { get; set; }
         public byte EventInfo11 { get; set; }
+        /// <summary>
+        /// Protocol 325 world flags: bit 0 low general-placement tiles, bit 1 permanent Halloween,
+        /// bit 2 permanent Christmas, bit 3 more-lightning seed, bit 4 no-lightning seed.
+        /// </summary>
+        public byte EventInfo12 { get; set; }
 
         public byte SunDialCooldown { get; set; }
         public byte MoonDialCooldown { get; set; }
-
         public short OreTierCopper { get; set; }
         public short OreTierIron { get; set; }
         public short OreTierSilver { get; set; }
@@ -131,21 +123,15 @@ namespace Multiplicity.Packets
         public short OreTierCobalt { get; set; }
         public short OreTierMythril { get; set; }
         public short OreTierAdamantite { get; set; }
-
         public sbyte InvasionType { get; set; }
         public ulong LobbyId { get; set; }
         public float SandstormSeverity { get; set; }
-
         public WorldSpawnPoint[] ExtraSpawnPoints { get; set; }
 
-        // Keep any unknown tail bytes for forward compatibility.
         private byte[] _trailingData;
         public byte[] TrailingData
         {
-            get
-            {
-                return _trailingData ??= TrailingDataMemory.ToArray();
-            }
+            get => _trailingData ??= TrailingDataMemory.ToArray();
             set
             {
                 _trailingData = value;
@@ -188,7 +174,6 @@ namespace Multiplicity.Packets
             WorldUniqueIdMemory = br.ReadMemory(WorldUniqueIdLength);
             WorldGeneratorVersion = br.ReadUInt64();
             MoonType = br.ReadByte();
-
             TreeBackground = br.ReadByte();
             TreeBackground2 = br.ReadByte();
             TreeBackground3 = br.ReadByte();
@@ -202,14 +187,11 @@ namespace Multiplicity.Packets
             OceanBackground = br.ReadByte();
             MushroomBackground = br.ReadByte();
             UnderworldBackground = br.ReadByte();
-
             IceBackStyle = br.ReadByte();
             JungleBackStyle = br.ReadByte();
             HellBackStyle = br.ReadByte();
-
             WindSpeedSet = br.ReadSingle();
             CloudNumber = br.ReadByte();
-
             Tree1 = br.ReadInt32();
             Tree2 = br.ReadInt32();
             Tree3 = br.ReadInt32();
@@ -217,7 +199,6 @@ namespace Multiplicity.Packets
             TreeStyle2 = br.ReadByte();
             TreeStyle3 = br.ReadByte();
             TreeStyle4 = br.ReadByte();
-
             CaveBack1 = br.ReadInt32();
             CaveBack2 = br.ReadInt32();
             CaveBack3 = br.ReadInt32();
@@ -225,10 +206,8 @@ namespace Multiplicity.Packets
             CaveBackStyle2 = br.ReadByte();
             CaveBackStyle3 = br.ReadByte();
             CaveBackStyle4 = br.ReadByte();
-
             TreeTopVariationsMemory = br.ReadMemory(TreeTopVariationCount);
             Rain = br.ReadSingle();
-
             EventInfo = br.ReadByte();
             EventInfo2 = br.ReadByte();
             EventInfo3 = br.ReadByte();
@@ -240,10 +219,9 @@ namespace Multiplicity.Packets
             EventInfo9 = br.ReadByte();
             EventInfo10 = br.ReadByte();
             EventInfo11 = br.ReadByte();
-
+            EventInfo12 = br.ReadByte();
             SunDialCooldown = br.ReadByte();
             MoonDialCooldown = br.ReadByte();
-
             OreTierCopper = br.ReadInt16();
             OreTierIron = br.ReadInt16();
             OreTierSilver = br.ReadInt16();
@@ -251,7 +229,6 @@ namespace Multiplicity.Packets
             OreTierCobalt = br.ReadInt16();
             OreTierMythril = br.ReadInt16();
             OreTierAdamantite = br.ReadInt16();
-
             InvasionType = br.ReadSByte();
             LobbyId = br.ReadUInt64();
             SandstormSeverity = br.ReadSingle();
@@ -259,146 +236,114 @@ namespace Multiplicity.Packets
             byte extraSpawnCount = br.ReadByte();
             ExtraSpawnPoints = new WorldSpawnPoint[extraSpawnCount];
             for (int i = 0; i < extraSpawnCount; i++)
-            {
-                short x = br.ReadInt16();
-                short y = br.ReadInt16();
-                ExtraSpawnPoints[i] = new WorldSpawnPoint(x, y);
-            }
+                ExtraSpawnPoints[i] = new WorldSpawnPoint(br.ReadInt16(), br.ReadInt16());
 
             int trailingLength = (int)(br.BaseStream.Length - br.BaseStream.Position);
             if (trailingLength > 0)
-            {
                 TrailingDataMemory = br.ReadMemory(trailingLength);
-            }
         }
 
         public override short GetLength()
         {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                ToStream(ms, includeHeader: false);
-                return (short)ms.Length;
-            }
+            using MemoryStream ms = new MemoryStream();
+            ToStream(ms, includeHeader: false);
+            return checked((short)ms.Length);
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             if (includeHeader)
-            {
                 base.ToStream(stream, includeHeader);
-            }
 
-            using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            bw.Write(Time);
+            bw.Write(DayandMoonInfo);
+            bw.Write(MoonPhase);
+            bw.Write(MaxTilesX);
+            bw.Write(MaxTilesY);
+            bw.Write(SpawnX);
+            bw.Write(SpawnY);
+            bw.Write(WorldSurface);
+            bw.Write(RockLayer);
+            bw.Write(WorldId);
+            bw.Write(WorldName ?? string.Empty);
+            bw.Write(GameMode);
+            bw.Write(PacketSerializationHelper.NormalizeFixedBuffer(
+                WorldUniqueIdMemory.Length == WorldUniqueIdLength ? WorldUniqueIdMemory.ToArray() : WorldUniqueId,
+                WorldUniqueIdLength));
+            bw.Write(WorldGeneratorVersion);
+            bw.Write(MoonType);
+            bw.Write(TreeBackground);
+            bw.Write(TreeBackground2);
+            bw.Write(TreeBackground3);
+            bw.Write(TreeBackground4);
+            bw.Write(CorruptionBackground);
+            bw.Write(JungleBackground);
+            bw.Write(SnowBackground);
+            bw.Write(HallowBackground);
+            bw.Write(CrimsonBackground);
+            bw.Write(DesertBackground);
+            bw.Write(OceanBackground);
+            bw.Write(MushroomBackground);
+            bw.Write(UnderworldBackground);
+            bw.Write(IceBackStyle);
+            bw.Write(JungleBackStyle);
+            bw.Write(HellBackStyle);
+            bw.Write(WindSpeedSet);
+            bw.Write(CloudNumber);
+            bw.Write(Tree1);
+            bw.Write(Tree2);
+            bw.Write(Tree3);
+            bw.Write(TreeStyle1);
+            bw.Write(TreeStyle2);
+            bw.Write(TreeStyle3);
+            bw.Write(TreeStyle4);
+            bw.Write(CaveBack1);
+            bw.Write(CaveBack2);
+            bw.Write(CaveBack3);
+            bw.Write(CaveBackStyle1);
+            bw.Write(CaveBackStyle2);
+            bw.Write(CaveBackStyle3);
+            bw.Write(CaveBackStyle4);
+            bw.Write(PacketSerializationHelper.NormalizeFixedBuffer(
+                TreeTopVariationsMemory.Length == TreeTopVariationCount ? TreeTopVariationsMemory.ToArray() : TreeTopVariations,
+                TreeTopVariationCount));
+            bw.Write(Rain);
+            bw.Write(EventInfo);
+            bw.Write(EventInfo2);
+            bw.Write(EventInfo3);
+            bw.Write(EventInfo4);
+            bw.Write(EventInfo5);
+            bw.Write(EventInfo6);
+            bw.Write(EventInfo7);
+            bw.Write(EventInfo8);
+            bw.Write(EventInfo9);
+            bw.Write(EventInfo10);
+            bw.Write(EventInfo11);
+            bw.Write(EventInfo12);
+            bw.Write(SunDialCooldown);
+            bw.Write(MoonDialCooldown);
+            bw.Write(OreTierCopper);
+            bw.Write(OreTierIron);
+            bw.Write(OreTierSilver);
+            bw.Write(OreTierGold);
+            bw.Write(OreTierCobalt);
+            bw.Write(OreTierMythril);
+            bw.Write(OreTierAdamantite);
+            bw.Write(InvasionType);
+            bw.Write(LobbyId);
+            bw.Write(SandstormSeverity);
+
+            int extraSpawnCount = Math.Min(ExtraSpawnPoints?.Length ?? 0, MaximumExtraSpawnPoints);
+            bw.Write((byte)extraSpawnCount);
+            for (int i = 0; i < extraSpawnCount; i++)
             {
-                bw.Write(Time);
-                bw.Write(DayandMoonInfo);
-                bw.Write(MoonPhase);
-                bw.Write(MaxTilesX);
-                bw.Write(MaxTilesY);
-                bw.Write(SpawnX);
-                bw.Write(SpawnY);
-                bw.Write(WorldSurface);
-                bw.Write(RockLayer);
-                bw.Write(WorldId);
-                bw.Write(WorldName ?? string.Empty);
-                bw.Write(GameMode);
-
-                bw.Write(PacketSerializationHelper.NormalizeFixedBuffer(
-                    WorldUniqueIdMemory.Length == WorldUniqueIdLength ? WorldUniqueIdMemory.ToArray() : WorldUniqueId,
-                    WorldUniqueIdLength));
-
-                bw.Write(WorldGeneratorVersion);
-                bw.Write(MoonType);
-
-                bw.Write(TreeBackground);
-                bw.Write(TreeBackground2);
-                bw.Write(TreeBackground3);
-                bw.Write(TreeBackground4);
-                bw.Write(CorruptionBackground);
-                bw.Write(JungleBackground);
-                bw.Write(SnowBackground);
-                bw.Write(HallowBackground);
-                bw.Write(CrimsonBackground);
-                bw.Write(DesertBackground);
-                bw.Write(OceanBackground);
-                bw.Write(MushroomBackground);
-                bw.Write(UnderworldBackground);
-
-                bw.Write(IceBackStyle);
-                bw.Write(JungleBackStyle);
-                bw.Write(HellBackStyle);
-
-                bw.Write(WindSpeedSet);
-                bw.Write(CloudNumber);
-
-                bw.Write(Tree1);
-                bw.Write(Tree2);
-                bw.Write(Tree3);
-                bw.Write(TreeStyle1);
-                bw.Write(TreeStyle2);
-                bw.Write(TreeStyle3);
-                bw.Write(TreeStyle4);
-
-                bw.Write(CaveBack1);
-                bw.Write(CaveBack2);
-                bw.Write(CaveBack3);
-                bw.Write(CaveBackStyle1);
-                bw.Write(CaveBackStyle2);
-                bw.Write(CaveBackStyle3);
-                bw.Write(CaveBackStyle4);
-
-                bw.Write(PacketSerializationHelper.NormalizeFixedBuffer(
-                    TreeTopVariationsMemory.Length == TreeTopVariationCount ? TreeTopVariationsMemory.ToArray() : TreeTopVariations,
-                    TreeTopVariationCount));
-
-                bw.Write(Rain);
-
-                bw.Write(EventInfo);
-                bw.Write(EventInfo2);
-                bw.Write(EventInfo3);
-                bw.Write(EventInfo4);
-                bw.Write(EventInfo5);
-                bw.Write(EventInfo6);
-                bw.Write(EventInfo7);
-                bw.Write(EventInfo8);
-                bw.Write(EventInfo9);
-                bw.Write(EventInfo10);
-                bw.Write(EventInfo11);
-
-                bw.Write(SunDialCooldown);
-                bw.Write(MoonDialCooldown);
-
-                bw.Write(OreTierCopper);
-                bw.Write(OreTierIron);
-                bw.Write(OreTierSilver);
-                bw.Write(OreTierGold);
-                bw.Write(OreTierCobalt);
-                bw.Write(OreTierMythril);
-                bw.Write(OreTierAdamantite);
-
-                bw.Write(InvasionType);
-                bw.Write(LobbyId);
-                bw.Write(SandstormSeverity);
-
-                int extraSpawnCount = ExtraSpawnPoints?.Length ?? 0;
-                if (extraSpawnCount > MaximumExtraSpawnPoints)
-                {
-                    extraSpawnCount = MaximumExtraSpawnPoints;
-                }
-
-                bw.Write((byte)extraSpawnCount);
-                for (int i = 0; i < extraSpawnCount; i++)
-                {
-                    bw.Write(ExtraSpawnPoints[i].X);
-                    bw.Write(ExtraSpawnPoints[i].Y);
-                }
-
-                if (TrailingDataMemory.Length > 0)
-                {
-                    bw.Write(TrailingDataMemory.Span);
-                }
+                bw.Write(ExtraSpawnPoints[i].X);
+                bw.Write(ExtraSpawnPoints[i].Y);
             }
+
+            if (TrailingDataMemory.Length > 0)
+                bw.Write(TrailingDataMemory.Span);
         }
     }
 }
-

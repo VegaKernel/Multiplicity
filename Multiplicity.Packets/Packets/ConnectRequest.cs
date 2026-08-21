@@ -9,14 +9,12 @@ namespace Multiplicity.Packets
     /// </summary>
     public class ConnectRequest : TerrariaPacket
     {
-        public const int Protocol317 = 317;
-        public const int Protocol318 = 318;
-        public const int Protocol319 = 319;
-        public const int CurrentProtocol = Protocol319;
+        public const int Protocol325 = 325;
+        public const int CurrentProtocol = Protocol325;
         public const string VersionPrefix = "Terraria";
 
         /// <summary>
-        /// Gets or sets the protocol banner string. Example: "Terraria319".
+        /// Gets or sets the protocol banner string. Example: "Terraria325".
         /// </summary>
         public string Version { get; set; }
 
@@ -58,22 +56,11 @@ namespace Multiplicity.Packets
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             *
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
                 br.Write(Version ?? string.Empty);

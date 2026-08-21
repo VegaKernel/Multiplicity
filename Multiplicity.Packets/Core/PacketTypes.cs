@@ -1,3 +1,5 @@
+using System;
+
 namespace Multiplicity.Packets
 {
     public enum PacketTypes : byte
@@ -146,10 +148,10 @@ namespace Multiplicity.Packets
         /*142*/ SyncProjectileTrackers,
         /*143*/ CrystalInvasionRequestedToSkipWaitTime,
         /*144*/ RequestQuestEffect,
-        /*145*/ SyncItemsWithShimmer,
+        /*145*/ SyncItemsWithShimmerDeprecated,
         /*146*/ ShimmerActions,
         /*147*/ SyncLoadout,
-        /*148*/ SyncItemCannotBeTakenByEnemies,
+        /*148*/ SyncItemCannotBeTakenByEnemiesDeprecated,
         /*149*/ TEDeadCellsDisplayJar,
         /*150*/ SpectatePlayer,
         /*151*/ SyncItemDespawn,
@@ -163,8 +165,8 @@ namespace Multiplicity.Packets
         /*159*/ RequestSection,
         /*160*/ SyncItemPosition,
         /*161*/ HostToken,
-        /*162*/ ServerInfo,
-        /*163*/ PlayerPlatformInfo
+        /*162*/ DamageNPCAck,
+        /*163*/ ServerInfo,
+        /*164*/ PlayerPlatformInfo
     }
 }
-

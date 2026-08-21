@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
@@ -25,11 +25,11 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header => _packet.Header;
-
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
-
         public DebugCommands Packet => _packetObject;
+        public string Command => _packetObject.Command;
+        public int Value => _packetObject.Value;
+        public float Value2 => _packetObject.Value2;
+        public float Value3 => _packetObject.Value3;
     }
 }
-
-

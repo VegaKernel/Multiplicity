@@ -12,7 +12,8 @@ namespace Multiplicity.Packets
         ControlRight = 1 << 3,
         ControlJump = 1 << 4,
         ControlUseItem = 1 << 5,
-        DirectionRight = 1 << 6
+        DirectionRight = 1 << 6,
+        ControlDash = 1 << 7
     }
 
     [Flags]
@@ -53,6 +54,7 @@ namespace Multiplicity.Packets
         IsOperatingAnotherEntity = 1 << 3,
         ControlUseTile = 1 << 4,
         HasCameraTarget = 1 << 5,
-        LastItemUseAttemptSuccess = 1 << 6
+        LastItemUseAttemptSuccess = 1 << 6,
+        AccSnappingStoneLightUp = 1 << 7
     }
 }

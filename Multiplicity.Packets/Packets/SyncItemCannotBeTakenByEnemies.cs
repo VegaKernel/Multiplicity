@@ -1,19 +1,20 @@
-﻿using System.IO;
-using Multiplicity.Packets.Models;
+using System;
+using System.IO;
 
 namespace Multiplicity.Packets
 {
     public sealed class SyncItemCannotBeTakenByEnemies : WorldItemSyncPacketBase
+    {
+        public SyncItemCannotBeTakenByEnemies()
+            : base((byte)PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated)
         {
-            public SyncItemCannotBeTakenByEnemies()
-                : base((byte)PacketTypes.SyncItemCannotBeTakenByEnemies)
-            {
-            }
-    
-            public SyncItemCannotBeTakenByEnemies(BinaryReader br)
-                : base(br)
-            {
-            }
+            throw new NotSupportedException("Packet 148 is deprecated and cannot be sent in Terraria protocol 325.");
         }
-}
 
+        public SyncItemCannotBeTakenByEnemies(BinaryReader br)
+            : base(br)
+        {
+            throw new InvalidDataException("Packet 148 is deprecated in Terraria protocol 325.");
+        }
+    }
+}

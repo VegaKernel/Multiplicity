@@ -310,12 +310,11 @@ namespace Multiplicity.Packets.Tests
         {
             ProjectileNew original = new ProjectileNew
             {
-                Identity = 42,
+                Key = new ProjectileKey(spawner: 3, index: 42, generation: 7),
                 PositionX = 14.5f,
                 PositionY = 28.25f,
                 VelocityX = 1.75f,
                 VelocityY = -0.5f,
-                Owner = 3,
                 Type = 97,
                 AI0 = 2.25f,
                 Damage = 55
@@ -332,24 +331,25 @@ namespace Multiplicity.Packets.Tests
                 TerrariaPacket.DeserializePayload(PacketTypes.ProjectileNew, payload));
             ProjectileNewView view = ProjectileNewView.FromPayload(payload);
 
-            Assert.Equal(original.Identity, parsed.Identity);
-            Assert.Equal(original.Identity, view.Identity);
+            Assert.Equal(original.Key, parsed.Key);
+            Assert.Equal(original.Key, view.Key);
+            Assert.Equal((byte)3, view.Key.Spawner);
+            Assert.Equal((ushort)42, view.Key.Index);
+            Assert.Equal((ushort)7, view.Key.Generation);
             Assert.Equal(original.Type, view.Type);
             Assert.Equal(original.Damage, view.Damage);
         }
 
         [Fact]
-        public void PayloadMetadata_ItemDrop_ReportsFixedPayloadLength()
+        public void PayloadMetadata_ItemDrop_ReportsVariablePayloadLength()
         {
             PacketPayloadMetadata metadata = TerrariaPacket.GetPayloadMetadata(PacketTypes.ItemDrop);
 
             Assert.Equal(PacketTypes.ItemDrop, metadata.PacketType);
             Assert.Equal(typeof(ItemDrop), metadata.PacketClrType);
-            Assert.Equal((short)24, metadata.DefaultPayloadLength);
-            Assert.True(metadata.HasFixedPayloadLength);
-            Assert.Equal((short)24, metadata.FixedPayloadLength);
-            Assert.True(TerrariaPacket.TryGetFixedPayloadLength(PacketTypes.ItemDrop, out short payloadLength));
-            Assert.Equal((short)24, payloadLength);
+            Assert.Equal(new ItemDrop().GetLength(), metadata.DefaultPayloadLength);
+            Assert.False(metadata.HasFixedPayloadLength);
+            Assert.False(TerrariaPacket.TryGetFixedPayloadLength(PacketTypes.ItemDrop, out _));
         }
 
         [Fact]
@@ -365,7 +365,7 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void PacketViewParser_TryParsePayload_WithConsumed_TrimsFixedPayloadFromTrailingBytes()
+        public void PacketViewParser_TryParsePayload_WithConsumed_TrimsVariableItemPayloadFromTrailingBytes()
         {
             ItemDrop original = new ItemDrop
             {
@@ -376,8 +376,10 @@ namespace Multiplicity.Packets.Tests
                 VelocityY = -2.5f,
                 Stack = 3,
                 Prefix = 4,
-                Flags = WorldItemSyncFlags.KeepTime,
-                ItemNetId = 71
+                Flags = WorldItemSyncFlags.None,
+                ItemNetId = 71,
+                Shimmered = true,
+                ShimmerTime = 0.5f
             };
 
             byte[] payload = original.ToPayloadArray();
@@ -430,7 +432,7 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void PacketViewParser_TryParsePayloadBounded_AllowsTrailingBytes_ForFixedPayload()
+        public void PacketViewParser_TryParsePayloadBounded_AllowsTrailingBytes_ForVariableItemPayload()
         {
             ItemDrop original = new ItemDrop
             {
@@ -441,8 +443,9 @@ namespace Multiplicity.Packets.Tests
                 VelocityY = -4.5f,
                 Stack = 6,
                 Prefix = 2,
-                Flags = WorldItemSyncFlags.KeepTime,
-                ItemNetId = 73
+                Flags = WorldItemSyncFlags.None,
+                ItemNetId = 73,
+                EnemyGrabDelayTime = 5
             };
 
             byte[] payload = original.ToPayloadArray();
@@ -605,32 +608,20 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void TerrariaNetModule_Deserialize_TagEffectFullState_PreservesSparseArrays()
+        public void TerrariaNetModule_Deserialize_NetCreativeUnlocks_RoundTrips()
         {
-            TagEffectModule original = new TagEffectModule
+            NetCreativeUnlocksModule original = new NetCreativeUnlocksModule
             {
-                PlayerId = 5,
-                MessageType = TagEffectMessageType.FullState,
-                EffectType = 14,
-                IncludeProcTimeEntries = true
+                ItemId = 1234,
+                SacrificeCount = 42
             };
-            original.TimeEntries.Add(new TagEffectNpcTimeEntry { NpcIndex = 2, TimeLeft = 120 });
-            original.TimeEntries.Add(new TagEffectNpcTimeEntry { NpcIndex = 9, TimeLeft = 45 });
-            original.ProcTimeEntries.Add(new TagEffectNpcTimeEntry { NpcIndex = 7, TimeLeft = 18 });
 
             byte[] bytes = original.ToArray(includeHeader: true);
-            TagEffectModule parsed = Assert.IsType<TagEffectModule>(TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
+            NetCreativeUnlocksModule parsed = Assert.IsType<NetCreativeUnlocksModule>(
+                TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
 
-            Assert.Equal((byte)5, parsed.PlayerId);
-            Assert.Equal(TagEffectMessageType.FullState, parsed.MessageType);
-            Assert.Equal((short)14, parsed.EffectType);
-            Assert.True(parsed.IncludeProcTimeEntries);
-            Assert.Equal(2, parsed.TimeEntries.Count);
-            Assert.Equal((byte)9, parsed.TimeEntries[1].NpcIndex);
-            Assert.Equal(45, parsed.TimeEntries[1].TimeLeft);
-            Assert.Single(parsed.ProcTimeEntries);
-            Assert.Equal((byte)7, parsed.ProcTimeEntries[0].NpcIndex);
-            Assert.Equal(18, parsed.ProcTimeEntries[0].TimeLeft);
+            Assert.Equal((short)1234, parsed.ItemId);
+            Assert.Equal((ushort)42, parsed.SacrificeCount);
             Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
         }
 

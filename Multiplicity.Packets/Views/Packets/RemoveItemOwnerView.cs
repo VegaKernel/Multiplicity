@@ -1,5 +1,4 @@
-﻿using System;
-using Multiplicity.Packets.Models;
+using System;
 
 namespace Multiplicity.Packets.Views
 {
@@ -13,10 +12,7 @@ namespace Multiplicity.Packets.Views
         {
         }
 
-        public static RemoveItemOwnerView FromPayload(ReadOnlySpan<byte> payload)
-        {
-            return new RemoveItemOwnerView(payload);
-        }
+        public static RemoveItemOwnerView FromPayload(ReadOnlySpan<byte> payload) => new RemoveItemOwnerView(payload);
 
         public RemoveItemOwnerView(PacketView packet)
         {
@@ -25,13 +21,9 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header => _packet.Header;
-
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
-
         public RemoveItemOwner Packet => _packetObject;
-
         public short ItemIndex => _packetObject.ItemIndex;
+        public bool ForceAssignToServer => _packetObject.ForceAssignToServer;
     }
 }
-
-

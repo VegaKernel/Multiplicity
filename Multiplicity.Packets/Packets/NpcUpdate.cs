@@ -45,13 +45,18 @@ namespace Multiplicity.Packets
             21,201,201,202,202,203,203,223,223,231,231,232,232,233,233,234,234,235,235
         };
 
+        // Known vanilla catchable NPC ids retained only as a serialization convenience.
+        // Deserialization does not depend on this table: ReleaseOwner is the final optional byte
+        // in packet 23 and is detected from the actual payload length. This keeps protocol parsing
+        // correct when Terraria adds another releasable critter without requiring a library update.
         public static readonly HashSet<short> NpcCatchable = new HashSet<short>
         {
             46,55,74,148,149,297,298,299,300,355,356,357,358,359,360,361,362,363,364,
             365,366,367,374,377,539,538,484,485,486,487,442,443,444,445,446,447,448
         };
 
-        public short NpcId { get; set; }
+        public byte NpcSlot { get; set; }
+        public byte Generation { get; set; }
         public float PositionX { get; set; }
         public float PositionY { get; set; }
         public float VelocityX { get; set; }
@@ -65,7 +70,15 @@ namespace Multiplicity.Packets
         public float Difficulty { get; set; } = 1f;
         public byte LifeBytes { get; set; } = LifeSizeSByte;
         public int Life { get; set; }
-        public byte ReleaseOwner { get; set; }
+        public byte ReleaseOwner { get; set; } = byte.MaxValue;
+
+        /// <summary>
+        /// Indicates that the optional ReleaseOwner tail byte is present on the wire.
+        /// Incoming packets set this from the payload itself. When constructing a packet for a
+        /// catchable NPC not present in <see cref="NpcCatchable"/>, set this to true explicitly.
+        /// </summary>
+        public bool HasReleaseOwner { get; set; }
+
         public int NpcType { get; set; }
 
         public NpcUpdate()
@@ -79,7 +92,8 @@ namespace Multiplicity.Packets
         {
             AI = new float[4];
 
-            NpcId = br.ReadInt16();
+            NpcSlot = br.ReadByte();
+            Generation = br.ReadByte();
             PositionX = br.ReadSingle();
             PositionY = br.ReadSingle();
             VelocityX = br.ReadSingle();
@@ -116,8 +130,17 @@ namespace Multiplicity.Packets
             }
 
             NpcType = NpcTypeFromNetId(NpcNetId);
-            if (IsCatchableType(NpcType))
+
+            long remaining = br.BaseStream.Length - br.BaseStream.Position;
+            if (remaining == 1)
+            {
+                HasReleaseOwner = true;
                 ReleaseOwner = br.ReadByte();
+            }
+            else if (remaining != 0)
+            {
+                throw new InvalidDataException($"NpcUpdate payload has {remaining} unexpected trailing bytes.");
+            }
         }
 
         public static int NpcTypeFromNetId(int id)
@@ -145,7 +168,7 @@ namespace Multiplicity.Packets
                 length += SinglePayloadLength;
             if ((flags & NpcUpdateFlags.LifeIsFull) == 0)
                 length += (short)(BytePayloadLength + GetLifePayloadLength());
-            if (IsCatchableType(NpcTypeFromNetId(NpcNetId)))
+            if (ShouldWriteReleaseOwner())
                 length += BytePayloadLength;
 
             return length;
@@ -164,7 +187,8 @@ namespace Multiplicity.Packets
 
             using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                bw.Write(NpcId);
+                bw.Write(NpcSlot);
+                bw.Write(Generation);
                 bw.Write(PositionX);
                 bw.Write(PositionY);
                 bw.Write(VelocityX);
@@ -206,15 +230,14 @@ namespace Multiplicity.Packets
                     }
                 }
 
-                int npcType = NpcTypeFromNetId(NpcNetId);
-                if (IsCatchableType(npcType))
+                if (ShouldWriteReleaseOwner())
                     bw.Write(ReleaseOwner);
             }
         }
 
         public override string ToString()
         {
-            return $"[NpcUpdate: NpcId = {NpcId}, PositionX = {PositionX}, PositionY = {PositionY}, VelocityX = {VelocityX}, VelocityY = {VelocityY}, Target = {Target}, Flags = {Flags}, ExtraFlags = {ExtraFlags}]";
+            return $"[NpcUpdate: NpcSlot = {NpcSlot}, Generation = {Generation}, PositionX = {PositionX}, PositionY = {PositionY}, VelocityX = {VelocityX}, VelocityY = {VelocityY}, Target = {Target}, Flags = {Flags}, ExtraFlags = {ExtraFlags}, HasReleaseOwner = {HasReleaseOwner}]";
         }
 
         private bool HasFlag(NpcUpdateFlags flag)
@@ -246,6 +269,11 @@ namespace Multiplicity.Packets
             return extraFlags;
         }
 
+        private bool ShouldWriteReleaseOwner()
+        {
+            return HasReleaseOwner || IsKnownCatchableType(NpcTypeFromNetId(NpcNetId));
+        }
+
         private byte BuildLifeSize()
         {
             if (LifeBytes == LifeSizeSByte || LifeBytes == LifeSizeInt16 || LifeBytes == LifeSizeInt32)
@@ -269,7 +297,7 @@ namespace Multiplicity.Packets
             };
         }
 
-        private static bool IsCatchableType(int npcType)
+        private static bool IsKnownCatchableType(int npcType)
         {
             return npcType >= 0 && NpcCatchable.Contains((short)npcType);
         }
@@ -285,4 +313,3 @@ namespace Multiplicity.Packets
         }
     }
 }
-

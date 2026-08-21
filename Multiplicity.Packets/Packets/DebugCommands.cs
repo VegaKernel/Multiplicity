@@ -1,69 +1,54 @@
-using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The DebugCommands (0x5E) packet.
+    /// Terraria DevCommands packet (94).
+    /// Wire layout: string command, int32 value, float value2, float value3.
     /// </summary>
-    public class DebugCommands : TerrariaPacket
+    public sealed class DebugCommands : TerrariaPacket
     {
+        private const short NumericPayloadLength = sizeof(int) + sizeof(float) + sizeof(float);
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DebugCommands"/> class.
-        /// </summary>
+        public string Command { get; set; } = string.Empty;
+        public int Value { get; set; }
+        public float Value2 { get; set; }
+        public float Value3 { get; set; }
+
         public DebugCommands()
             : base((byte)PacketTypes.DebugCommands)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DebugCommands"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public DebugCommands(BinaryReader br)
             : base(br)
         {
+            Command = br.ReadString();
+            Value = br.ReadInt32();
+            Value2 = br.ReadSingle();
+            Value3 = br.ReadSingle();
         }
-
-        public override string ToString()
-        {
-            return $"[DebugCommands:]";
-        }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(0);
+            return checked((short)(PacketSerializationHelper.GetSerializedStringLength(Command) + NumericPayloadLength));
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
-            {
                 base.ToStream(stream, includeHeader);
-            }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
-            {
-            }
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            bw.Write(Command ?? string.Empty);
+            bw.Write(Value);
+            bw.Write(Value2);
+            bw.Write(Value3);
         }
 
-        #endregion
-
+        public override string ToString()
+        {
+            return $"[DebugCommands: Command = {Command}, Value = {Value}, Value2 = {Value2}, Value3 = {Value3}]";
+        }
     }
 }

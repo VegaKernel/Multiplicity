@@ -1,5 +1,4 @@
-﻿using System;
-using Multiplicity.Packets.Models;
+using System;
 
 namespace Multiplicity.Packets.Views
 {
@@ -13,10 +12,7 @@ namespace Multiplicity.Packets.Views
         {
         }
 
-        public static NpcStrikeView FromPayload(ReadOnlySpan<byte> payload)
-        {
-            return new NpcStrikeView(payload);
-        }
+        public static NpcStrikeView FromPayload(ReadOnlySpan<byte> payload) => new NpcStrikeView(payload);
 
         public NpcStrikeView(PacketView packet)
         {
@@ -25,21 +21,13 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header => _packet.Header;
-
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
-
         public NpcStrike Packet => _packetObject;
-
-        public short NpcId => _packetObject.NpcId;
-
+        public byte NpcSlot => _packetObject.NpcSlot;
+        public byte Generation => _packetObject.Generation;
         public short Damage => _packetObject.Damage;
-
         public float Knockback => _packetObject.Knockback;
-
         public byte Direction => _packetObject.Direction;
-
-        public bool Crit => _packetObject.Crit;
+        public byte Crit => _packetObject.Crit;
     }
 }
-
-
