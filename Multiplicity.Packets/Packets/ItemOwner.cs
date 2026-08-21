@@ -1,78 +1,67 @@
-using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The ItemOwner (0x16) packet.
+    /// The ItemOwner (0x16) packet for protocol 325.
     /// </summary>
     public class ItemOwner : TerrariaPacket
     {
-
         public short ItemId { get; set; }
-
         public byte PlayerId { get; set; }
+        public int TimeToKeepReservation { get; set; }
+        public byte GrabDelayPlayer { get; set; }
+        public int GrabDelayTime { get; set; }
+        public float PositionX { get; set; }
+        public float PositionY { get; set; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ItemOwner"/> class.
-        /// </summary>
         public ItemOwner()
             : base((byte)PacketTypes.ItemOwner)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ItemOwner"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public ItemOwner(BinaryReader br)
             : base(br)
         {
-            this.ItemId = br.ReadInt16();
-            this.PlayerId = br.ReadByte();
+            ItemId = br.ReadInt16();
+            PlayerId = br.ReadByte();
+            TimeToKeepReservation = br.Read7BitEncodedInt();
+            GrabDelayPlayer = br.ReadByte();
+            GrabDelayTime = br.Read7BitEncodedInt();
+            PositionX = br.ReadSingle();
+            PositionY = br.ReadSingle();
         }
 
         public override string ToString()
         {
-            return $"[ItemOwner: ItemId = {ItemId} PlayerId = {PlayerId}]";
+            return $"[ItemOwner: ItemId = {ItemId} PlayerId = {PlayerId} TimeToKeepReservation = {TimeToKeepReservation} GrabDelayPlayer = {GrabDelayPlayer} GrabDelayTime = {GrabDelayTime} PositionX = {PositionX} PositionY = {PositionY}]";
         }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(3);
+            return checked((short)(
+                sizeof(short) + sizeof(byte) +
+                PacketSerializationHelper.Get7BitEncodedIntLength(TimeToKeepReservation) +
+                sizeof(byte) +
+                PacketSerializationHelper.Get7BitEncodedIntLength(GrabDelayTime) +
+                sizeof(float) * 2));
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
-            {
                 base.ToStream(stream, includeHeader);
-            }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
+            using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                br.Write(ItemId);
-                br.Write(PlayerId);
+                bw.Write(ItemId);
+                bw.Write(PlayerId);
+                bw.Write7BitEncodedInt(TimeToKeepReservation);
+                bw.Write(GrabDelayPlayer);
+                bw.Write7BitEncodedInt(GrabDelayTime);
+                bw.Write(PositionX);
+                bw.Write(PositionY);
             }
         }
-
-        #endregion
-
     }
 }
-
