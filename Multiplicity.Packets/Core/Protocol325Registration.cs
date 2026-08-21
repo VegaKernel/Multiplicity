@@ -8,6 +8,8 @@ namespace Multiplicity.Packets
         [ModuleInitializer]
         internal static void Register()
         {
+            TerrariaPacket.DeserializerMap.Remove(PacketTypes.SyncItemsWithShimmerDeprecated);
+            TerrariaPacket.DeserializerMap.Remove(PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated);
             TerrariaPacket.DeserializerMap[PacketTypes.DamageNPCAck] = br => new DamageNPCAck(br);
         }
     }
