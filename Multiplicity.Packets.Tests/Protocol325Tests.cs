@@ -129,6 +129,56 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
+        public void ItemOwner_UsesProtocol325ReservationAndGrabDelayLayout()
+        {
+            ItemOwner packet = new ItemOwner
+            {
+                ItemId = 321,
+                PlayerId = 4,
+                TimeToKeepReservation = 300,
+                GrabDelayPlayer = 7,
+                GrabDelayTime = 900,
+                PositionX = 12.5f,
+                PositionY = 33.25f
+            };
+
+            byte[] bytes = packet.ToArray(includeHeader: true);
+            ItemOwner parsed = Assert.IsType<ItemOwner>(
+                TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
+            ItemOwnerView view = PacketViewParser.ParseExact(bytes).AsItemOwnerView();
+
+            Assert.Equal(300, parsed.TimeToKeepReservation);
+            Assert.Equal((byte)7, parsed.GrabDelayPlayer);
+            Assert.Equal(900, parsed.GrabDelayTime);
+            Assert.Equal(12.5f, view.PositionX);
+            Assert.Equal(33.25f, view.PositionY);
+            Assert.Equal(300, view.TimeToKeepReservation);
+            Assert.Equal(900, view.GrabDelayTime);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void RemoveItemOwner_IncludesForceAssignFlag()
+        {
+            RemoveItemOwner packet = new RemoveItemOwner
+            {
+                ItemIndex = 42,
+                ForceAssignToServer = true
+            };
+
+            byte[] bytes = packet.ToArray(includeHeader: true);
+            Assert.Equal(new byte[] { 6, 0, (byte)PacketTypes.RemoveItemOwner, 42, 0, 1 }, bytes);
+
+            RemoveItemOwner parsed = Assert.IsType<RemoveItemOwner>(
+                TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
+            RemoveItemOwnerView view = PacketViewParser.ParseExact(bytes).AsRemoveItemOwnerView();
+
+            Assert.True(parsed.ForceAssignToServer);
+            Assert.True(view.ForceAssignToServer);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
         public void DamageNPCAck_RoundTripsAsEmptyPayloadPacket()
         {
             DamageNPCAck packet = new DamageNPCAck();
