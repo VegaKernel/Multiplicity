@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <PackageId>TZ.Multiplicity</PackageId>
+    <PackageId>Multiplicity</PackageId>
     <Version>2.6.0</Version>
     <AssemblyName>Multiplicity.Packets</AssemblyName>
     <RootNamespace>Multiplicity.Packets</RootNamespace>
-    <Authors>TerraZ-Team</Authors>
+    <Authors>VegaKernel</Authors>
     <Description>Low-level Terraria packet serialization/deserialization library with typed packet models and zero-copy packet views for protocol 325 (Terraria 1.4.5.7).</Description>
-    <PackageTags>Terraria;Packets;Networking;TShock;TZ</PackageTags>
-    <PackageProjectUrl>https://github.com/TerraZ-Team/Multiplicity</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/TerraZ-Team/Multiplicity</RepositoryUrl>
+    <PackageTags>Terraria;Packets;Networking;TShock</PackageTags>
+    <PackageProjectUrl>https://github.com/VegaKernel/Multiplicity</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/VegaKernel/Multiplicity</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>

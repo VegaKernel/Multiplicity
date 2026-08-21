@@ -2,7 +2,7 @@
 
 `Multiplicity.Packets` is a low-level C# library for reading and writing Terraria network packets.
 
-NuGet package id: `TZ.Multiplicity`. The assembly and public namespace remain `Multiplicity.Packets`.
+NuGet package id: `Multiplicity`. The assembly and public namespace remain `Multiplicity.Packets`.
 
 ## Protocol support
 
@@ -40,7 +40,7 @@ Target framework: `net9.0`.
 ## Install
 
 ```powershell
-Install-Package TZ.Multiplicity
+Install-Package Multiplicity
 ```
 
 ## Object model
