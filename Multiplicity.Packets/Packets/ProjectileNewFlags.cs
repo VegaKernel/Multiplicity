@@ -12,8 +12,7 @@ namespace Multiplicity.Packets
         HasBannerIdToRespondTo = 1 << 3,
         HasDamage = 1 << 4,
         HasKnockBack = 1 << 5,
-        HasOriginalDamage = 1 << 6,
-        HasProjectileUuid = 1 << 7
+        HasOriginalDamage = 1 << 6
     }
 
     [Flags]
