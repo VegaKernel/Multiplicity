@@ -310,12 +310,11 @@ namespace Multiplicity.Packets.Tests
         {
             ProjectileNew original = new ProjectileNew
             {
-                Identity = 42,
+                Key = new ProjectileKey(spawner: 3, index: 42, generation: 7),
                 PositionX = 14.5f,
                 PositionY = 28.25f,
                 VelocityX = 1.75f,
                 VelocityY = -0.5f,
-                Owner = 3,
                 Type = 97,
                 AI0 = 2.25f,
                 Damage = 55
@@ -332,24 +331,25 @@ namespace Multiplicity.Packets.Tests
                 TerrariaPacket.DeserializePayload(PacketTypes.ProjectileNew, payload));
             ProjectileNewView view = ProjectileNewView.FromPayload(payload);
 
-            Assert.Equal(original.Identity, parsed.Identity);
-            Assert.Equal(original.Identity, view.Identity);
+            Assert.Equal(original.Key, parsed.Key);
+            Assert.Equal(original.Key, view.Key);
+            Assert.Equal((byte)3, view.Key.Spawner);
+            Assert.Equal((ushort)42, view.Key.Index);
+            Assert.Equal((ushort)7, view.Key.Generation);
             Assert.Equal(original.Type, view.Type);
             Assert.Equal(original.Damage, view.Damage);
         }
 
         [Fact]
-        public void PayloadMetadata_ItemDrop_ReportsFixedPayloadLength()
+        public void PayloadMetadata_ItemDrop_ReportsVariablePayloadLength()
         {
             PacketPayloadMetadata metadata = TerrariaPacket.GetPayloadMetadata(PacketTypes.ItemDrop);
 
             Assert.Equal(PacketTypes.ItemDrop, metadata.PacketType);
             Assert.Equal(typeof(ItemDrop), metadata.PacketClrType);
-            Assert.Equal((short)24, metadata.DefaultPayloadLength);
-            Assert.True(metadata.HasFixedPayloadLength);
-            Assert.Equal((short)24, metadata.FixedPayloadLength);
-            Assert.True(TerrariaPacket.TryGetFixedPayloadLength(PacketTypes.ItemDrop, out short payloadLength));
-            Assert.Equal((short)24, payloadLength);
+            Assert.Equal(new ItemDrop().GetLength(), metadata.DefaultPayloadLength);
+            Assert.False(metadata.HasFixedPayloadLength);
+            Assert.False(TerrariaPacket.TryGetFixedPayloadLength(PacketTypes.ItemDrop, out _));
         }
 
         [Fact]
@@ -365,7 +365,7 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void PacketViewParser_TryParsePayload_WithConsumed_TrimsFixedPayloadFromTrailingBytes()
+        public void PacketViewParser_TryParsePayload_WithConsumed_TrimsVariableItemPayloadFromTrailingBytes()
         {
             ItemDrop original = new ItemDrop
             {
@@ -376,8 +376,10 @@ namespace Multiplicity.Packets.Tests
                 VelocityY = -2.5f,
                 Stack = 3,
                 Prefix = 4,
-                Flags = WorldItemSyncFlags.KeepTime,
-                ItemNetId = 71
+                Flags = WorldItemSyncFlags.None,
+                ItemNetId = 71,
+                Shimmered = true,
+                ShimmerTime = 0.5f
             };
 
             byte[] payload = original.ToPayloadArray();
@@ -430,7 +432,7 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void PacketViewParser_TryParsePayloadBounded_AllowsTrailingBytes_ForFixedPayload()
+        public void PacketViewParser_TryParsePayloadBounded_AllowsTrailingBytes_ForVariableItemPayload()
         {
             ItemDrop original = new ItemDrop
             {
@@ -441,8 +443,9 @@ namespace Multiplicity.Packets.Tests
                 VelocityY = -4.5f,
                 Stack = 6,
                 Prefix = 2,
-                Flags = WorldItemSyncFlags.KeepTime,
-                ItemNetId = 73
+                Flags = WorldItemSyncFlags.None,
+                ItemNetId = 73,
+                EnemyGrabDelayTime = 5
             };
 
             byte[] payload = original.ToPayloadArray();
