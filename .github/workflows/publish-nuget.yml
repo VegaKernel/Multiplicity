@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Package version to publish (for example 2.6.0)"
+        description: "Package version to publish (for example 2.6.2)"
         required: true
         type: string
 
@@ -15,9 +15,15 @@ permissions:
   contents: read
   id-token: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.value }}
 
     steps:
       - name: Checkout
@@ -27,15 +33,6 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "9.0.x"
-
-      - name: Restore
-        run: dotnet restore Multiplicity.sln
-
-      - name: Build
-        run: dotnet build Multiplicity.sln -c Release --no-restore
-
-      - name: Test
-        run: dotnet test Multiplicity.Packets.Tests/Multiplicity.Packets.Tests.csproj -c Release --no-build
 
       - name: Compute version
         id: version
@@ -54,13 +51,58 @@ jobs:
 
           echo "value=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Pack
+      - name: Restore
+        run: dotnet restore Multiplicity.sln
+
+      - name: Build
+        run: dotnet build Multiplicity.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test Multiplicity.Packets.Tests/Multiplicity.Packets.Tests.csproj -c Release --no-build
+
+      - name: Pack NuGet package
         run: >
           dotnet pack Multiplicity.Packets/Multiplicity.Packets.csproj
           -c Release
           --no-build
-          -o artifacts
+          -o artifacts/nuget
           /p:PackageVersion=${{ steps.version.outputs.value }}
+
+      - name: Stage plugin DLL
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/plugin
+          cp Multiplicity.Packets/bin/Release/net9.0/Multiplicity.Packets.dll artifacts/plugin/
+
+      - name: Upload NuGet artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: nuget-packages
+          path: |
+            artifacts/nuget/*.nupkg
+            artifacts/nuget/*.snupkg
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload plugin artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: Multiplicity
+          path: artifacts/plugin/Multiplicity.Packets.dll
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download NuGet artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: nuget-packages
+          path: artifacts
 
       - name: NuGet login
         id: nuget-login
@@ -81,3 +123,48 @@ jobs:
           --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}"
           --source "https://api.nuget.org/v3/index.json"
           --skip-duplicate
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, windows, x64]
+
+    steps:
+      - name: Download plugin artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: Multiplicity
+          path: ${{ runner.temp }}\Multiplicity-artifact
+
+      - name: Deploy artifact
+        shell: pwsh
+        env:
+          DEPLOY_DIR: ${{ vars.PLUGIN_DEPLOY_DIR }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:DEPLOY_DIR)) {
+            $env:DEPLOY_DIR = "C:\github-deploy"
+            Write-Host "PLUGIN_DEPLOY_DIR is not set. Using default: $env:DEPLOY_DIR"
+          }
+
+          $artifactDir = Join-Path $env:RUNNER_TEMP "Multiplicity-artifact"
+          $dlls = @(Get-ChildItem -LiteralPath $artifactDir -Filter "*.dll" -File)
+          if ($dlls.Count -ne 1) { throw "Expected exactly one plugin DLL in artifact, found $($dlls.Count)." }
+
+          $source = $dlls[0].FullName
+          $destination = Join-Path $env:DEPLOY_DIR $dlls[0].Name
+          New-Item -ItemType Directory -Path $env:DEPLOY_DIR -Force | Out-Null
+
+          if (-not (Test-Path $destination)) {
+            Copy-Item $source $destination
+          } else {
+            $bytes = [System.IO.File]::ReadAllBytes($source)
+            $stream = [System.IO.File]::Open($destination, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Write, [System.IO.FileShare]::Read)
+            try {
+              $stream.SetLength(0)
+              $stream.Write($bytes, 0, $bytes.Length)
+              $stream.Flush($true)
+            } finally {
+              $stream.Dispose()
+            }
+          }
+
+          Write-Host "Deployed: $destination"
