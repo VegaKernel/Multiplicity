@@ -167,12 +167,6 @@ namespace Multiplicity.Packets
         /*161*/ HostToken,
         /*162*/ DamageNPCAck,
         /*163*/ ServerInfo,
-        /*164*/ PlayerPlatformInfo,
-
-        [Obsolete("Packet 145 is deprecated in Terraria 1.4.5.7 / protocol 325.")]
-        SyncItemsWithShimmer = SyncItemsWithShimmerDeprecated,
-
-        [Obsolete("Packet 148 is deprecated in Terraria 1.4.5.7 / protocol 325.")]
-        SyncItemCannotBeTakenByEnemies = SyncItemCannotBeTakenByEnemiesDeprecated
+        /*164*/ PlayerPlatformInfo
     }
 }
