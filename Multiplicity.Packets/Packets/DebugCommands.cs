@@ -27,7 +27,6 @@ namespace Multiplicity.Packets
             Value = br.ReadInt32();
             Value2 = br.ReadSingle();
             Value3 = br.ReadSingle();
-            CheckLength();
         }
 
         public override short GetLength()
