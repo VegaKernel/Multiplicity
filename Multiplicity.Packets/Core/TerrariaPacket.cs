@@ -171,10 +171,8 @@ namespace Multiplicity.Packets
             /*142*/ { PacketTypes.SyncProjectileTrackers, (br) => new SyncProjectileTrackers(br) },
             /*143*/ { PacketTypes.CrystalInvasionRequestedToSkipWaitTime, (br) => new CrystalInvasionRequestedToSkipWaitTime(br) },
             /*144*/ { PacketTypes.RequestQuestEffect, (br) => new RequestQuestEffect(br) },
-            /*145*/ { PacketTypes.SyncItemsWithShimmer, (br) => new SyncItemsWithShimmer(br) },
             /*146*/ { PacketTypes.ShimmerActions, (br) => new ShimmerActions(br) },
             /*147*/ { PacketTypes.SyncLoadout, (br) => new SyncLoadout(br) },
-            /*148*/ { PacketTypes.SyncItemCannotBeTakenByEnemies, (br) => new SyncItemCannotBeTakenByEnemies(br) },
             /*149*/ { PacketTypes.TEDeadCellsDisplayJar, (br) => new TEDeadCellsDisplayJar(br) },
             /*150*/ { PacketTypes.SpectatePlayer, (br) => new SpectatePlayer(br) },
             /*151*/ { PacketTypes.SyncItemDespawn, (br) => new SyncItemDespawn(br) },
@@ -188,8 +186,9 @@ namespace Multiplicity.Packets
             /*159*/ { PacketTypes.RequestSection, (br) => new RequestSection(br) },
             /*160*/ { PacketTypes.SyncItemPosition, (br) => new SyncItemPosition(br) },
             /*161*/ { PacketTypes.HostToken, (br) => new HostToken(br) },
-            /*162*/ { PacketTypes.ServerInfo, (br) => new ServerInfo(br) },
-            /*163*/ { PacketTypes.PlayerPlatformInfo, (br) => new PlayerPlatformInfo(br) }
+            /*162*/ { PacketTypes.DamageNPCAck, (br) => new DamageNPCAck(br) },
+            /*163*/ { PacketTypes.ServerInfo, (br) => new ServerInfo(br) },
+            /*164*/ { PacketTypes.PlayerPlatformInfo, (br) => new PlayerPlatformInfo(br) }
         };
 
         /// <summary>
@@ -539,7 +538,6 @@ namespace Multiplicity.Packets
         }
 	}
 }
-
 
 
 
