@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
@@ -13,10 +13,7 @@ namespace Multiplicity.Packets.Views
         {
         }
 
-        public static ProjectileDestroyView FromPayload(ReadOnlySpan<byte> payload)
-        {
-            return new ProjectileDestroyView(payload);
-        }
+        public static ProjectileDestroyView FromPayload(ReadOnlySpan<byte> payload) => new ProjectileDestroyView(payload);
 
         public ProjectileDestroyView(PacketView packet)
         {
@@ -25,15 +22,10 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header => _packet.Header;
-
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
-
         public ProjectileDestroy Packet => _packetObject;
-
-        public short ProjectileId => _packetObject.ProjectileId;
-
-        public byte Owner => _packetObject.Owner;
+        public ProjectileKey Key => _packetObject.Key;
+        public float PositionX => _packetObject.PositionX;
+        public float PositionY => _packetObject.PositionY;
     }
 }
-
-
