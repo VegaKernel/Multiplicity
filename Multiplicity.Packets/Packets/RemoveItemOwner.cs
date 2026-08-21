@@ -1,73 +1,42 @@
-using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The RemoveItemOwner (0x27) packet.
+    /// ReleaseItemOwnership (0x27) for protocol 325.
     /// </summary>
     public class RemoveItemOwner : TerrariaPacket
     {
-
         public short ItemIndex { get; set; }
+        public bool ForceAssignToServer { get; set; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RemoveItemOwner"/> class.
-        /// </summary>
         public RemoveItemOwner()
             : base((byte)PacketTypes.RemoveItemOwner)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RemoveItemOwner"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public RemoveItemOwner(BinaryReader br)
             : base(br)
         {
-            this.ItemIndex = br.ReadInt16();
+            ItemIndex = br.ReadInt16();
+            ForceAssignToServer = br.ReadBoolean();
         }
 
-        public override string ToString()
-        {
-            return $"[RemoveItemOwner: ItemIndex = {ItemIndex}]";
-        }
+        public override string ToString() =>
+            $"[RemoveItemOwner: ItemIndex = {ItemIndex} ForceAssignToServer = {ForceAssignToServer}]";
 
-        #region implemented abstract members of TerrariaPacket
-
-        public override short GetLength()
-        {
-            return (short)(2);
-        }
+        public override short GetLength() => 3;
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
-            {
                 base.ToStream(stream, includeHeader);
-            }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
+            using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                br.Write(ItemIndex);
+                bw.Write(ItemIndex);
+                bw.Write(ForceAssignToServer);
             }
         }
-
-        #endregion
-
     }
 }
