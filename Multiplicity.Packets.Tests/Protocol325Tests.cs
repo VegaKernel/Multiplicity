@@ -73,10 +73,31 @@ namespace Multiplicity.Packets.Tests
         [Fact]
         public void Protocol325PacketIdRange_MatchesDesktopMessageIdsAndExtensions()
         {
+            Assert.Equal(145, (int)PacketTypes.SyncItemsWithShimmerDeprecated);
+            Assert.Equal(148, (int)PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated);
             Assert.Equal(161, (int)PacketTypes.HostToken);
             Assert.Equal(162, (int)PacketTypes.DamageNPCAck);
             Assert.Equal(163, (int)PacketTypes.ServerInfo);
             Assert.Equal(164, (int)PacketTypes.PlayerPlatformInfo);
+        }
+
+        [Fact]
+        public void Protocol325_DeprecatedVanillaPacketIdsAreNotRegisteredForDeserialization()
+        {
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.SyncItemsWithShimmerDeprecated));
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated));
+        }
+
+        [Fact]
+        public void Protocol325_NetModuleRegistrationOrderMatchesTerraria1457()
+        {
+            Assert.Equal(0, (int)NetworkModuleTypes.NetLiquidModule);
+            Assert.Equal(4, (int)NetworkModuleTypes.NetBestiaryModule);
+            Assert.Equal(5, (int)NetworkModuleTypes.NetCreativeUnlocksModule);
+            Assert.Equal(6, (int)NetworkModuleTypes.NetCreativePowersModule);
+            Assert.Equal(12, (int)NetworkModuleTypes.NetCraftingRequestsModule);
+            Assert.Equal(13, (int)NetworkModuleTypes.LeashedEntityModule);
+            Assert.Equal(14, (int)NetworkModuleTypes.UnbreakableWallScanModule);
         }
 
         [Fact]
