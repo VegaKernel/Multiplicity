@@ -187,5 +187,77 @@ namespace Multiplicity.Packets.Tests
             Assert.Equal(new byte[] { 3, 0, (byte)PacketTypes.DamageNPCAck }, bytes);
             Assert.IsType<DamageNPCAck>(TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
         }
+
+        [Fact]
+        public void CatchNPC_UsesProtocol325TwoBytePayload()
+        {
+            CatchNPC packet = new CatchNPC
+            {
+                NpcId = 0x1234
+            };
+
+            byte[] bytes = packet.ToArray(includeHeader: true);
+            Assert.Equal(new byte[] { 5, 0, (byte)PacketTypes.CatchNPC, 0x34, 0x12 }, bytes);
+
+            CatchNPC parsed = Assert.IsType<CatchNPC>(
+                TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
+            CatchNPCView view = PacketViewParser.ParseExact(bytes).AsCatchNPCView();
+
+            Assert.Equal((short)0x1234, parsed.NpcId);
+            Assert.Equal((short)0x1234, view.NpcId);
+            Assert.Equal((short)2, CatchNPC.PayloadLength);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void ItemSync_ExplicitZeroValuedOptionalBlocksRemainPresent()
+        {
+            ItemDrop packet = new ItemDrop
+            {
+                ItemIndex = 12,
+                Stack = 1,
+                ItemNetId = 71,
+                Flags = WorldItemSyncFlags.HasShimmerData | WorldItemSyncFlags.HasEnemyGrabDelay,
+                Shimmered = false,
+                ShimmerTime = 0f,
+                EnemyGrabDelayTime = 0
+            };
+
+            byte[] payload = packet.ToPayloadArray();
+            Assert.Equal(30, payload.Length);
+
+            ItemDrop parsed = Assert.IsType<ItemDrop>(
+                TerrariaPacket.DeserializePayload(PacketTypes.ItemDrop, payload));
+
+            Assert.True((parsed.Flags & WorldItemSyncFlags.HasShimmerData) != 0);
+            Assert.True((parsed.Flags & WorldItemSyncFlags.HasEnemyGrabDelay) != 0);
+            Assert.False(parsed.Shimmered);
+            Assert.Equal(0f, parsed.ShimmerTime);
+            Assert.Equal((byte)0, parsed.EnemyGrabDelayTime);
+            Assert.Equal(payload, parsed.ToPayloadArray());
+        }
+
+        [Fact]
+        public void PlayerControls_ExposeProtocol325DashAndSnappingStoneBits()
+        {
+            Assert.Equal(0x80, (byte)UpdatePlayerControlFlags.ControlDash);
+            Assert.Equal(0x80, (byte)UpdatePlayerMiscFlags2.AccSnappingStoneLightUp);
+
+            PlayerUpdate packet = new PlayerUpdate
+            {
+                PlayerId = 3,
+                ControlFlags = UpdatePlayerControlFlags.ControlDash,
+                MiscFlags2 = UpdatePlayerMiscFlags2.AccSnappingStoneLightUp,
+                SelectedItem = 1
+            };
+
+            byte[] bytes = packet.ToArray(includeHeader: true);
+            PlayerUpdate parsed = Assert.IsType<PlayerUpdate>(
+                TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
+
+            Assert.True((parsed.ControlFlags & UpdatePlayerControlFlags.ControlDash) != 0);
+            Assert.True((parsed.MiscFlags2 & UpdatePlayerMiscFlags2.AccSnappingStoneLightUp) != 0);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
     }
 }
