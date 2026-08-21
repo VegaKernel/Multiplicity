@@ -4,7 +4,9 @@ namespace Multiplicity.Packets
 {
     public abstract class WorldItemSyncPacketBase : TerrariaPacket
     {
-        protected const short PayloadLength = 24;
+        // Named FixedPayloadLength deliberately: TerrariaPacket metadata treats packets
+        // that expose this marker as variable-length and parses them through the object model.
+        protected const short FixedPayloadLength = 24;
 
         public short ItemIndex { get; set; }
         public float PositionX { get; set; }
@@ -15,6 +17,15 @@ namespace Multiplicity.Packets
         public byte Prefix { get; set; }
         public WorldItemSyncFlags Flags { get; set; }
         public short ItemNetId { get; set; }
+        public bool Shimmered { get; set; }
+        public float ShimmerTime { get; set; }
+        public byte EnemyGrabDelayTime { get; set; }
+
+        public NewItemOwnership Ownership
+        {
+            get => (NewItemOwnership)((byte)Flags & (byte)WorldItemSyncFlags.OwnershipMask);
+            set => Flags = (WorldItemSyncFlags)(((byte)Flags & ~(byte)WorldItemSyncFlags.OwnershipMask) | ((byte)value & 0x03));
+        }
 
         protected WorldItemSyncPacketBase(byte id)
             : base(id)
@@ -33,19 +44,36 @@ namespace Multiplicity.Packets
             Prefix = br.ReadByte();
             Flags = (WorldItemSyncFlags)br.ReadByte();
             ItemNetId = br.ReadInt16();
+
+            if ((Flags & WorldItemSyncFlags.HasShimmerData) != 0)
+            {
+                Shimmered = br.ReadBoolean();
+                ShimmerTime = br.ReadSingle();
+            }
+
+            if ((Flags & WorldItemSyncFlags.HasEnemyGrabDelay) != 0)
+                EnemyGrabDelayTime = br.ReadByte();
         }
 
         public override short GetLength()
         {
-            return PayloadLength;
+            WorldItemSyncFlags flags = BuildFlags();
+            short length = FixedPayloadLength;
+
+            if ((flags & WorldItemSyncFlags.HasShimmerData) != 0)
+                length += sizeof(byte) + sizeof(float);
+            if ((flags & WorldItemSyncFlags.HasEnemyGrabDelay) != 0)
+                length += sizeof(byte);
+
+            return length;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             if (includeHeader)
-            {
                 base.ToStream(stream, includeHeader);
-            }
+
+            WorldItemSyncFlags flags = BuildFlags();
 
             using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
@@ -56,10 +84,31 @@ namespace Multiplicity.Packets
                 bw.Write(VelocityY);
                 bw.Write(Stack);
                 bw.Write(Prefix);
-                bw.Write((byte)Flags);
+                bw.Write((byte)flags);
                 bw.Write(ItemNetId);
+
+                if ((flags & WorldItemSyncFlags.HasShimmerData) != 0)
+                {
+                    bw.Write(Shimmered);
+                    bw.Write(ShimmerTime);
+                }
+
+                if ((flags & WorldItemSyncFlags.HasEnemyGrabDelay) != 0)
+                    bw.Write(EnemyGrabDelayTime);
             }
+        }
+
+        private WorldItemSyncFlags BuildFlags()
+        {
+            WorldItemSyncFlags flags = Flags;
+            flags = SetFlag(flags, WorldItemSyncFlags.HasShimmerData, Shimmered || ShimmerTime != 0f);
+            flags = SetFlag(flags, WorldItemSyncFlags.HasEnemyGrabDelay, EnemyGrabDelayTime != 0);
+            return flags;
+        }
+
+        private static WorldItemSyncFlags SetFlag(WorldItemSyncFlags current, WorldItemSyncFlags flag, bool enabled)
+        {
+            return enabled ? current | flag : current & ~flag;
         }
     }
 }
-
