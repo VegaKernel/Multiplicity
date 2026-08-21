@@ -7,7 +7,7 @@ namespace Multiplicity.Packets.Views
         private readonly WorldItemSyncView _view;
 
         public SyncItemsWithShimmerView(ReadOnlySpan<byte> payload)
-            : this(PacketView.FromPayload(PacketTypes.SyncItemsWithShimmer, payload))
+            : this(PacketView.FromPayload(PacketTypes.SyncItemsWithShimmerDeprecated, payload))
         {
         }
 
