@@ -51,7 +51,8 @@ namespace Multiplicity.Packets
             365,366,367,374,377,539,538,484,485,486,487,442,443,444,445,446,447,448
         };
 
-        public short NpcId { get; set; }
+        public byte NpcSlot { get; set; }
+        public byte Generation { get; set; }
         public float PositionX { get; set; }
         public float PositionY { get; set; }
         public float VelocityX { get; set; }
@@ -79,7 +80,8 @@ namespace Multiplicity.Packets
         {
             AI = new float[4];
 
-            NpcId = br.ReadInt16();
+            NpcSlot = br.ReadByte();
+            Generation = br.ReadByte();
             PositionX = br.ReadSingle();
             PositionY = br.ReadSingle();
             VelocityX = br.ReadSingle();
@@ -164,7 +166,8 @@ namespace Multiplicity.Packets
 
             using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                bw.Write(NpcId);
+                bw.Write(NpcSlot);
+                bw.Write(Generation);
                 bw.Write(PositionX);
                 bw.Write(PositionY);
                 bw.Write(VelocityX);
@@ -214,7 +217,7 @@ namespace Multiplicity.Packets
 
         public override string ToString()
         {
-            return $"[NpcUpdate: NpcId = {NpcId}, PositionX = {PositionX}, PositionY = {PositionY}, VelocityX = {VelocityX}, VelocityY = {VelocityY}, Target = {Target}, Flags = {Flags}, ExtraFlags = {ExtraFlags}]";
+            return $"[NpcUpdate: NpcSlot = {NpcSlot}, Generation = {Generation}, PositionX = {PositionX}, PositionY = {PositionY}, VelocityX = {VelocityX}, VelocityY = {VelocityY}, Target = {Target}, Flags = {Flags}, ExtraFlags = {ExtraFlags}]";
         }
 
         private bool HasFlag(NpcUpdateFlags flag)
@@ -285,4 +288,3 @@ namespace Multiplicity.Packets
         }
     }
 }
-
