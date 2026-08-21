@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
@@ -31,9 +31,5 @@ namespace Multiplicity.Packets.Views
         public CatchNPC Packet => _packetObject;
 
         public short NpcId => _packetObject.NpcId;
-
-        public byte Who => _packetObject.Who;
     }
 }
-
-
