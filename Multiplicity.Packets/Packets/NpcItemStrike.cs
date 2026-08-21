@@ -15,6 +15,7 @@ namespace Multiplicity.Packets
         public NpcItemStrike()
             : base((byte)PacketTypes.NpcItemStrike)
         {
+            throw new NotSupportedException("Packet 24 (UnusedMeleeStrike) is not valid in Terraria protocol 325.");
         }
 
         public NpcItemStrike(BinaryReader br)
