@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace Multiplicity.Packets.Views
 {
@@ -42,7 +43,8 @@ namespace Multiplicity.Packets.Views
             float difficulty = 1f;
             byte lifeByteCount = 0;
             int life = 0;
-            byte releaseOwner = 0;
+            byte releaseOwner = byte.MaxValue;
+            bool hasReleaseOwner = false;
 
             if ((extraFlags & NpcUpdateExtraFlags.HasPlayerCountScaling) != 0)
                 statsScaledForPlayerCount = reader.ReadByte();
@@ -60,10 +62,15 @@ namespace Multiplicity.Packets.Views
                 };
             }
 
-            int npcType = NpcUpdate.NpcTypeFromNetId(npcNetId);
-            bool isCatchable = npcType >= 0 && NpcUpdate.NpcCatchable.Contains((short)npcType);
-            if (isCatchable)
+            if (reader.RemainingCount == 1)
+            {
+                hasReleaseOwner = true;
                 releaseOwner = reader.ReadByte();
+            }
+            else if (reader.RemainingCount != 0)
+            {
+                throw new InvalidDataException($"NpcUpdate payload has {reader.RemainingCount} unexpected trailing bytes.");
+            }
 
             reader.EnsureEnd();
 
@@ -83,13 +90,13 @@ namespace Multiplicity.Packets.Views
             AI2 = ai2;
             AI3 = ai3;
             NpcNetId = npcNetId;
-            NpcType = npcType;
+            NpcType = NpcUpdate.NpcTypeFromNetId(npcNetId);
             StatsScaledForPlayerCount = statsScaledForPlayerCount;
             Difficulty = difficulty;
             LifeByteCount = lifeByteCount;
             Life = life;
             ReleaseOwner = releaseOwner;
-            IsCatchable = isCatchable;
+            HasReleaseOwner = hasReleaseOwner;
         }
 
         public PacketHeader Header { get; }
@@ -114,7 +121,8 @@ namespace Multiplicity.Packets.Views
         public byte LifeByteCount { get; }
         public int Life { get; }
         public byte ReleaseOwner { get; }
-        public bool IsCatchable { get; }
+        public bool HasReleaseOwner { get; }
+        public bool IsCatchable => HasReleaseOwner;
         public bool HasAI0 => (Flags & NpcUpdateFlags.HasAI0) != 0;
         public bool HasAI1 => (Flags & NpcUpdateFlags.HasAI1) != 0;
         public bool HasAI2 => (Flags & NpcUpdateFlags.HasAI2) != 0;
