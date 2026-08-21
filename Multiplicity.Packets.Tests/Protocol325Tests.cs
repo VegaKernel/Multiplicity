@@ -259,5 +259,42 @@ namespace Multiplicity.Packets.Tests
             Assert.True((parsed.MiscFlags2 & UpdatePlayerMiscFlags2.AccSnappingStoneLightUp) != 0);
             Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
         }
+
+        [Fact]
+        public void UnusedMeleeStrike_IsRejectedInProtocol325()
+        {
+            byte[] bytes = { 3, 0, (byte)PacketTypes.NpcItemStrike };
+
+            Assert.Throws<System.IO.InvalidDataException>(() => TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
+            Assert.False(TerrariaPacket.TryDeserialize((ReadOnlyMemory<byte>)bytes, out _));
+            Assert.Throws<NotSupportedException>(() => new NpcItemStrike().ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void DebugCommands_UsesProtocol325StringIntFloatFloatLayout()
+        {
+            DebugCommands packet = new DebugCommands
+            {
+                Command = "/randomizeprojslots",
+                Value = 123456,
+                Value2 = 1.25f,
+                Value3 = -3.5f
+            };
+
+            byte[] bytes = packet.ToArray(includeHeader: true);
+            DebugCommands parsed = Assert.IsType<DebugCommands>(
+                TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
+            DebugCommandsView view = PacketViewParser.ParseExact(bytes).AsDebugCommandsView();
+
+            Assert.Equal(packet.Command, parsed.Command);
+            Assert.Equal(packet.Value, parsed.Value);
+            Assert.Equal(packet.Value2, parsed.Value2);
+            Assert.Equal(packet.Value3, parsed.Value3);
+            Assert.Equal(packet.Command, view.Command);
+            Assert.Equal(packet.Value, view.Value);
+            Assert.Equal(packet.Value2, view.Value2);
+            Assert.Equal(packet.Value3, view.Value3);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
     }
 }
