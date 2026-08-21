@@ -6,7 +6,7 @@ namespace Multiplicity.Packets
     {
         public const short PayloadLength = 2;
 
-        public short NPCId { get; set; }
+        public short NpcId { get; set; }
 
         public CatchNPC()
             : base((byte)PacketTypes.CatchNPC)
@@ -16,7 +16,7 @@ namespace Multiplicity.Packets
         public CatchNPC(BinaryReader br)
             : base(br)
         {
-            NPCId = br.ReadInt16();
+            NpcId = br.ReadInt16();
             CheckLength();
         }
 
@@ -31,7 +31,7 @@ namespace Multiplicity.Packets
 
             using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                bw.Write(NPCId);
+                bw.Write(NpcId);
             }
         }
     }
