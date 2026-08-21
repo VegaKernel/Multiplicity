@@ -101,6 +101,34 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
+        public void NpcUpdate_ReleaseOwnerTailDoesNotDependOnKnownCatchableTable()
+        {
+            const short unknownCatchableType = 700;
+            Assert.DoesNotContain(unknownCatchableType, NpcUpdate.NpcCatchable);
+
+            NpcUpdate packet = new NpcUpdate
+            {
+                NpcSlot = 17,
+                Generation = 3,
+                NpcNetId = unknownCatchableType,
+                Life = 80,
+                ReleaseOwner = 9,
+                HasReleaseOwner = true
+            };
+
+            byte[] bytes = packet.ToArray(includeHeader: true);
+            NpcUpdate parsed = Assert.IsType<NpcUpdate>(
+                TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
+            NpcUpdateView view = PacketViewParser.ParseExact(bytes).AsNpcUpdateView();
+
+            Assert.True(parsed.HasReleaseOwner);
+            Assert.Equal((byte)9, parsed.ReleaseOwner);
+            Assert.True(view.HasReleaseOwner);
+            Assert.Equal((byte)9, view.ReleaseOwner);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
         public void DamageNPCAck_RoundTripsAsEmptyPayloadPacket()
         {
             DamageNPCAck packet = new DamageNPCAck();
