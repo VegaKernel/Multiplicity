@@ -1,78 +1,38 @@
-using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
-    /// <summary>
-    /// The CatchNPC (0x46) packet.
-    /// </summary>
-    public class CatchNPC : TerrariaPacket
+    public sealed class CatchNPC : TerrariaPacket
     {
+        public const short PayloadLength = 2;
 
-        public short NpcId { get; set; }
+        public short NPCId { get; set; }
 
-        public byte Who { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CatchNPC"/> class.
-        /// </summary>
         public CatchNPC()
             : base((byte)PacketTypes.CatchNPC)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CatchNPC"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public CatchNPC(BinaryReader br)
             : base(br)
         {
-            this.NpcId = br.ReadInt16();
-            this.Who = br.ReadByte();
+            NPCId = br.ReadInt16();
+            CheckLength();
         }
-
-        public override string ToString()
-        {
-            return $"[CatchNPC: NpcId = {NpcId} Who = {Who}]";
-        }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(3);
+            return PayloadLength;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
-            if (includeHeader)
-            {
-                base.ToStream(stream, includeHeader);
-            }
+            base.ToStream(stream, includeHeader);
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
+            using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                br.Write(NpcId);
-                br.Write(Who);
+                bw.Write(NPCId);
             }
         }
-
-        #endregion
-
     }
 }
-
