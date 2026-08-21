@@ -605,32 +605,20 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void TerrariaNetModule_Deserialize_TagEffectFullState_PreservesSparseArrays()
+        public void TerrariaNetModule_Deserialize_NetCreativeUnlocks_RoundTrips()
         {
-            TagEffectModule original = new TagEffectModule
+            NetCreativeUnlocksModule original = new NetCreativeUnlocksModule
             {
-                PlayerId = 5,
-                MessageType = TagEffectMessageType.FullState,
-                EffectType = 14,
-                IncludeProcTimeEntries = true
+                ItemId = 1234,
+                SacrificeCount = 42
             };
-            original.TimeEntries.Add(new TagEffectNpcTimeEntry { NpcIndex = 2, TimeLeft = 120 });
-            original.TimeEntries.Add(new TagEffectNpcTimeEntry { NpcIndex = 9, TimeLeft = 45 });
-            original.ProcTimeEntries.Add(new TagEffectNpcTimeEntry { NpcIndex = 7, TimeLeft = 18 });
 
             byte[] bytes = original.ToArray(includeHeader: true);
-            TagEffectModule parsed = Assert.IsType<TagEffectModule>(TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
+            NetCreativeUnlocksModule parsed = Assert.IsType<NetCreativeUnlocksModule>(
+                TerrariaNetModule.Deserialize((ReadOnlyMemory<byte>)bytes));
 
-            Assert.Equal((byte)5, parsed.PlayerId);
-            Assert.Equal(TagEffectMessageType.FullState, parsed.MessageType);
-            Assert.Equal((short)14, parsed.EffectType);
-            Assert.True(parsed.IncludeProcTimeEntries);
-            Assert.Equal(2, parsed.TimeEntries.Count);
-            Assert.Equal((byte)9, parsed.TimeEntries[1].NpcIndex);
-            Assert.Equal(45, parsed.TimeEntries[1].TimeLeft);
-            Assert.Single(parsed.ProcTimeEntries);
-            Assert.Equal((byte)7, parsed.ProcTimeEntries[0].NpcIndex);
-            Assert.Equal(18, parsed.ProcTimeEntries[0].TimeLeft);
+            Assert.Equal((short)1234, parsed.ItemId);
+            Assert.Equal((ushort)42, parsed.SacrificeCount);
             Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
         }
 
