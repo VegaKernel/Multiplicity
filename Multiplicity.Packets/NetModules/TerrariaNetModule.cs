@@ -14,6 +14,7 @@ namespace Multiplicity.Packets
                 { NetworkModuleTypes.NetPingModule, br => new NetPingModule(br) },
                 { NetworkModuleTypes.NetAmbienceModule, br => new NetAmbienceModule(br) },
                 { NetworkModuleTypes.NetBestiaryModule, br => new NetBestiaryModule(br) },
+                { NetworkModuleTypes.NetCreativeUnlocksModule, br => new NetCreativeUnlocksModule(br) },
                 { NetworkModuleTypes.NetCreativePowersModule, br => new NetCreativePowersModule(br) },
                 { NetworkModuleTypes.NetCreativeUnlocksPlayerReportModule, br => new NetCreativeUnlocksPlayerReportModule(br) },
                 { NetworkModuleTypes.NetTeleportPylonModule, br => new NetTeleportPylonModule(br) },
@@ -21,7 +22,6 @@ namespace Multiplicity.Packets
                 { NetworkModuleTypes.NetCreativePowerPermissionsModule, br => new NetCreativePowerPermissionsModule(br) },
                 { NetworkModuleTypes.NetBannersModule, br => new NetBannersModule(br) },
                 { NetworkModuleTypes.NetCraftingRequestsModule, br => new NetCraftingRequestsModule(br) },
-                { NetworkModuleTypes.TagEffectModule, br => new TagEffectModule(br) },
                 { NetworkModuleTypes.LeashedEntityModule, br => new LeashedEntityModule(br) },
                 { NetworkModuleTypes.UnbreakableWallScanModule, br => new UnbreakableWallScanModule(br) },
                 { NetworkModuleTypes.NetLiquidModule, br => new NetLiquidModule(br) },
@@ -47,9 +47,7 @@ namespace Multiplicity.Packets
             br.BaseStream.Seek(startPosition, SeekOrigin.Begin);
 
             if (!DeserializerMap.TryGetValue((NetworkModuleTypes)rawId, out Func<BinaryReader, TerrariaNetModule> deserializer))
-            {
                 return new UnknownNetModule(br);
-            }
 
             return deserializer(br);
         }
@@ -63,14 +61,10 @@ namespace Multiplicity.Packets
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
             if (!includeHeader)
-            {
                 return;
-            }
 
             using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
-            {
                 bw.Write((ushort)Id);
-            }
         }
     }
 }
