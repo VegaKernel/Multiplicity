@@ -101,14 +101,13 @@ namespace Multiplicity.Packets
         private WorldItemSyncFlags BuildFlags()
         {
             WorldItemSyncFlags flags = Flags;
-            flags = SetFlag(flags, WorldItemSyncFlags.HasShimmerData, Shimmered || ShimmerTime != 0f);
-            flags = SetFlag(flags, WorldItemSyncFlags.HasEnemyGrabDelay, EnemyGrabDelayTime != 0);
-            return flags;
-        }
 
-        private static WorldItemSyncFlags SetFlag(WorldItemSyncFlags current, WorldItemSyncFlags flag, bool enabled)
-        {
-            return enabled ? current | flag : current & ~flag;
+            if (Shimmered || ShimmerTime != 0f)
+                flags |= WorldItemSyncFlags.HasShimmerData;
+            if (EnemyGrabDelayTime != 0)
+                flags |= WorldItemSyncFlags.HasEnemyGrabDelay;
+
+            return flags;
         }
     }
 }
