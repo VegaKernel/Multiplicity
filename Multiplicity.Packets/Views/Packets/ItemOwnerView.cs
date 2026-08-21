@@ -1,5 +1,4 @@
-﻿using System;
-using Multiplicity.Packets.Models;
+using System;
 
 namespace Multiplicity.Packets.Views
 {
@@ -13,10 +12,7 @@ namespace Multiplicity.Packets.Views
         {
         }
 
-        public static ItemOwnerView FromPayload(ReadOnlySpan<byte> payload)
-        {
-            return new ItemOwnerView(payload);
-        }
+        public static ItemOwnerView FromPayload(ReadOnlySpan<byte> payload) => new ItemOwnerView(payload);
 
         public ItemOwnerView(PacketView packet)
         {
@@ -25,15 +21,14 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header => _packet.Header;
-
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
-
         public ItemOwner Packet => _packetObject;
-
         public short ItemId => _packetObject.ItemId;
-
         public byte PlayerId => _packetObject.PlayerId;
+        public int TimeToKeepReservation => _packetObject.TimeToKeepReservation;
+        public byte GrabDelayPlayer => _packetObject.GrabDelayPlayer;
+        public int GrabDelayTime => _packetObject.GrabDelayTime;
+        public float PositionX => _packetObject.PositionX;
+        public float PositionY => _packetObject.PositionY;
     }
 }
-
-
