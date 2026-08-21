@@ -7,7 +7,7 @@ namespace Multiplicity.Packets.Views
         private readonly WorldItemSyncView _view;
 
         public SyncItemCannotBeTakenByEnemiesView(ReadOnlySpan<byte> payload)
-            : this(PacketView.FromPayload(PacketTypes.SyncItemCannotBeTakenByEnemies, payload))
+            : this(PacketView.FromPayload(PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated, payload))
         {
         }
 
