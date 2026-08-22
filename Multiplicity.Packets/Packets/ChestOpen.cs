@@ -49,7 +49,7 @@ namespace Multiplicity.Packets
             this.NameLength = br.ReadByte();
             this.ChestName = String.Empty;
 
-            if (this.NameLength <= MaxChestNameLength)
+            if (this.NameLength > 0 && this.NameLength <= MaxChestNameLength)
                 this.ChestName = br.ReadString();
             else
                 this.NameLength = 0;

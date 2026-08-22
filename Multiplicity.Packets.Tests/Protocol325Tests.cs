@@ -210,6 +210,31 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
+        public void ChestOpen_EmptyName_RoundTripsWithoutStringPayload()
+        {
+            ChestOpen packet = new ChestOpen
+            {
+                ChestId = 12,
+                ChestX = 345,
+                ChestY = 678,
+                ChestName = string.Empty
+            };
+
+            byte[] bytes = packet.ToArray(includeHeader: true);
+            ChestOpen parsed = Assert.IsType<ChestOpen>(
+                TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
+            ChestOpenView view = PacketViewParser.ParseExact(bytes).AsChestOpenView();
+
+            Assert.Equal(10, bytes.Length);
+            Assert.Equal((byte)0, bytes[^1]);
+            Assert.Equal((byte)0, parsed.NameLength);
+            Assert.Equal(string.Empty, parsed.ChestName);
+            Assert.Equal((short)12, view.ChestId);
+            Assert.Equal(string.Empty, view.ChestName);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
         public void ItemSync_ExplicitZeroValuedOptionalBlocksRemainPresent()
         {
             ItemDrop packet = new ItemDrop
