@@ -1,14 +1,14 @@
 using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The PlayerSpawn (0xC) packet.
+    /// The PlayerSpawn (0x0C) packet for Terraria protocol 325.
     /// </summary>
     public class PlayerSpawn : TerrariaPacket
     {
+        public const short PayloadLength = 15;
 
         public byte PlayerId { get; set; }
 
@@ -16,67 +16,60 @@ namespace Multiplicity.Packets
 
         public short SpawnY { get; set; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PlayerSpawn"/> class.
-        /// </summary>
+        public int RespawnTimer { get; set; }
+
+        public short NumberOfDeathsPVE { get; set; }
+
+        public short NumberOfDeathsPVP { get; set; }
+
+        public byte Team { get; set; }
+
+        /// <summary>Raw Terraria PlayerSpawnContext value.</summary>
+        public byte SpawnContext { get; set; }
+
         public PlayerSpawn()
             : base((byte)PacketTypes.PlayerSpawn)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PlayerSpawn"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public PlayerSpawn(BinaryReader br)
             : base(br)
         {
-            this.PlayerId = br.ReadByte();
-            this.SpawnX = br.ReadInt16();
-            this.SpawnY = br.ReadInt16();
+            PlayerId = br.ReadByte();
+            SpawnX = br.ReadInt16();
+            SpawnY = br.ReadInt16();
+            RespawnTimer = br.ReadInt32();
+            NumberOfDeathsPVE = br.ReadInt16();
+            NumberOfDeathsPVP = br.ReadInt16();
+            Team = br.ReadByte();
+            SpawnContext = br.ReadByte();
         }
 
-        public override string ToString()
-        {
-            return $"[PlayerSpawn: PlayerId = {PlayerId} SpawnX = {SpawnX} SpawnY = {SpawnY}]";
-        }
+        public override string ToString() =>
+            $"[PlayerSpawn: PlayerId = {PlayerId} SpawnX = {SpawnX} SpawnY = {SpawnY} RespawnTimer = {RespawnTimer} " +
+            $"DeathsPVE = {NumberOfDeathsPVE} DeathsPVP = {NumberOfDeathsPVP} Team = {Team} Context = {SpawnContext}]";
 
-        #region implemented abstract members of TerrariaPacket
-
-        public override short GetLength()
-        {
-            return (short)(5);
-        }
+        public override short GetLength() => PayloadLength;
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
-            {
-                br.Write(PlayerId);
-                br.Write(SpawnX);
-                br.Write(SpawnY);
-            }
+            using BinaryWriter writer = new BinaryWriter(
+                stream,
+                new System.Text.UTF8Encoding(),
+                leaveOpen: true);
+            writer.Write(PlayerId);
+            writer.Write(SpawnX);
+            writer.Write(SpawnY);
+            writer.Write(RespawnTimer);
+            writer.Write(NumberOfDeathsPVE);
+            writer.Write(NumberOfDeathsPVP);
+            writer.Write(Team);
+            writer.Write(SpawnContext);
         }
-
-        #endregion
-
     }
 }
-
