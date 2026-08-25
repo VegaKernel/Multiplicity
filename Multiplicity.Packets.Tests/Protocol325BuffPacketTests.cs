@@ -53,5 +53,36 @@ namespace Multiplicity.Packets.Tests
             Assert.Equal(120000, parsed.Time);
             Assert.Equal(120000, view.Time);
         }
+
+        [Fact]
+        public void PlayerBuff_UsesVariableUInt16ListAndIsNotFixedLengthMetadata()
+        {
+            var packet = new PlayerBuff
+            {
+                PlayerId = 9,
+                BuffTypes = new ushort[] { 1, 0x1234, 300, 0 }
+            };
+
+            byte[] payload = packet.ToPayloadArray();
+            Assert.Equal(9, payload.Length);
+
+            PlayerBuff parsed = Assert.IsType<PlayerBuff>(
+                TerrariaPacket.DeserializePayload(PacketTypes.PlayerBuff, payload));
+            var view = new PlayerBuffView(PacketView.FromPayload(PacketTypes.PlayerBuff, payload));
+
+            Assert.Equal((byte)9, parsed.PlayerId);
+            Assert.Equal(new ushort[] { 1, 0x1234, 300, 0 }, parsed.BuffTypes);
+            Assert.Equal(new ushort[] { 1, 0x1234, 300, 0 }, view.BuffTypesMemory.ToArray());
+            Assert.False(TerrariaPacket.TryGetFixedPayloadLength(PacketTypes.PlayerBuff, out _));
+        }
+
+        [Fact]
+        public void PlayerBuff_RejectsOddUInt16Tail()
+        {
+            byte[] payload = { 2, 1, 0, 0x7f };
+
+            Assert.Throws<InvalidDataException>(() =>
+                TerrariaPacket.DeserializePayload(PacketTypes.PlayerBuff, payload));
+        }
     }
 }
