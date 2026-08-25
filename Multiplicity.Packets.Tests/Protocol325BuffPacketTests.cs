@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Multiplicity.Packets;
 using Multiplicity.Packets.Views;
 using Xunit;
