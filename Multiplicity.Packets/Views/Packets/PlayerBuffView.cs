@@ -1,5 +1,4 @@
 ﻿using System;
-using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
 {
@@ -32,8 +31,9 @@ namespace Multiplicity.Packets.Views
 
         public byte PlayerId => _packetObject.PlayerId;
 
+        public ReadOnlyMemory<ushort> BuffTypesMemory => _packetObject.BuffTypesMemory;
+
+        [Obsolete("Protocol 325 uses UInt16 buff ids. Use BuffTypesMemory instead.")]
         public ReadOnlyMemory<byte> BuffTypeMemory => _packetObject.BuffTypeMemory;
     }
 }
-
-

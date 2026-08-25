@@ -7,14 +7,11 @@ namespace Multiplicity.Packets.Views
         private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public TileGetSectionView(ReadOnlySpan<byte> payload)
-        : this(PacketView.FromPayload(PacketTypes.TileGetSection, payload))
+            : this(PacketView.FromPayload(PacketTypes.TileGetSection, payload))
         {
         }
 
-        public static TileGetSectionView FromPayload(ReadOnlySpan<byte> payload)
-        {
-            return new TileGetSectionView(payload);
-        }
+        public static TileGetSectionView FromPayload(ReadOnlySpan<byte> payload) => new TileGetSectionView(payload);
 
         public TileGetSectionView(PacketView packet)
         {
@@ -23,12 +20,14 @@ namespace Multiplicity.Packets.Views
             PacketReader reader = packet.CreatePayloadReader();
             int x = reader.ReadInt32();
             int y = reader.ReadInt32();
+            byte team = reader.ReadByte();
             reader.EnsureEnd();
 
             Header = packet.Header;
             _sourceSpan = packet.SourceSpan;
             X = x;
             Y = y;
+            Team = team;
         }
 
         public PacketHeader Header { get; }
@@ -38,8 +37,7 @@ namespace Multiplicity.Packets.Views
         public int X { get; }
 
         public int Y { get; }
+
+        public byte Team { get; }
     }
 }
-
-
-

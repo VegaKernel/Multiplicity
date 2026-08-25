@@ -1,95 +1,108 @@
 using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
     /// The PlayerBuff (0x32) packet.
+    /// Protocol 325 serializes buff ids as UInt16 values. The number of serialized slots is derived
+    /// from the packet payload length rather than hard-coded here.
     /// </summary>
     public class PlayerBuff : TerrariaPacket
     {
-
         public byte PlayerId { get; set; }
 
-        private byte[] _buffType;
+        public ushort[] BuffTypes { get; set; } = Array.Empty<ushort>();
 
+        public ReadOnlyMemory<ushort> BuffTypesMemory => BuffTypes;
+
+        [Obsolete("Protocol 325 uses UInt16 buff ids. Use BuffTypes instead. This compatibility property truncates ids above 255.")]
         public byte[] BuffType
         {
             get
             {
-                return _buffType ??= BuffTypeMemory.ToArray();
+                ushort[] source = BuffTypes ?? Array.Empty<ushort>();
+                byte[] result = new byte[source.Length];
+                for (int i = 0; i < source.Length; i++)
+                {
+                    result[i] = unchecked((byte)source[i]);
+                }
+
+                return result;
             }
             set
             {
-                _buffType = value;
-                BuffTypeMemory = value ?? Array.Empty<byte>();
+                byte[] source = value ?? Array.Empty<byte>();
+                ushort[] result = new ushort[source.Length];
+                for (int i = 0; i < source.Length; i++)
+                {
+                    result[i] = source[i];
+                }
+
+                BuffTypes = result;
             }
         }
 
-        public ReadOnlyMemory<byte> BuffTypeMemory { get; set; }
+        [Obsolete("Protocol 325 uses UInt16 buff ids. Use BuffTypesMemory instead. This compatibility property truncates ids above 255.")]
+        public ReadOnlyMemory<byte> BuffTypeMemory
+        {
+            get => BuffType;
+            set => BuffType = value.ToArray();
+        }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PlayerBuff"/> class.
-        /// </summary>
         public PlayerBuff()
             : base((byte)PacketTypes.PlayerBuff)
         {
-            BuffTypeMemory = ReadOnlyMemory<byte>.Empty;
-            _buffType = Array.Empty<byte>();
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PlayerBuff"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public PlayerBuff(BinaryReader br)
             : base(br)
         {
-            this.PlayerId = br.ReadByte();
-            this.BuffTypeMemory = br.ReadMemory(22);
+            PlayerId = br.ReadByte();
+
+            long remaining = br.BaseStream.Length - br.BaseStream.Position;
+            if (remaining < 0 || (remaining & 1L) != 0 || remaining / sizeof(ushort) > int.MaxValue)
+            {
+                throw new InvalidDataException($"Invalid PlayerBuff payload tail length {remaining}.");
+            }
+
+            int count = checked((int)(remaining / sizeof(ushort)));
+            ushort[] buffs = new ushort[count];
+            for (int i = 0; i < count; i++)
+            {
+                buffs[i] = br.ReadUInt16();
+            }
+
+            BuffTypes = buffs;
         }
 
         public override string ToString()
         {
-            return $"[PlayerBuff: PlayerId = {PlayerId}]";
+            return $"[PlayerBuff: PlayerId = {PlayerId} BuffCount = {BuffTypes?.Length ?? 0}]";
         }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(23);
+            int count = BuffTypes?.Length ?? 0;
+            return checked((short)(sizeof(byte) + count * sizeof(ushort)));
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
+            using (BinaryWriter br = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
             {
                 br.Write(PlayerId);
-                ReadOnlySpan<byte> buffSpan = BuffTypeMemory.Length == 22 ? BuffTypeMemory.Span : BuffType;
-                br.Write(buffSpan);
+                ushort[] buffs = BuffTypes ?? Array.Empty<ushort>();
+                for (int i = 0; i < buffs.Length; i++)
+                {
+                    br.Write(buffs[i]);
+                }
             }
         }
-
-        #endregion
-
     }
 }
-
