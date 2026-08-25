@@ -7,14 +7,11 @@ namespace Multiplicity.Packets.Views
         private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public PlayerSpawnView(ReadOnlySpan<byte> payload)
-        : this(PacketView.FromPayload(PacketTypes.PlayerSpawn, payload))
+            : this(PacketView.FromPayload(PacketTypes.PlayerSpawn, payload))
         {
         }
 
-        public static PlayerSpawnView FromPayload(ReadOnlySpan<byte> payload)
-        {
-            return new PlayerSpawnView(payload);
-        }
+        public static PlayerSpawnView FromPayload(ReadOnlySpan<byte> payload) => new PlayerSpawnView(payload);
 
         public PlayerSpawnView(PacketView packet)
         {
@@ -24,6 +21,11 @@ namespace Multiplicity.Packets.Views
             byte playerId = reader.ReadByte();
             short spawnX = reader.ReadInt16();
             short spawnY = reader.ReadInt16();
+            int respawnTimer = reader.ReadInt32();
+            short numberOfDeathsPVE = reader.ReadInt16();
+            short numberOfDeathsPVP = reader.ReadInt16();
+            byte team = reader.ReadByte();
+            byte spawnContext = reader.ReadByte();
             reader.EnsureEnd();
 
             Header = packet.Header;
@@ -31,6 +33,11 @@ namespace Multiplicity.Packets.Views
             PlayerId = playerId;
             SpawnX = spawnX;
             SpawnY = spawnY;
+            RespawnTimer = respawnTimer;
+            NumberOfDeathsPVE = numberOfDeathsPVE;
+            NumberOfDeathsPVP = numberOfDeathsPVP;
+            Team = team;
+            SpawnContext = spawnContext;
         }
 
         public PacketHeader Header { get; }
@@ -42,8 +49,15 @@ namespace Multiplicity.Packets.Views
         public short SpawnX { get; }
 
         public short SpawnY { get; }
+
+        public int RespawnTimer { get; }
+
+        public short NumberOfDeathsPVE { get; }
+
+        public short NumberOfDeathsPVP { get; }
+
+        public byte Team { get; }
+
+        public byte SpawnContext { get; }
     }
 }
-
-
-
