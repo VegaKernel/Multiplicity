@@ -32,10 +32,8 @@ namespace Multiplicity.Packets.Views
 
         public byte PlayerId => _packetObject.PlayerId;
 
-        public byte Buff => _packetObject.Buff;
+        public ushort Buff => _packetObject.Buff;
 
         public int Time => _packetObject.Time;
     }
 }
-
-
