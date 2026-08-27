@@ -1,74 +1,54 @@
-using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The ContinueConnecting (0x3) packet.
+    /// The ContinueConnecting (0x03) packet for Terraria 1.4.5.x.
     /// </summary>
     public class ContinueConnecting : TerrariaPacket
     {
+        public const short PayloadLength = 2;
 
         public byte PlayerId { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ContinueConnecting"/> class.
+        /// Gets or sets Terraria's third server-special flag, transmitted as the second byte
+        /// of packet 3 during connection bootstrap.
         /// </summary>
+        public bool ServerSpecialFlag2 { get; set; }
+
         public ContinueConnecting()
             : base((byte)PacketTypes.ContinueConnecting)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ContinueConnecting"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public ContinueConnecting(BinaryReader br)
             : base(br)
         {
-            this.PlayerId = br.ReadByte();
+            PlayerId = br.ReadByte();
+            ServerSpecialFlag2 = br.ReadBoolean();
         }
 
         public override string ToString()
         {
-            return $"[ContinueConnecting: PlayerId = {PlayerId}]";
+            return $"[ContinueConnecting: PlayerId = {PlayerId} ServerSpecialFlag2 = {ServerSpecialFlag2}]";
         }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(1);
+            return PayloadLength;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
-            {
-                br.Write(PlayerId);
-            }
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            bw.Write(PlayerId);
+            bw.Write(ServerSpecialFlag2);
         }
-
-        #endregion
-
     }
 }
-
