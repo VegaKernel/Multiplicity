@@ -253,19 +253,19 @@ namespace Multiplicity.Packets
         private NpcUpdateFlags BuildFlags()
         {
             NpcUpdateFlags flags = Flags;
-            flags = SetFlag(flags, NpcUpdateFlags.HasAI0, AI[0] != 0f);
-            flags = SetFlag(flags, NpcUpdateFlags.HasAI1, AI[1] != 0f);
-            flags = SetFlag(flags, NpcUpdateFlags.HasAI2, AI[2] != 0f);
-            flags = SetFlag(flags, NpcUpdateFlags.HasAI3, AI[3] != 0f);
-            flags = SetFlag(flags, NpcUpdateFlags.LifeIsFull, LifeBytes == 0);
+            flags = SetFlag(flags, NpcUpdateFlags.HasAI0, HasExplicitFlag(Flags, NpcUpdateFlags.HasAI0) || AI[0] != 0f);
+            flags = SetFlag(flags, NpcUpdateFlags.HasAI1, HasExplicitFlag(Flags, NpcUpdateFlags.HasAI1) || AI[1] != 0f);
+            flags = SetFlag(flags, NpcUpdateFlags.HasAI2, HasExplicitFlag(Flags, NpcUpdateFlags.HasAI2) || AI[2] != 0f);
+            flags = SetFlag(flags, NpcUpdateFlags.HasAI3, HasExplicitFlag(Flags, NpcUpdateFlags.HasAI3) || AI[3] != 0f);
+            flags = SetFlag(flags, NpcUpdateFlags.LifeIsFull, HasExplicitFlag(Flags, NpcUpdateFlags.LifeIsFull) || LifeBytes == 0);
             return flags;
         }
 
         private NpcUpdateExtraFlags BuildExtraFlags()
         {
             NpcUpdateExtraFlags extraFlags = ExtraFlags;
-            extraFlags = SetFlag(extraFlags, NpcUpdateExtraFlags.HasPlayerCountScaling, StatsScaledForPlayerCount > 1);
-            extraFlags = SetFlag(extraFlags, NpcUpdateExtraFlags.HasDifficultyOverride, Difficulty != 1f);
+            extraFlags = SetFlag(extraFlags, NpcUpdateExtraFlags.HasPlayerCountScaling, HasExplicitFlag(ExtraFlags, NpcUpdateExtraFlags.HasPlayerCountScaling) || StatsScaledForPlayerCount > 1);
+            extraFlags = SetFlag(extraFlags, NpcUpdateExtraFlags.HasDifficultyOverride, HasExplicitFlag(ExtraFlags, NpcUpdateExtraFlags.HasDifficultyOverride) || Difficulty != 1f);
             return extraFlags;
         }
 
@@ -300,6 +300,16 @@ namespace Multiplicity.Packets
         private static bool IsKnownCatchableType(int npcType)
         {
             return npcType >= 0 && NpcCatchable.Contains((short)npcType);
+        }
+
+        private static bool HasExplicitFlag(NpcUpdateFlags current, NpcUpdateFlags flag)
+        {
+            return (current & flag) != 0;
+        }
+
+        private static bool HasExplicitFlag(NpcUpdateExtraFlags current, NpcUpdateExtraFlags flag)
+        {
+            return (current & flag) != 0;
         }
 
         private static NpcUpdateFlags SetFlag(NpcUpdateFlags current, NpcUpdateFlags flag, bool enabled)
