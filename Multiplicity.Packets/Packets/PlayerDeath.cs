@@ -7,6 +7,7 @@ namespace Multiplicity.Packets
     /// Packet id 44 is unused in Terraria 1.4.5.x. Current player death synchronization uses PlayerDeathV2.
     /// This legacy type is retained only for source compatibility and must not be serialized.
     /// </summary>
+    [PacketRegistrationIgnore]
     public class PlayerDeath : TerrariaPacket
     {
         public byte PlayerId { get; set; }
