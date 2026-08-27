@@ -1,6 +1,6 @@
 using Multiplicity.Packets.Extensions;
 using Multiplicity.Packets.Extensions.Dimensions;
-using Multiplicity.Packets.Extensions.Tsapi;
+using Multiplicity.Packets.Extensions.Mobile;
 using Xunit;
 
 namespace Multiplicity.Packets.Tests
@@ -37,7 +37,7 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void TsapiServerInfo_IsDecodedByExtensionAwareDecoder()
+        public void MobileServerInfo_IsDecodedOnlyByExtensionAwareDecoder()
         {
             ServerInfo packet = new ServerInfo(new byte[] { 1, 2, 3, 4 });
             byte[] bytes = packet.ToArray(includeHeader: true);
@@ -46,18 +46,21 @@ namespace Multiplicity.Packets.Tests
             TerrariaPacket decoded = PacketDecoder.CommonExtensions.Decode(bytes);
             ServerInfo extension = Assert.IsType<ServerInfo>(decoded);
 
-            Assert.IsType<ServerInfo>(vanilla); // Legacy compatibility path until the next breaking release.
+            Assert.IsType<UnknownPacket>(vanilla);
             Assert.Equal(packet.Payload, extension.Payload);
         }
 
         [Fact]
-        public void TsapiPlayerPlatformInfo_UsesExtensionId164()
+        public void MobilePlayerPlatformInfo_UsesExtensionId164()
         {
             PlayerPlatformInfo packet = new PlayerPlatformInfo(new byte[] { 9, 8, 7 });
+            byte[] bytes = packet.ToArray(includeHeader: true);
 
-            TerrariaPacket decoded = PacketDecoder.CommonExtensions.Decode(packet.ToArray(includeHeader: true));
+            TerrariaPacket vanilla = TerrariaPacket.Deserialize(bytes);
+            TerrariaPacket decoded = PacketDecoder.CommonExtensions.Decode(bytes);
             PlayerPlatformInfo extension = Assert.IsType<PlayerPlatformInfo>(decoded);
 
+            Assert.IsType<UnknownPacket>(vanilla);
             Assert.Equal(PlayerPlatformInfo.PacketId, extension.Id);
             Assert.Equal(packet.Payload, extension.Payload);
         }
