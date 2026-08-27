@@ -1,5 +1,7 @@
-﻿using System;
-using Multiplicity.Packets.Models;
+using System;
+using System.IO;
+using Multiplicity.Packets.Extensions;
+using Multiplicity.Packets.Extensions.Mobile;
 
 namespace Multiplicity.Packets.Views
 {
@@ -9,7 +11,7 @@ namespace Multiplicity.Packets.Views
         private readonly PlayerPlatformInfo _packetObject;
 
         public PlayerPlatformInfoView(ReadOnlySpan<byte> payload)
-            : this(PacketView.FromPayload(PacketTypes.PlayerPlatformInfo, payload))
+            : this(PacketView.FromPayload(PlayerPlatformInfo.PacketId, payload))
         {
         }
 
@@ -20,8 +22,14 @@ namespace Multiplicity.Packets.Views
 
         public PlayerPlatformInfoView(PacketView packet)
         {
+            if (packet.Header.RawPacketId != PlayerPlatformInfo.PacketId)
+            {
+                throw new InvalidDataException($"Expected packet id {PlayerPlatformInfo.PacketId}, got {packet.Header.RawPacketId}.");
+            }
+
             _packet = packet;
-            _packetObject = PacketViewMaterializer.Materialize<PlayerPlatformInfo>(packet, PacketTypes.PlayerPlatformInfo);
+            _packetObject = (PlayerPlatformInfo)new PacketDecoder(PacketExtensions.Mobile)
+                .DecodePayload(PlayerPlatformInfo.PacketId, packet.PayloadSpan.ToArray());
         }
 
         public PacketHeader Header => _packet.Header;
@@ -31,5 +39,3 @@ namespace Multiplicity.Packets.Views
         public PlayerPlatformInfo Packet => _packetObject;
     }
 }
-
-

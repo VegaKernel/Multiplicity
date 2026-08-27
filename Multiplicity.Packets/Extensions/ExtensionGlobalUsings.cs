@@ -1,1 +1,1 @@
-global using Multiplicity.Packets.Extensions.Tsapi;
+global using Multiplicity.Packets.Views;
