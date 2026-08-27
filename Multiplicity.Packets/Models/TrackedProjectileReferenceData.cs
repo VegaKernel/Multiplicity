@@ -1,23 +1,52 @@
+using System;
 using System.IO;
 
 namespace Multiplicity.Packets.Models
 {
     public sealed class TrackedProjectileReferenceData
     {
-        private const short EmptyPayloadLength = 2;
-        private const short TrackedPayloadLength = 6;
+        public const short PayloadLength = sizeof(int) + sizeof(short);
 
-        public short OwnerIndex { get; set; } = -1;
-
-        public short Identity { get; set; }
+        public ProjectileKey Key { get; set; }
 
         public short ProjectileType { get; set; }
 
-        public bool IsTrackingSomething
+        public bool IsTrackingSomething => ProjectileType != 0;
+
+        [Obsolete("Use Key. Terraria serializes a packed ProjectileKey, not a standalone Int16 owner index.")]
+        public short OwnerIndex
         {
-            get
+            get => IsTrackingSomething ? Key.Spawner : (short)-1;
+            set
             {
-                return OwnerIndex != -1;
+                if (value == -1)
+                {
+                    Key = default;
+                    ProjectileType = 0;
+                    return;
+                }
+
+                if (value < byte.MinValue || value > byte.MaxValue)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Projectile spawner must fit in a byte.");
+                }
+
+                Key = new ProjectileKey((byte)value, Key.Index, Key.Generation);
+            }
+        }
+
+        [Obsolete("Use Key. Terraria serializes a packed ProjectileKey containing index and generation.")]
+        public short Identity
+        {
+            get => checked((short)Key.Index);
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Projectile index cannot be negative.");
+                }
+
+                Key = new ProjectileKey(Key.Spawner, checked((ushort)value), Key.Generation);
             }
         }
 
@@ -27,30 +56,18 @@ namespace Multiplicity.Packets.Models
 
         public TrackedProjectileReferenceData(BinaryReader br)
         {
-            OwnerIndex = br.ReadInt16();
-            if (OwnerIndex == -1)
-            {
-                return;
-            }
-
-            Identity = br.ReadInt16();
+            Key = ProjectileKey.FromPacked(br.ReadInt32());
             ProjectileType = br.ReadInt16();
         }
 
         public short GetLength()
         {
-            return IsTrackingSomething ? TrackedPayloadLength : EmptyPayloadLength;
+            return PayloadLength;
         }
 
         public void ToStream(BinaryWriter bw)
         {
-            bw.Write(OwnerIndex);
-            if (!IsTrackingSomething)
-            {
-                return;
-            }
-
-            bw.Write(Identity);
+            bw.Write(Key.ToInt32());
             bw.Write(ProjectileType);
         }
     }
