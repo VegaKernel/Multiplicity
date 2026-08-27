@@ -77,5 +77,11 @@ namespace Multiplicity.Packets.Tests
             Assert.Equal(packet.X, parsed.X);
             Assert.Equal(packet.Y, parsed.Y);
         }
+
+        [Fact]
+        public void NpcSpecial_IncludesProtocol326PartyGirlCakeEffect()
+        {
+            Assert.Equal(10, (byte)NpcSpecialType.PartyGirlCake);
+        }
     }
 }
