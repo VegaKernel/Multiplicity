@@ -77,7 +77,7 @@ namespace Multiplicity.Packets.Tests
             PacketPayloadMetadata metadata = TerrariaPacket.GetPayloadMetadata(PacketTypes.NpcUpdateBuff);
             bool parsed = PacketViewParser.TryParsePayload(
                 PacketTypes.NpcUpdateBuff,
-                extended,
+                (ReadOnlySpan<byte>)extended,
                 out PacketView view,
                 out int consumed);
 

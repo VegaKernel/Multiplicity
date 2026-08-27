@@ -1,5 +1,6 @@
 using System;
 using Multiplicity.Packets;
+using Multiplicity.Packets.Extensions.Mobile;
 using Multiplicity.Packets.Views;
 using Xunit;
 
@@ -74,14 +75,16 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void Protocol325PacketIdRange_MatchesDesktopMessageIdsAndExtensions()
+        public void Protocol325PacketIdRange_StopsAtDesktop162AndKeepsMobileIdsSeparate()
         {
             Assert.Equal(145, (int)PacketTypes.SyncItemsWithShimmerDeprecated);
             Assert.Equal(148, (int)PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated);
             Assert.Equal(161, (int)PacketTypes.HostToken);
             Assert.Equal(162, (int)PacketTypes.DamageNPCAck);
-            Assert.Equal(163, (int)PacketTypes.ServerInfo);
-            Assert.Equal(164, (int)PacketTypes.PlayerPlatformInfo);
+            Assert.Equal(163, ServerInfo.PacketId);
+            Assert.Equal(164, PlayerPlatformInfo.PacketId);
+            Assert.False(Enum.IsDefined(typeof(PacketTypes), ServerInfo.PacketId));
+            Assert.False(Enum.IsDefined(typeof(PacketTypes), PlayerPlatformInfo.PacketId));
         }
 
         [Fact]
@@ -95,8 +98,8 @@ namespace Multiplicity.Packets.Tests
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.NpcKillCount));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.SyncItemsWithShimmerDeprecated));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated));
-            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.ServerInfo));
-            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.PlayerPlatformInfo));
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey((PacketTypes)ServerInfo.PacketId));
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey((PacketTypes)PlayerPlatformInfo.PacketId));
 
             Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.ConnectRequest));
             Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.WorldInfo));
