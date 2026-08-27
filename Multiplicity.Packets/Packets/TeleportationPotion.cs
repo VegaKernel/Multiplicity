@@ -9,61 +9,45 @@ namespace Multiplicity.Packets
     /// </summary>
     public class TeleportationPotion : TerrariaPacket
     {
+        public const short PayloadLength = 1;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TeleportationPotion"/> class.
+        /// Gets or sets the teleport subtype used by Terraria 1.4.5.x.
         /// </summary>
+        public byte Subtype { get; set; }
+
         public TeleportationPotion()
             : base((byte)PacketTypes.TeleportationPotion)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TeleportationPotion"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public TeleportationPotion(BinaryReader br)
             : base(br)
         {
+            Subtype = br.ReadByte();
         }
 
         public override string ToString()
         {
-            return $"[TeleportationPotion:]";
+            return $"[TeleportationPotion: Subtype = {Subtype}]";
         }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(0);
+            return PayloadLength;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
+                br.Write(Subtype);
             }
         }
-
-        #endregion
-
     }
 }
