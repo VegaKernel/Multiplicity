@@ -1,67 +1,114 @@
 using System;
 using System.IO;
+using System.Net;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The Placeholder (0x43) packet.
+    /// Packet id 67 is unused by vanilla Terraria 1.4.5.x and is used by the upstream
+    /// Dimensions server proxy as an extension carrier.
     /// </summary>
     public class Placeholder : TerrariaPacket
     {
+        /// <summary>
+        /// Dimensions message type 0 reports the client's address observed by the proxy.
+        /// </summary>
+        public const short DimensionsRealIpMessageType = 0;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Placeholder"/> class.
+        /// Dimensions message type, or null when this is a bare vanilla placeholder packet.
         /// </summary>
-        public Placeholder() 
+        public short? DimensionsMessageType { get; set; }
+
+        /// <summary>
+        /// Dimensions string payload. For message type 0 this is the proxy-reported client IP.
+        /// </summary>
+        public string DimensionsPayload { get; set; } = string.Empty;
+
+        public bool IsDimensionsMessage => DimensionsMessageType.HasValue;
+
+        public bool IsDimensionsRealIp => DimensionsMessageType == DimensionsRealIpMessageType;
+
+        /// <summary>
+        /// Returns the IP text reported by Dimensions for message type 0, otherwise null.
+        /// The value is a report from an extension peer and is not authenticated by the Terraria protocol.
+        /// </summary>
+        public string ReportedRealIp => IsDimensionsRealIp ? DimensionsPayload : null;
+
+        public Placeholder()
             : base((byte)PacketTypes.Placeholder)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Placeholder"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
-        public Placeholder(BinaryReader br) 
+        public Placeholder(BinaryReader br)
             : base(br)
         {
+            if (br.BaseStream.Position >= br.BaseStream.Length)
+            {
+                return;
+            }
 
+            DimensionsMessageType = br.ReadInt16();
+            DimensionsPayload = br.ReadString();
+        }
+
+        public static Placeholder CreateDimensionsRealIp(string ipAddress)
+        {
+            if (!IPAddress.TryParse(ipAddress, out IPAddress parsedAddress))
+            {
+                throw new ArgumentException("Dimensions real-IP payload must be a valid IPv4 or IPv6 address.", nameof(ipAddress));
+            }
+
+            return new Placeholder
+            {
+                DimensionsMessageType = DimensionsRealIpMessageType,
+                DimensionsPayload = parsedAddress.ToString()
+            };
+        }
+
+        public bool TryGetReportedRealIp(out IPAddress address)
+        {
+            if (!IsDimensionsRealIp)
+            {
+                address = null;
+                return false;
+            }
+
+            return IPAddress.TryParse(DimensionsPayload, out address);
         }
 
         public override string ToString()
         {
-            return string.Format("[Placeholder]");
+            return IsDimensionsMessage
+                ? $"[DimensionsMessage: Type = {DimensionsMessageType} Payload = {DimensionsPayload}]"
+                : "[Placeholder]";
         }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(0);
+            if (!DimensionsMessageType.HasValue)
+            {
+                return 0;
+            }
+
+            return checked((short)(sizeof(short) + PacketSerializationHelper.GetSerializedStringLength(DimensionsPayload ?? string.Empty)));
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
-            if (includeHeader) {
+            if (includeHeader)
+            {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true)) {
+            if (!DimensionsMessageType.HasValue)
+            {
+                return;
             }
+
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            bw.Write(DimensionsMessageType.Value);
+            bw.Write(DimensionsPayload ?? string.Empty);
         }
-
-        #endregion
-
     }
 }
