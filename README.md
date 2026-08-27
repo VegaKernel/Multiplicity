@@ -6,24 +6,31 @@ NuGet package id: `Multiplicity`. The assembly and public namespace remain `Mult
 
 ## Protocol support
 
-The current baseline is **Terraria 1.4.5.7 / protocol 325**.
+The current baseline is **Terraria 1.4.5.8 / protocol 326**.
 
-- connection handshake: `Terraria325`;
+- connection handshake: `Terraria326`;
 - vanilla desktop `MessageID.Count`: `163`;
 - vanilla desktop packet ids: `0..162`;
 - highest vanilla packet id: `DamageNPCAck (162)`;
 - `ServerInfo (163)` and `PlayerPlatformInfo (164)` are Multiplicity/TSAPI-family extension ids and are not part of vanilla desktop `MessageID`.
 
-Important protocol-325 changes covered by the library include:
+The confirmed wire delta from Terraria 1.4.5.7 / protocol 325 to 1.4.5.8 / protocol 326 is deliberately small:
+
+- the connection handshake changes from `Terraria325` to `Terraria326`;
+- `WorldInfo (7)` keeps the same eleven world/event flag bytes and appends `short DungeonX + short DungeonY` after the extra-spawn-point list;
+- the remaining packet layouts and the `NetManager` module registration order are inherited from the audited 1.4.5.7 / protocol 325 baseline unless a packet has an independently documented compatibility fix.
+
+Important 1.4.5.x packet-layout fixes covered by the library include:
 
 - NPC slot + generation identity in NPC synchronization and damage packets;
-- 32-bit `ProjectileKey` identity in projectile create/destroy synchronization;
+- 32-bit `ProjectileKey` identity in projectile create/destroy synchronization and projectile trackers;
 - current world-item sync and item ownership layouts;
 - `RemoveItemOwner (39)` force-assignment flag;
+- variable-length `NpcUpdateBuff (54)` entries using `ushort` buff ids and times with a zero terminator;
 - `DamageNPCAck (162)`;
-- additional `WorldInfo` seed/world flags used by 1.4.5.7;
+- current `WorldInfo` seed/world flags plus the protocol-326 dungeon-coordinate tail;
 - current `NetManager` module registration order, including restored `NetCreativeUnlocksModule`;
-- packet ids `145` and `148` are treated as deprecated in protocol 325 and are not registered for normal runtime deserialization.
+- packet ids `145` and `148` are treated as deprecated and are not registered for normal runtime deserialization.
 
 `KillPortal (95)` uses the vanilla wire layout `ushort PlayerId + byte PortalColor`, so its payload is 3 bytes. The old `ProjectileIndex` property is retained only as an obsolete source-compatibility alias.
 
@@ -122,7 +129,7 @@ A payload-only `PacketView` has no complete Terraria packet header, so `HasPacke
 
 ## Net modules
 
-`LoadNetModule` and `TerrariaNetModule` use the Terraria 1.4.5.7 registration order. The currently registered module ids are:
+`LoadNetModule` and `TerrariaNetModule` use the Terraria 1.4.5.8 registration order, unchanged from the audited 1.4.5.7 baseline. The currently registered module ids are:
 
 | Id | Module |
 |---:|---|
@@ -142,7 +149,7 @@ A payload-only `PacketView` has no complete Terraria packet header, so `HasPacke
 | 13 | `LeashedEntityModule` |
 | 14 | `UnbreakableWallScanModule` |
 
-The older `TagEffectModule` is not part of the protocol-325 registration table and has been removed from the active API.
+The older `TagEffectModule` is not part of the current registration table and has been removed from the active API.
 
 ## Project layout
 
@@ -154,4 +161,4 @@ The older `TagEffectModule` is not part of the protocol-325 registration table a
 
 ## Summary
 
-Multiplicity provides both a conventional packet object model and a low-allocation view API, with the current wire baseline set to **Terraria 1.4.5.7 / protocol 325**.
+Multiplicity provides both a conventional packet object model and a low-allocation view API, with the current wire baseline set to **Terraria 1.4.5.8 / protocol 326**.
