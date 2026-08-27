@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
@@ -23,36 +22,38 @@ namespace Multiplicity.Packets
         public byte NameLength { get; set; }
 
         /// <summary>
-        /// Gets or sets the ChestName - Only if length > 0 && <= 20|
+        /// Gets or sets the chest name when the name marker is between 1 and 20.
         /// </summary>
         public string ChestName { get; set; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChestOpen"/> class.
-        /// </summary>
         public ChestOpen()
             : base((byte)PacketTypes.ChestOpen)
         {
-
+            ChestName = string.Empty;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChestOpen"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public ChestOpen(BinaryReader br)
             : base(br)
         {
-            this.ChestId = br.ReadInt16();
-            this.ChestX = br.ReadInt16();
-            this.ChestY = br.ReadInt16();
-            this.NameLength = br.ReadByte();
-            this.ChestName = String.Empty;
+            ChestId = br.ReadInt16();
+            ChestX = br.ReadInt16();
+            ChestY = br.ReadInt16();
+            NameLength = br.ReadByte();
+            ChestName = string.Empty;
 
-            if (this.NameLength > 0 && this.NameLength <= MaxChestNameLength)
-                this.ChestName = br.ReadString();
-            else
-                this.NameLength = 0;
+            if (NameLength > 0)
+            {
+                if (NameLength <= MaxChestNameLength)
+                {
+                    ChestName = br.ReadString();
+                }
+                else if (NameLength != InvalidNameLength)
+                {
+                    // Terraria preserves 255 as the explicit "no valid name" sentinel,
+                    // but normalizes every other out-of-range marker to zero.
+                    NameLength = 0;
+                }
+            }
         }
 
         public override string ToString()
@@ -60,58 +61,49 @@ namespace Multiplicity.Packets
             return $"[ChestOpen: ChestId = {ChestId} ChestX = {ChestX} ChestY = {ChestY} NameLength = {NameLength} ChestName = {ChestName}]";
         }
 
-        #region implemented abstract members of TerrariaPacket
-
         public override short GetLength()
         {
-            if (string.IsNullOrEmpty(ChestName))
+            string chestName = ChestName ?? string.Empty;
+            if (chestName.Length == 0 || chestName.Length > MaxChestNameLength)
             {
                 return FixedPayloadLength;
             }
 
-            return (short)(FixedPayloadLength + PacketSerializationHelper.GetSerializedStringLength(ChestName));
+            return checked((short)(FixedPayloadLength + PacketSerializationHelper.GetSerializedStringLength(chestName)));
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
-            {
-                br.Write(ChestId);
-                br.Write(ChestX);
-                br.Write(ChestY);
-                string chestName = ChestName ?? string.Empty;
-                NameLength = (byte)chestName.Length;
-                if (NameLength > MaxChestNameLength)
-                {
-                    NameLength = InvalidNameLength;
-                }
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
 
-                br.Write(NameLength);
-                if (NameLength > 0 && NameLength <= MaxChestNameLength)
-                {
-                    br.Write(chestName);
-                }
+            bw.Write(ChestId);
+            bw.Write(ChestX);
+            bw.Write(ChestY);
+
+            string chestName = ChestName ?? string.Empty;
+            if (chestName.Length == 0)
+            {
+                NameLength = 0;
+            }
+            else if (chestName.Length > MaxChestNameLength)
+            {
+                NameLength = InvalidNameLength;
+            }
+            else
+            {
+                NameLength = (byte)chestName.Length;
+            }
+
+            bw.Write(NameLength);
+            if (NameLength > 0 && NameLength <= MaxChestNameLength)
+            {
+                bw.Write(chestName);
             }
         }
-
-        #endregion
-
     }
 }
-
