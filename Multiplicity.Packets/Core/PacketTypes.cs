@@ -1,5 +1,3 @@
-using System;
-
 namespace Multiplicity.Packets
 {
     public enum PacketTypes : byte
