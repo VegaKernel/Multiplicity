@@ -12,7 +12,7 @@ The current baseline is **Terraria 1.4.5.8 / protocol 326**.
 - vanilla desktop `MessageID.Count`: `163`;
 - vanilla desktop packet ids: `0..162`;
 - highest vanilla packet id: `DamageNPCAck (162)`;
-- `ServerInfo (163)` and `PlayerPlatformInfo (164)` are TSAPI-family extension ids and are not part of vanilla desktop `MessageID`.
+- `ServerInfo (163)` and `PlayerPlatformInfo (164)` are mobile-family extension ids and are not part of vanilla desktop `MessageID`.
 
 The confirmed wire delta from Terraria 1.4.5.7 / protocol 325 to 1.4.5.8 / protocol 326 is deliberately small:
 
@@ -30,7 +30,7 @@ Important 1.4.5.x packet-layout fixes covered by the library include:
 - `DamageNPCAck (162)`;
 - current `WorldInfo` seed/world flags plus the protocol-326 dungeon-coordinate tail;
 - current `NetManager` module registration order, including restored `NetCreativeUnlocksModule`;
-- packet ids `145` and `148` are treated as deprecated and are not registered for normal runtime deserialization.
+- packet ids `24`, `25`, `26`, `44`, `48`, `83`, `145` and `148` are not registered as active vanilla protocol-326 packets.
 
 `KillPortal (95)` uses the vanilla wire layout `ushort PlayerId + byte PortalColor`, so its payload is 3 bytes. The old `ProjectileIndex` property is retained only as an obsolete source-compatibility alias.
 
@@ -40,7 +40,8 @@ Important 1.4.5.x packet-layout fixes covered by the library include:
 - typed packet models;
 - a zero-copy `ReadOnlySpan<byte>` view layer for server hot paths;
 - opt-in packet-extension overlays without mixing extension models into the vanilla packet folder;
-- packet and view names aligned with the TSAPI/Terraria naming where practical;
+- a source-generated vanilla packet registry with no runtime assembly scanning;
+- packet and view names aligned with the Terraria naming where practical;
 - no external runtime dependencies.
 
 Target framework: `net9.0`.
@@ -55,6 +56,21 @@ The package is marked as AOT/trimming compatible and enables the .NET AOT and tr
 ```
 
 A NativeAOT application can therefore consume the same `net9.0` NuGet package; a separate AOT NuGet package is not required.
+
+### AOT-safe packet registration
+
+Vanilla packet registration is generated at compile time by `Multiplicity.Packets.Generators`.
+
+The generator discovers concrete packet models during compilation and emits direct code equivalent to:
+
+```csharp
+PacketRegistration.Fixed(
+    PacketTypes.Zones,
+    static reader => new Zones(reader),
+    static () => new Zones());
+```
+
+There is no runtime `Assembly.GetTypes()`, constructor lookup, `Activator` or reflected `PayloadLength` lookup in the library registry path. The generated registry supplies both deserializers and packet metadata from the same compile-time source of truth. Legacy packet classes that intentionally remain only for source compatibility are marked `[PacketRegistrationIgnore]` and are excluded from generated vanilla registration.
 
 ## Install
 
@@ -140,12 +156,14 @@ string payload
 
 `messageType = 0` reports the client IP observed by the Dimensions proxy. This value is an extension report and is not authenticated by the vanilla Terraria protocol, so consumers should only trust it from a trusted proxy path.
 
-TSAPI-family extension packets currently modeled separately are:
+Mobile-family packets currently isolated behind an opt-in extension overlay are:
 
-- `Extensions.Tsapi.ServerInfo`, packet id `163`;
-- `Extensions.Tsapi.PlayerPlatformInfo`, packet id `164`.
+- `Extensions.Mobile.ServerInfo`, packet id `163`;
+- `Extensions.Mobile.PlayerPlatformInfo`, packet id `164`.
 
-`PacketTypes.ServerInfo` and `PacketTypes.PlayerPlatformInfo` remain temporary compatibility aliases for existing consumers. They are not vanilla Terraria IDs and new code should use the extension packet constants instead.
+Older mobile protocol tables independently identify the same `ServerInfo` and `PlayerPlatformInfo` packet family, but their numeric ids moved as the shared packet table grew. Until a matching mobile build for ids `163/164` is pinned, Multiplicity deliberately preserves their payloads as opaque bytes instead of pretending an older layout is proven for the current ids.
+
+`PacketTypes.ServerInfo` and `PacketTypes.PlayerPlatformInfo` remain temporary compatibility aliases for existing consumers. They are not vanilla desktop Terraria IDs and new code should use the extension packet constants instead.
 
 ## Zero-copy packet views
 
@@ -209,11 +227,12 @@ The older `TagEffectModule` is not part of the current registration table and ha
 
 ## Project layout
 
-- `Multiplicity.Packets/Core` - packet framing, metadata and vanilla protocol registration;
+- `Multiplicity.Packets/Core` - packet framing and generated-registry runtime support;
 - `Multiplicity.Packets/Packets` - vanilla typed packet object models;
-- `Multiplicity.Packets/Extensions` - opt-in extension overlays such as Dimensions and TSAPI-family packets;
+- `Multiplicity.Packets/Extensions` - opt-in extension overlays such as Dimensions and mobile-family packets;
 - `Multiplicity.Packets/NetModules` - `NetManager` module models;
 - `Multiplicity.Packets/Views` - low-allocation packet views;
+- `Multiplicity.Packets.Generators` - compile-time vanilla packet registry generator;
 - `Multiplicity.Packets.Tests` - protocol and serialization regression tests.
 
 ## Summary
