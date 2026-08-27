@@ -7,6 +7,7 @@ namespace Multiplicity.Packets
     /// Packet id 25 is unused in Terraria 1.4.5.x. Chat synchronization uses NetTextModule.
     /// This legacy type is retained only for source compatibility and must not be serialized.
     /// </summary>
+    [PacketRegistrationIgnore]
     public class ChatMessage : TerrariaPacket
     {
         public byte PlayerId { get; set; }
