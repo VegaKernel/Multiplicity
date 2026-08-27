@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
@@ -30,18 +29,6 @@ namespace Multiplicity.Packets.Views
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
 
         public Placeholder Packet => _packetObject;
-
-        public bool IsDimensionsMessage => _packetObject.IsDimensionsMessage;
-
-        public bool IsDimensionsRealIp => _packetObject.IsDimensionsRealIp;
-
-        public short? DimensionsMessageType => _packetObject.DimensionsMessageType;
-
-        public string DimensionsPayload => _packetObject.DimensionsPayload;
-
-        public string ReportedRealIp => _packetObject.ReportedRealIp;
-
-        public bool TryGetReportedRealIp(out IPAddress address) => _packetObject.TryGetReportedRealIp(out address);
     }
 }
 
