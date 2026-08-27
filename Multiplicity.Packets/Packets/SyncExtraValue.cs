@@ -9,45 +9,37 @@ namespace Multiplicity.Packets
     /// </summary>
     public class SyncExtraValue : TerrariaPacket
     {
-        private const short PayloadLength = 14;
-
+        public const short PayloadLength = 14;
 
         public short NpcIndex { get; set; }
 
-        public float ExtraValue { get; set; }
+        /// <summary>
+        /// Gets or sets the integer extra-value delta carried by Terraria on the wire.
+        /// </summary>
+        public int ExtraValue { get; set; }
 
         public float X { get; set; }
 
         public float Y { get; set; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SyncExtraValue"/> class.
-        /// </summary>
         public SyncExtraValue()
             : base((byte)PacketTypes.SyncExtraValue)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SyncExtraValue"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public SyncExtraValue(BinaryReader br)
             : base(br)
         {
-            this.NpcIndex = br.ReadInt16();
-            this.ExtraValue = br.ReadSingle();
-            this.X = br.ReadSingle();
-            this.Y = br.ReadSingle();
+            NpcIndex = br.ReadInt16();
+            ExtraValue = br.ReadInt32();
+            X = br.ReadSingle();
+            Y = br.ReadSingle();
         }
 
         public override string ToString()
         {
             return $"[SyncExtraValue: NpcIndex = {NpcIndex} ExtraValue = {ExtraValue} X = {X} Y = {Y}]";
         }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
@@ -56,22 +48,11 @@ namespace Multiplicity.Packets
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
             using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
             {
                 br.Write(NpcIndex);
@@ -80,9 +61,5 @@ namespace Multiplicity.Packets
                 br.Write(Y);
             }
         }
-
-        #endregion
-
     }
 }
-
