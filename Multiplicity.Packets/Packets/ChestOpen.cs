@@ -88,7 +88,11 @@ namespace Multiplicity.Packets
             string chestName = ChestName ?? string.Empty;
             if (chestName.Length == 0)
             {
-                NameLength = 0;
+                // Keep an explicitly parsed/configured 255 marker stable across a round-trip.
+                if (NameLength != InvalidNameLength)
+                {
+                    NameLength = 0;
+                }
             }
             else if (chestName.Length > MaxChestNameLength)
             {
