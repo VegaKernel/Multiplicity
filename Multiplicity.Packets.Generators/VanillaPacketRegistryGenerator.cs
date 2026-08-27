@@ -30,7 +30,7 @@ namespace Multiplicity.Packets.Generators
             context.RegisterSourceOutput(input, static (spc, pair) =>
             {
                 string source = Generate(pair.Compilation, pair.Types);
-                spc.AddSource("VanillaPacketRegistry.g.cs", SourceText.From(source, Encoding.UTF8));
+                spc.AddSource("GeneratedPacketRegistry.g.cs", SourceText.From(source, Encoding.UTF8));
             });
         }
 
@@ -176,7 +176,7 @@ namespace Multiplicity.Packets.Generators
             return type.InstanceConstructors.Any(static ctor =>
                 !ctor.IsStatic &&
                 ctor.Parameters.Length == 0 &&
-                ctor.DeclaredAccessibility != Accessibility.Private);
+                IsRegistryAccessible(ctor.DeclaredAccessibility));
         }
 
         private static bool HasBinaryReaderConstructor(INamedTypeSymbol type, INamedTypeSymbol binaryReader)
@@ -185,7 +185,14 @@ namespace Multiplicity.Packets.Generators
                 !ctor.IsStatic &&
                 ctor.Parameters.Length == 1 &&
                 SymbolEqualityComparer.Default.Equals(ctor.Parameters[0].Type, binaryReader) &&
-                ctor.DeclaredAccessibility != Accessibility.Private);
+                IsRegistryAccessible(ctor.DeclaredAccessibility));
+        }
+
+        private static bool IsRegistryAccessible(Accessibility accessibility)
+        {
+            return accessibility == Accessibility.Public ||
+                   accessibility == Accessibility.Internal ||
+                   accessibility == Accessibility.ProtectedOrInternal;
         }
 
         private static bool IsFixedPayload(INamedTypeSymbol type)
