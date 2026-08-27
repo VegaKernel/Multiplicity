@@ -4,7 +4,7 @@ using Multiplicity.Packets.Models;
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The ProjectileNew (0x1B) packet for protocol 325.
+    /// The ProjectileNew (0x1B) packet for Terraria 1.4.5.8 / protocol 326.
     /// </summary>
     public class ProjectileNew : TerrariaPacket
     {
@@ -113,22 +113,28 @@ namespace Multiplicity.Packets
         private ProjectileNewFlags BuildFlags()
         {
             ProjectileNewFlags flags = Flags;
-            flags = SetFlag(flags, ProjectileNewFlags.HasAI0, AI0 != 0f);
-            flags = SetFlag(flags, ProjectileNewFlags.HasAI1, AI1 != 0f);
-            flags = SetFlag(flags, ProjectileNewFlags.HasBannerIdToRespondTo, BannerIdToRespondTo != 0);
-            flags = SetFlag(flags, ProjectileNewFlags.HasDamage, Damage != 0);
-            flags = SetFlag(flags, ProjectileNewFlags.HasKnockBack, KnockBack != 0f);
-            flags = SetFlag(flags, ProjectileNewFlags.HasOriginalDamage, OriginalDamage != 0);
-            flags = SetFlag(flags, ProjectileNewFlags.HasExtraFlags, BuildExtraFlags() != ProjectileNewExtraFlags.None);
+            flags = SetFlag(flags, ProjectileNewFlags.HasAI0, HasExplicitFlag(Flags, ProjectileNewFlags.HasAI0) || AI0 != 0f);
+            flags = SetFlag(flags, ProjectileNewFlags.HasAI1, HasExplicitFlag(Flags, ProjectileNewFlags.HasAI1) || AI1 != 0f);
+            flags = SetFlag(flags, ProjectileNewFlags.HasBannerIdToRespondTo, HasExplicitFlag(Flags, ProjectileNewFlags.HasBannerIdToRespondTo) || BannerIdToRespondTo != 0);
+            flags = SetFlag(flags, ProjectileNewFlags.HasDamage, HasExplicitFlag(Flags, ProjectileNewFlags.HasDamage) || Damage != 0);
+            flags = SetFlag(flags, ProjectileNewFlags.HasKnockBack, HasExplicitFlag(Flags, ProjectileNewFlags.HasKnockBack) || KnockBack != 0f);
+            flags = SetFlag(flags, ProjectileNewFlags.HasOriginalDamage, HasExplicitFlag(Flags, ProjectileNewFlags.HasOriginalDamage) || OriginalDamage != 0);
+            flags = SetFlag(flags, ProjectileNewFlags.HasExtraFlags, HasExplicitFlag(Flags, ProjectileNewFlags.HasExtraFlags) || BuildExtraFlags() != ProjectileNewExtraFlags.None);
             return flags;
         }
 
         private ProjectileNewExtraFlags BuildExtraFlags()
         {
             ProjectileNewExtraFlags extraFlags = ExtraFlags;
-            extraFlags = SetFlag(extraFlags, ProjectileNewExtraFlags.HasAI2, AI2 != 0f);
+            extraFlags = SetFlag(extraFlags, ProjectileNewExtraFlags.HasAI2, HasExplicitFlag(ExtraFlags, ProjectileNewExtraFlags.HasAI2) || AI2 != 0f);
             return extraFlags;
         }
+
+        private static bool HasExplicitFlag(ProjectileNewFlags current, ProjectileNewFlags flag) =>
+            (current & flag) != 0;
+
+        private static bool HasExplicitFlag(ProjectileNewExtraFlags current, ProjectileNewExtraFlags flag) =>
+            (current & flag) != 0;
 
         private static ProjectileNewFlags SetFlag(ProjectileNewFlags current, ProjectileNewFlags flag, bool enabled) =>
             enabled ? current | flag : current & ~flag;
