@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
@@ -33,6 +33,8 @@ namespace Multiplicity.Packets.Views
         public byte PlayerId => _packetObject.PlayerId;
 
         public int AnglerQuestsCompleted => _packetObject.AnglerQuestsCompleted;
+
+        public int GolferScoreAccumulated => _packetObject.GolferScoreAccumulated;
     }
 }
 

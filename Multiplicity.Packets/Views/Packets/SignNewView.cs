@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
@@ -39,6 +39,10 @@ namespace Multiplicity.Packets.Views
         public string Text => _packetObject.Text;
 
         public byte PlayerId => _packetObject.PlayerId;
+
+        public byte Flags => _packetObject.Flags;
+
+        public bool SuppressOpen => _packetObject.SuppressOpen;
     }
 }
 

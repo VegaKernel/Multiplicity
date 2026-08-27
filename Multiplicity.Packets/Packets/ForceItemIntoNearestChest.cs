@@ -1,73 +1,135 @@
 using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
+    public enum QuickStackChestsPayloadKind : byte
+    {
+        InventoryRequest = 0,
+        BlockedChestList = 1
+    }
+
     /// <summary>
-    /// The ForceItemIntoNearestChest (0x55) packet.
+    /// Packet 85 (QuickStackChests). The payload is direction-dependent:
+    /// client-to-server sends Int32 count + Int16 inventory slot ids + Boolean smartStack;
+    /// server-to-client sends Int32 count + UInt16 blocked chest ids.
     /// </summary>
     public class ForceItemIntoNearestChest : TerrariaPacket
     {
+        private const short CountPayloadLength = 4;
+        private const short EntryPayloadLength = 2;
+        private const short SmartStackPayloadLength = 1;
 
-        public byte InventorySlot { get; set; }
+        public QuickStackChestsPayloadKind PayloadKind { get; set; }
+        public short[] InventorySlots { get; set; } = Array.Empty<short>();
+        public bool SmartStack { get; set; }
+        public ushort[] BlockedChestIds { get; set; } = Array.Empty<ushort>();
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ForceItemIntoNearestChest"/> class.
-        /// </summary>
+        [Obsolete("Packet 85 is QuickStackChests, not a single inventory-slot packet. Use InventorySlots.")]
+        public byte InventorySlot
+        {
+            get => InventorySlots.Length == 0 ? (byte)0 : unchecked((byte)InventorySlots[0]);
+            set
+            {
+                PayloadKind = QuickStackChestsPayloadKind.InventoryRequest;
+                InventorySlots = new[] { (short)value };
+            }
+        }
+
         public ForceItemIntoNearestChest()
             : base((byte)PacketTypes.ForceItemIntoNearestChest)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ForceItemIntoNearestChest"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public ForceItemIntoNearestChest(BinaryReader br)
             : base(br)
         {
-            this.InventorySlot = br.ReadByte();
-        }
+            int count = br.ReadInt32();
+            if (count < 0)
+            {
+                throw new InvalidDataException($"QuickStackChests contains negative entry count {count}.");
+            }
 
-        public override string ToString()
-        {
-            return $"[ForceItemIntoNearestChest: InventorySlot = {InventorySlot}]";
-        }
+            long entryBytes = checked((long)count * EntryPayloadLength);
+            long remaining = br.BaseStream.Length - br.BaseStream.Position;
 
-        #region implemented abstract members of TerrariaPacket
+            if (remaining == entryBytes + SmartStackPayloadLength)
+            {
+                PayloadKind = QuickStackChestsPayloadKind.InventoryRequest;
+                InventorySlots = new short[count];
+                for (int i = 0; i < count; i++)
+                {
+                    InventorySlots[i] = br.ReadInt16();
+                }
+                SmartStack = br.ReadBoolean();
+                return;
+            }
+
+            if (remaining == entryBytes)
+            {
+                PayloadKind = QuickStackChestsPayloadKind.BlockedChestList;
+                BlockedChestIds = new ushort[count];
+                for (int i = 0; i < count; i++)
+                {
+                    BlockedChestIds[i] = br.ReadUInt16();
+                }
+                return;
+            }
+
+            throw new InvalidDataException(
+                $"QuickStackChests entry count {count} does not match remaining payload length {remaining}.");
+        }
 
         public override short GetLength()
         {
-            return (short)(1);
+            int count = PayloadKind == QuickStackChestsPayloadKind.InventoryRequest
+                ? InventorySlots?.Length ?? 0
+                : BlockedChestIds?.Length ?? 0;
+
+            int length = CountPayloadLength + checked(count * EntryPayloadLength);
+            if (PayloadKind == QuickStackChestsPayloadKind.InventoryRequest)
+            {
+                length += SmartStackPayloadLength;
+            }
+
+            return checked((short)length);
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            if (PayloadKind == QuickStackChestsPayloadKind.InventoryRequest)
             {
-                br.Write(InventorySlot);
+                short[] slots = InventorySlots ?? Array.Empty<short>();
+                bw.Write(slots.Length);
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    bw.Write(slots[i]);
+                }
+                bw.Write(SmartStack);
+            }
+            else
+            {
+                ushort[] chests = BlockedChestIds ?? Array.Empty<ushort>();
+                bw.Write(chests.Length);
+                for (int i = 0; i < chests.Length; i++)
+                {
+                    bw.Write(chests[i]);
+                }
             }
         }
 
-        #endregion
-
+        public override string ToString()
+        {
+            int count = PayloadKind == QuickStackChestsPayloadKind.InventoryRequest
+                ? InventorySlots?.Length ?? 0
+                : BlockedChestIds?.Length ?? 0;
+            return $"[QuickStackChests: PayloadKind = {PayloadKind} Count = {count} SmartStack = {SmartStack}]";
+        }
     }
 }

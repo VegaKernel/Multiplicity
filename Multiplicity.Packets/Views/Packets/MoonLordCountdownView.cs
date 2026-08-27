@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
@@ -29,6 +29,8 @@ namespace Multiplicity.Packets.Views
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
 
         public MoonLordCountdown Packet => _packetObject;
+
+        public int MaxCountdownValue => _packetObject.MaxCountdownValue;
 
         public int CountdownValue => _packetObject.CountdownValue;
     }

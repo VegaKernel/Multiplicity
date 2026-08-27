@@ -30,7 +30,10 @@ Important 1.4.5.x packet-layout fixes covered by the library include:
 - `DamageNPCAck (162)`;
 - current `WorldInfo` seed/world flags plus the protocol-326 dungeon-coordinate tail;
 - current `NetManager` module registration order, including restored `NetCreativeUnlocksModule`;
-- packet ids `24`, `25`, `26`, `44`, `48`, `83`, `145` and `148` are not registered as active vanilla protocol-326 packets.
+- Terraria 1.4.5.8 wire corrections for `OpenSignResponse (47)`, `LiquidUpdate (48)`, `UniqueTownNPCInfoSyncRequest (56)`, `QuestsCountSync (76)`, `QuickStackChests (85)`, `MoonlordHorror (103)` and `SpecialFX (112)`;
+- current catchable-NPC release-owner handling in `NpcUpdate (23)`, including automatic life-width selection for 1/2/4-byte life values;
+- packet ids `24`, `25`, `26`, `44`, `83`, `145` and `148` are not registered as active vanilla protocol-326 packets;
+- legacy `LiquidUpdate (48)` remains registered because Terraria 1.4.5.8 still sends and accepts its `Int16 X + Int16 Y + Byte liquid + Byte liquidType` wire shape even though `NetLiquidModule` is preferred.
 
 `KillPortal (95)` uses the vanilla wire layout `ushort PlayerId + byte PortalColor`, so its payload is 3 bytes. The old `ProjectileIndex` property is retained only as an obsolete source-compatibility alias.
 
@@ -43,6 +46,8 @@ Important 1.4.5.x packet-layout fixes covered by the library include:
 - a source-generated vanilla packet registry with no runtime assembly scanning;
 - packet and view names aligned with the Terraria naming where practical;
 - no external runtime dependencies.
+
+Wire compatibility is intentionally dependency-free. Terraria/XNA/MonoGame implementation types are not runtime dependencies of the parser: `Vector2` values are represented by their two `Single` wire components, RGB values use the library's own `ColorStruct`, and protocol-specific compound values such as player death reasons, sound info, item-sync data and raw tile payloads use Multiplicity-owned models with the same byte layout.
 
 Target framework: `net9.0`.
 

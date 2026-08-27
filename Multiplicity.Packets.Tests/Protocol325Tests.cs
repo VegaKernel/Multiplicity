@@ -88,13 +88,13 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void GeneratedVanillaRegistry_ExcludesDeprecatedAndExtensionPacketIds()
+        public void GeneratedVanillaRegistry_ExcludesUnusedAndExtensionPacketIdsButKeepsLegacyLiquid48()
         {
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.NpcItemStrike));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.ChatMessage));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.PlayerDamage));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.PlayerDeath));
-            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.LiquidSet));
+            Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.LiquidSet));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.NpcKillCount));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.SyncItemsWithShimmerDeprecated));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated));
