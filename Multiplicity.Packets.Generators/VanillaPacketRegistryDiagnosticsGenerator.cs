@@ -31,7 +31,7 @@ namespace Multiplicity.Packets.Generators
         private static readonly DiagnosticDescriptor MissingPacketTypeId = new DiagnosticDescriptor(
             "MPR001",
             "Packet class has no matching PacketTypes member",
-            "Packet class '{0}' has no matching PacketTypes member. Add the enum member or annotate the class with [PacketRegistrationIgnore]",
+            "Packet class '{0}' has no matching PacketTypes member. Add the enum member or annotate the class with [PacketRegistrationIgnore].",
             "Multiplicity.PacketRegistry",
             DiagnosticSeverity.Error,
             isEnabledByDefault: true);
