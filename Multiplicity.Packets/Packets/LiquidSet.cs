@@ -7,6 +7,7 @@ namespace Multiplicity.Packets
     /// Packet id 48 is deprecated in Terraria 1.4.5.x. Current liquid synchronization uses NetLiquidModule.
     /// This legacy type is retained only for source compatibility and must not be serialized.
     /// </summary>
+    [PacketRegistrationIgnore]
     public class LiquidSet : TerrariaPacket
     {
         public short X { get; set; }
