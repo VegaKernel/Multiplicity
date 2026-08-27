@@ -27,6 +27,34 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
+        public void ContinueConnecting_CarriesThirdServerSpecialFlag()
+        {
+            ContinueConnecting packet = new ContinueConnecting
+            {
+                PlayerId = 23,
+                ServerSpecialFlag2 = true
+            };
+
+            byte[] payload = packet.ToPayloadArray();
+            byte[] framed = packet.ToArray(includeHeader: true);
+            ContinueConnecting parsed = Assert.IsType<ContinueConnecting>(
+                TerrariaPacket.DeserializePayload(PacketTypes.ContinueConnecting, payload));
+            ContinueConnectingView view = ContinueConnectingView.FromPayload(payload);
+            PacketPayloadMetadata metadata = TerrariaPacket.GetPayloadMetadata(PacketTypes.ContinueConnecting);
+
+            Assert.Equal(new byte[] { 23, 1 }, payload);
+            Assert.Equal(ContinueConnecting.PayloadLength, payload.Length);
+            Assert.Equal(ContinueConnecting.PayloadLength + TerrariaPacket.PacketHeaderLength, framed.Length);
+            Assert.Equal(packet.PlayerId, parsed.PlayerId);
+            Assert.Equal(packet.ServerSpecialFlag2, parsed.ServerSpecialFlag2);
+            Assert.Equal(packet.PlayerId, view.PlayerId);
+            Assert.Equal(packet.ServerSpecialFlag2, view.ServerSpecialFlag2);
+            Assert.Equal(framed, parsed.ToArray(includeHeader: true));
+            Assert.True(metadata.HasFixedPayloadLength);
+            Assert.Equal(ContinueConnecting.PayloadLength, metadata.FixedPayloadLength);
+        }
+
+        [Fact]
         public void Zones_UsesSevenByteProtocol326Layout()
         {
             Zones packet = new Zones
