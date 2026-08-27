@@ -31,9 +31,4 @@
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
-
-  <Target Name="CopyBuildResult" AfterTargets="Build">
-    <MakeDir Directories="$(MSBuildProjectDirectory)\_BuildResult" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)\_BuildResult" SkipUnchangedFiles="true" />
-  </Target>
 </Project>
