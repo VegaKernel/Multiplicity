@@ -14,8 +14,10 @@ namespace Multiplicity.Packets
 
         public byte[] TestRawBuffer { get; set; }
 
-        private static readonly IReadOnlyDictionary<PacketTypes, PacketPayloadMetadata> PayloadMetadataMap =
-            VanillaPacketRegistry.CreatePayloadMetadataMap();
+        private static readonly Lazy<IReadOnlyDictionary<PacketTypes, PacketPayloadMetadata>> PayloadMetadataMap =
+            new Lazy<IReadOnlyDictionary<PacketTypes, PacketPayloadMetadata>>(
+                VanillaPacketRegistry.CreatePayloadMetadataMap,
+                isThreadSafe: true);
 
         /// <summary>
         /// Vanilla desktop packet deserializers. The map is created from the same explicit,
@@ -183,7 +185,7 @@ namespace Multiplicity.Packets
 
         public static bool TryGetPayloadMetadata(PacketTypes packetType, out PacketPayloadMetadata metadata)
         {
-            return PayloadMetadataMap.TryGetValue(packetType, out metadata);
+            return PayloadMetadataMap.Value.TryGetValue(packetType, out metadata);
         }
 
         public static short GetDefaultPayloadLength(PacketTypes packetType)
