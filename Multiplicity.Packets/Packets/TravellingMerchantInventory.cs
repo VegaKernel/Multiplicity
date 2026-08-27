@@ -7,67 +7,53 @@ namespace Multiplicity.Packets
     /// </summary>
     public class TravellingMerchantInventory : TerrariaPacket
     {
+        private const int SlotCount = 40;
+        private const short PayloadLength = SlotCount * sizeof(short);
 
-        public short[] Items { get; set; }
+        public short[] Items { get; set; } = new short[SlotCount];
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TravellingMerchantInventory"/> class.
-        /// </summary>
         public TravellingMerchantInventory()
             : base((byte)PacketTypes.TravellingMerchantInventory)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TravellingMerchantInventory"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public TravellingMerchantInventory(BinaryReader br)
             : base(br)
         {
-            Items = new short[40];
-            for (int i = 0; i < 40; i++)
+            Items = new short[SlotCount];
+            for (int i = 0; i < SlotCount; i++)
+            {
                 Items[i] = br.ReadInt16();
+            }
         }
 
         public override string ToString()
         {
-            return string.Format("[TravellingMerchantInventory]");
+            return "[TravellingMerchantInventory]";
         }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(80);
+            return PayloadLength;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
-            if (includeHeader) {
+            if (includeHeader)
+            {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
+            if (Items == null || Items.Length != SlotCount)
             {
-                for (int i = 0; i < 40; i++)
-                    br.Write(Items[i]);
+                throw new InvalidDataException($"TravellingMerchantInventory requires exactly {SlotCount} item slots.");
+            }
+
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            for (int i = 0; i < SlotCount; i++)
+            {
+                bw.Write(Items[i]);
             }
         }
-
-        #endregion
-
     }
 }
