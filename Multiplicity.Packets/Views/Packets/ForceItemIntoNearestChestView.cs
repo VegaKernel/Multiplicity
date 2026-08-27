@@ -1,5 +1,4 @@
-﻿using System;
-using Multiplicity.Packets.Models;
+using System;
 
 namespace Multiplicity.Packets.Views
 {
@@ -25,13 +24,11 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header => _packet.Header;
-
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
-
         public ForceItemIntoNearestChest Packet => _packetObject;
-
-        public byte InventorySlot => _packetObject.InventorySlot;
+        public QuickStackChestsPayloadKind PayloadKind => _packetObject.PayloadKind;
+        public ReadOnlySpan<short> InventorySlots => _packetObject.InventorySlots;
+        public bool SmartStack => _packetObject.SmartStack;
+        public ReadOnlySpan<ushort> BlockedChestIds => _packetObject.BlockedChestIds;
     }
 }
-
-

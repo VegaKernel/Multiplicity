@@ -4,7 +4,8 @@ using System.IO;
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The TileSendSquare (0x14) packet.
+    /// The TileSendSquare (20) packet. The tile rectangle body is retained as raw vanilla wire
+    /// bytes so parsing does not depend on Terraria/XNA assemblies.
     /// </summary>
     public class TileSendSquare : TerrariaPacket
     {
@@ -15,27 +16,34 @@ namespace Multiplicity.Packets
         public byte Width { get; set; }
         public byte Height { get; set; }
         public byte TileChangeType { get; set; }
+
         private byte[] _tilePayload;
+        private ReadOnlyMemory<byte> _tilePayloadMemory;
 
         public byte[] TilePayload
         {
-            get
-            {
-                return _tilePayload ??= TilePayloadMemory.ToArray();
-            }
+            get => _tilePayload ??= _tilePayloadMemory.ToArray();
             set
             {
                 _tilePayload = value;
-                TilePayloadMemory = value ?? Array.Empty<byte>();
+                _tilePayloadMemory = value ?? Array.Empty<byte>();
             }
         }
 
-        public ReadOnlyMemory<byte> TilePayloadMemory { get; set; }
+        public ReadOnlyMemory<byte> TilePayloadMemory
+        {
+            get => _tilePayloadMemory;
+            set
+            {
+                _tilePayloadMemory = value;
+                _tilePayload = null;
+            }
+        }
 
         public TileSendSquare()
             : base((byte)PacketTypes.TileSendSquare)
         {
-            TilePayloadMemory = ReadOnlyMemory<byte>.Empty;
+            _tilePayloadMemory = ReadOnlyMemory<byte>.Empty;
             _tilePayload = Array.Empty<byte>();
         }
 
@@ -52,7 +60,7 @@ namespace Multiplicity.Packets
 
         public override short GetLength()
         {
-            return (short)(FixedPayloadLength + TilePayloadMemory.Length);
+            return checked((short)(FixedPayloadLength + _tilePayloadMemory.Length));
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
@@ -62,23 +70,21 @@ namespace Multiplicity.Packets
                 base.ToStream(stream, includeHeader);
             }
 
-            using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            bw.Write(TileX);
+            bw.Write(TileY);
+            bw.Write(Width);
+            bw.Write(Height);
+            bw.Write(TileChangeType);
+            if (_tilePayloadMemory.Length > 0)
             {
-                bw.Write(TileX);
-                bw.Write(TileY);
-                bw.Write(Width);
-                bw.Write(Height);
-                bw.Write(TileChangeType);
-                if (TilePayloadMemory.Length > 0)
-                {
-                    stream.Write(TilePayloadMemory.Span);
-                }
+                stream.Write(_tilePayloadMemory.Span);
             }
         }
 
         public override string ToString()
         {
-            double payloadKb = TilePayloadMemory.Length / 1024.0;
+            double payloadKb = _tilePayloadMemory.Length / 1024.0;
             return $"[TileSendSquare: TileChangeType = {TileChangeType} Width = {Width} Height = {Height} TileX = {TileX} TileY = {TileY} TileData = {payloadKb:0.###} kB]";
         }
     }

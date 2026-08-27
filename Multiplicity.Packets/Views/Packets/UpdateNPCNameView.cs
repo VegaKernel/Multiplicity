@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
@@ -33,6 +33,10 @@ namespace Multiplicity.Packets.Views
         public short NpcId => _packetObject.NpcId;
 
         public string Name => _packetObject.Name;
+
+        public int TownNpcVariationIndex => _packetObject.TownNpcVariationIndex;
+
+        public bool HasNameData => _packetObject.HasNameData;
     }
 }
 

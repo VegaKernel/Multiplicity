@@ -1,5 +1,4 @@
-﻿using System;
-using Multiplicity.Packets.Models;
+using System;
 
 namespace Multiplicity.Packets.Views
 {
@@ -25,21 +24,13 @@ namespace Multiplicity.Packets.Views
         }
 
         public PacketHeader Header => _packet.Header;
-
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
-
         public TreeGrowFX Packet => _packetObject;
-
-        public bool GrowEffect => _packetObject.GrowEffect;
-
-        public short X => _packetObject.X;
-
-        public short Y => _packetObject.Y;
-
-        public byte Height => _packetObject.Height;
-
-        public short TreeGore => _packetObject.TreeGore;
+        public byte EffectType => _packetObject.EffectType;
+        public int X => _packetObject.X;
+        public int Y => _packetObject.Y;
+        public byte Style => _packetObject.Style;
+        public short Extra => _packetObject.Extra;
+        public bool ExtraFlag => _packetObject.ExtraFlag;
     }
 }
-
-

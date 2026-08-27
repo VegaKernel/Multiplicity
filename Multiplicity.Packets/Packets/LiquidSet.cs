@@ -1,15 +1,15 @@
-using System;
 using System.IO;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// Packet id 48 is deprecated in Terraria 1.4.5.x. Current liquid synchronization uses NetLiquidModule.
-    /// This legacy type is retained only for source compatibility and must not be serialized.
+    /// The legacy LiquidUpdate (48) packet. Terraria 1.4.5.8 still sends and accepts this
+    /// six-byte wire shape even though NetLiquidModule is preferred for current liquid syncing.
     /// </summary>
-    [PacketRegistrationIgnore]
     public class LiquidSet : TerrariaPacket
     {
+        private const short PayloadLength = 6;
+
         public short X { get; set; }
         public short Y { get; set; }
         public byte Liquid { get; set; }
@@ -18,28 +18,36 @@ namespace Multiplicity.Packets
         public LiquidSet()
             : base((byte)PacketTypes.LiquidSet)
         {
-            throw new NotSupportedException("Packet 48 is deprecated in Terraria protocol 326; use NetLiquidModule.");
         }
 
         public LiquidSet(BinaryReader br)
             : base(br)
         {
-            throw new InvalidDataException("Packet 48 is deprecated in Terraria protocol 326.");
+            X = br.ReadInt16();
+            Y = br.ReadInt16();
+            Liquid = br.ReadByte();
+            LiquidType = (LiquidKind)br.ReadByte();
         }
 
-        public override short GetLength()
-        {
-            return 0;
-        }
+        public override short GetLength() => PayloadLength;
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            throw new NotSupportedException("Packet 48 cannot be sent in Terraria protocol 326; use NetLiquidModule.");
+            if (includeHeader)
+            {
+                base.ToStream(stream, includeHeader);
+            }
+
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            bw.Write(X);
+            bw.Write(Y);
+            bw.Write(Liquid);
+            bw.Write((byte)LiquidType);
         }
 
         public override string ToString()
         {
-            return "[DeprecatedLiquidUpdate48: unsupported in protocol 326]";
+            return $"[LiquidSet: X = {X} Y = {Y} Liquid = {Liquid} LiquidType = {LiquidType}]";
         }
     }
 }

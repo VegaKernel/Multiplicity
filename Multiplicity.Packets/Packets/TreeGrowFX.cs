@@ -1,90 +1,81 @@
 using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The TreeGrowFX (0x70) packet.
+    /// Packet 112 (SpecialFX). EffectType 1 carries TreeGrowFX data; effect type 2 carries fairy FX.
+    /// The wire shape is always Byte + Int32 + Int32 + Byte + Int16 + Byte.
     /// </summary>
     public class TreeGrowFX : TerrariaPacket
     {
+        private const short PayloadLength = 13;
 
-        public bool GrowEffect { get; set; }
+        public byte EffectType { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public byte Style { get; set; }
+        public short Extra { get; set; }
+        public bool ExtraFlag { get; set; }
 
-        public short X { get; set; }
+        [Obsolete("Use EffectType. Packet 112 is the generic SpecialFX packet.")]
+        public bool GrowEffect
+        {
+            get => EffectType != 0;
+            set => EffectType = value ? (byte)1 : (byte)0;
+        }
 
-        public short Y { get; set; }
+        [Obsolete("Use Style.")]
+        public byte Height
+        {
+            get => Style;
+            set => Style = value;
+        }
 
-        public byte Height { get; set; }
+        [Obsolete("Use Extra.")]
+        public short TreeGore
+        {
+            get => Extra;
+            set => Extra = value;
+        }
 
-        public short TreeGore { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TreeGrowFX"/> class.
-        /// </summary>
         public TreeGrowFX()
             : base((byte)PacketTypes.TreeGrowFX)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TreeGrowFX"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public TreeGrowFX(BinaryReader br)
             : base(br)
         {
-            this.GrowEffect = br.ReadBoolean();
-            this.X = br.ReadInt16();
-            this.Y = br.ReadInt16();
-            this.Height = br.ReadByte();
-            this.TreeGore = br.ReadInt16();
+            EffectType = br.ReadByte();
+            X = br.ReadInt32();
+            Y = br.ReadInt32();
+            Style = br.ReadByte();
+            Extra = br.ReadInt16();
+            ExtraFlag = br.ReadByte() == 1;
         }
 
-        public override string ToString()
-        {
-            return $"[TreeGrowFX: GrowEffect = {GrowEffect} X = {X} Y = {Y} Height = {Height} TreeGore = {TreeGore}]";
-        }
-
-        #region implemented abstract members of TerrariaPacket
-
-        public override short GetLength()
-        {
-            return (short)(8);
-        }
+        public override short GetLength() => PayloadLength;
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
-            {
-                br.Write(GrowEffect);
-                br.Write(X);
-                br.Write(Y);
-                br.Write(Height);
-                br.Write(TreeGore);
-            }
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            bw.Write(EffectType);
+            bw.Write(X);
+            bw.Write(Y);
+            bw.Write(Style);
+            bw.Write(Extra);
+            bw.Write((byte)(ExtraFlag ? 1 : 0));
         }
 
-        #endregion
-
+        public override string ToString()
+        {
+            return $"[SpecialFX: EffectType = {EffectType} X = {X} Y = {Y} Style = {Style} Extra = {Extra} ExtraFlag = {ExtraFlag}]";
+        }
     }
 }
-

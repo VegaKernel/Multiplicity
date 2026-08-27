@@ -3,17 +3,24 @@ using System.IO;
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The SignNew (0x2F) packet.
+    /// The OpenSignResponse / SignNew (47) packet.
     /// </summary>
     public class SignNew : TerrariaPacket
     {
-        private const short FixedPayloadLength = 7;
+        private const short FixedPayloadLength = 8;
 
         public short SignId { get; set; }
         public short X { get; set; }
         public short Y { get; set; }
         public string Text { get; set; }
         public byte PlayerId { get; set; }
+        public byte Flags { get; set; }
+
+        public bool SuppressOpen
+        {
+            get => (Flags & 1) != 0;
+            set => Flags = value ? (byte)(Flags | 1) : (byte)(Flags & ~1);
+        }
 
         public SignNew()
             : base((byte)PacketTypes.SignNew)
@@ -29,6 +36,7 @@ namespace Multiplicity.Packets
             Y = br.ReadInt16();
             Text = br.ReadString();
             PlayerId = br.ReadByte();
+            Flags = br.ReadByte();
         }
 
         public override short GetLength()
@@ -50,13 +58,13 @@ namespace Multiplicity.Packets
                 bw.Write(Y);
                 bw.Write(Text ?? string.Empty);
                 bw.Write(PlayerId);
+                bw.Write(Flags);
             }
         }
 
         public override string ToString()
         {
-            return $"[SignNew: SignId = {SignId} X = {X} Y = {Y} Text = {Text} PlayerId = {PlayerId}]";
+            return $"[SignNew: SignId = {SignId} X = {X} Y = {Y} Text = {Text} PlayerId = {PlayerId} Flags = {Flags}]";
         }
     }
 }
-

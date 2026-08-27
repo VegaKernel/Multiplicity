@@ -37,16 +37,25 @@ namespace Multiplicity.Packets
         public string WorldName { get; set; }
         public byte GameMode { get; set; }
         private byte[] _worldUniqueId;
+        private ReadOnlyMemory<byte> _worldUniqueIdMemory;
         public byte[] WorldUniqueId
         {
-            get => _worldUniqueId ??= WorldUniqueIdMemory.ToArray();
+            get => _worldUniqueId ??= _worldUniqueIdMemory.ToArray();
             set
             {
                 _worldUniqueId = value;
-                WorldUniqueIdMemory = value ?? Array.Empty<byte>();
+                _worldUniqueIdMemory = value ?? Array.Empty<byte>();
             }
         }
-        public ReadOnlyMemory<byte> WorldUniqueIdMemory { get; set; }
+        public ReadOnlyMemory<byte> WorldUniqueIdMemory
+        {
+            get => _worldUniqueIdMemory;
+            set
+            {
+                _worldUniqueIdMemory = value;
+                _worldUniqueId = null;
+            }
+        }
         public ulong WorldGeneratorVersion { get; set; }
         public byte MoonType { get; set; }
 
@@ -84,16 +93,25 @@ namespace Multiplicity.Packets
         public byte CaveBackStyle4 { get; set; }
 
         private byte[] _treeTopVariations;
+        private ReadOnlyMemory<byte> _treeTopVariationsMemory;
         public byte[] TreeTopVariations
         {
-            get => _treeTopVariations ??= TreeTopVariationsMemory.ToArray();
+            get => _treeTopVariations ??= _treeTopVariationsMemory.ToArray();
             set
             {
                 _treeTopVariations = value;
-                TreeTopVariationsMemory = value ?? Array.Empty<byte>();
+                _treeTopVariationsMemory = value ?? Array.Empty<byte>();
             }
         }
-        public ReadOnlyMemory<byte> TreeTopVariationsMemory { get; set; }
+        public ReadOnlyMemory<byte> TreeTopVariationsMemory
+        {
+            get => _treeTopVariationsMemory;
+            set
+            {
+                _treeTopVariationsMemory = value;
+                _treeTopVariations = null;
+            }
+        }
         public float Rain { get; set; }
 
         // Eleven BitsByte blocks written by NetMessage.SendData(7).
@@ -126,16 +144,25 @@ namespace Multiplicity.Packets
         public short DungeonY { get; set; }
 
         private byte[] _trailingData;
+        private ReadOnlyMemory<byte> _trailingDataMemory;
         public byte[] TrailingData
         {
-            get => _trailingData ??= TrailingDataMemory.ToArray();
+            get => _trailingData ??= _trailingDataMemory.ToArray();
             set
             {
                 _trailingData = value;
-                TrailingDataMemory = value ?? Array.Empty<byte>();
+                _trailingDataMemory = value ?? Array.Empty<byte>();
             }
         }
-        public ReadOnlyMemory<byte> TrailingDataMemory { get; set; }
+        public ReadOnlyMemory<byte> TrailingDataMemory
+        {
+            get => _trailingDataMemory;
+            set
+            {
+                _trailingDataMemory = value;
+                _trailingData = null;
+            }
+        }
 
         public WorldInfo()
             : base((byte)PacketTypes.WorldInfo)
