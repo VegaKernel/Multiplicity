@@ -8,14 +8,17 @@ namespace Multiplicity.Packets.Tests
     public class Protocol325Tests
     {
         [Fact]
-        public void ConnectRequest_DefaultsToTerraria325()
+        public void ConnectRequest_CanRepresentTerraria325Explicitly()
         {
-            ConnectRequest packet = new ConnectRequest();
+            ConnectRequest packet = new ConnectRequest
+            {
+                Version = ConnectRequest.BuildVersion(ConnectRequest.Protocol325)
+            };
 
             Assert.Equal(325, ConnectRequest.Protocol325);
-            Assert.Equal(ConnectRequest.Protocol325, ConnectRequest.CurrentProtocol);
             Assert.Equal("Terraria325", packet.Version);
             Assert.True(packet.IsProtocol(325));
+            Assert.False(packet.IsProtocol(ConnectRequest.CurrentProtocol));
 
             byte[] bytes = packet.ToArray(includeHeader: true);
             ConnectRequest parsed = Assert.IsType<ConnectRequest>(
