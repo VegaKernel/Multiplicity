@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace Multiplicity.Packets.Extensions.Tsapi
@@ -10,9 +11,10 @@ namespace Multiplicity.Packets.Extensions.Tsapi
     {
         public const byte PacketId = 164;
 
-        public PlayerPlatformInfo()
+        public PlayerPlatformInfo(ReadOnlyMemory<byte> payload)
             : base(PacketId)
         {
+            PayloadMemory = payload;
         }
 
         public PlayerPlatformInfo(BinaryReader reader)
