@@ -164,11 +164,9 @@ namespace Multiplicity.Packets.Tests
         [Fact]
         public void PacketViewParser_TryParse_ReturnsFalse_ForIncompleteBuffer()
         {
-            ChatMessage original = new ChatMessage
+            HostToken original = new HostToken
             {
-                PlayerId = 1,
-                MessageColor = CreateColor(255, 100, 50),
-                Message = "hello"
+                Token = "incomplete-buffer"
             };
 
             byte[] bytes = original.ToArray(includeHeader: true);
