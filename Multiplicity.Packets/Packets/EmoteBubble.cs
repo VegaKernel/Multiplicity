@@ -42,7 +42,13 @@ namespace Multiplicity.Packets
 
         public bool HasAnchorData => AnchorType != EmoteBubbleAnchorType.Removed;
 
-        public bool HasExtraMetadata => unchecked((sbyte)Emote) < 0;
+        /// <summary>
+        /// Terraria uses emote -1 (ItemDisplay) as the metadata-bearing sentinel. It is serialized
+        /// through BinaryWriter.Write(byte) as 0xFF. Ordinary emote ids include values above 127,
+        /// so interpreting every high-bit byte as a negative signed value would consume two bytes
+        /// that are not present for emotes 128..150.
+        /// </summary>
+        public bool HasExtraMetadata => Emote == byte.MaxValue;
 
         public override short GetLength()
         {
