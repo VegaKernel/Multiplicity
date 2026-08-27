@@ -12,7 +12,7 @@ The current baseline is **Terraria 1.4.5.8 / protocol 326**.
 - vanilla desktop `MessageID.Count`: `163`;
 - vanilla desktop packet ids: `0..162`;
 - highest vanilla packet id: `DamageNPCAck (162)`;
-- `ServerInfo (163)` and `PlayerPlatformInfo (164)` are Multiplicity/TSAPI-family extension ids and are not part of vanilla desktop `MessageID`.
+- `ServerInfo (163)` and `PlayerPlatformInfo (164)` are TSAPI-family extension ids and are not part of vanilla desktop `MessageID`.
 
 The confirmed wire delta from Terraria 1.4.5.7 / protocol 325 to 1.4.5.8 / protocol 326 is deliberately small:
 
@@ -39,10 +39,22 @@ Important 1.4.5.x packet-layout fixes covered by the library include:
 - packet serialization and deserialization;
 - typed packet models;
 - a zero-copy `ReadOnlySpan<byte>` view layer for server hot paths;
+- opt-in packet-extension overlays without mixing extension models into the vanilla packet folder;
 - packet and view names aligned with the TSAPI/Terraria naming where practical;
 - no external runtime dependencies.
 
 Target framework: `net9.0`.
+
+The package is marked as AOT/trimming compatible and enables the .NET AOT and trimming analyzers:
+
+```xml
+<IsAotCompatible>true</IsAotCompatible>
+<IsTrimmable>true</IsTrimmable>
+<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+<EnableAotAnalyzer>true</EnableAotAnalyzer>
+```
+
+A NativeAOT application can therefore consume the same `net9.0` NuGet package; a separate AOT NuGet package is not required.
 
 ## Install
 
@@ -72,7 +84,7 @@ switch (packet)
 }
 ```
 
-Main entry points:
+Main vanilla entry points:
 
 - `TerrariaPacket.Deserialize(...)`;
 - `TerrariaPacket.DeserializePayload(...)`;
@@ -90,6 +102,50 @@ TerrariaPacket packet = TerrariaPacket.DeserializePayload(
     payloadOffset,
     payloadLength);
 ```
+
+## Packet extensions
+
+Extension protocols live under `Multiplicity.Packets/Extensions` and are kept separate from vanilla packet models.
+
+The extension-aware decoder applies registered extension decoders **before** the vanilla decoder for the same byte id:
+
+```text
+packet id
+   ↓
+extension overlay
+   ↓ if not claimed
+vanilla decoder
+```
+
+This matters for protocols such as Dimensions, which intentionally reuses vanilla-unused packet id `67`.
+
+```csharp
+using Multiplicity.Packets.Extensions;
+using Multiplicity.Packets.Extensions.Dimensions;
+
+TerrariaPacket packet = PacketDecoder.CommonExtensions.Decode(receiveBuffer);
+
+if (packet is DimensionsMessage dimensions && dimensions.IsRealIp)
+{
+    Console.WriteLine(dimensions.ReportedRealIp);
+}
+```
+
+The upstream Dimensions extension carried on packet `67` has payload:
+
+```text
+Int16 messageType
+string payload
+```
+
+`messageType = 0` reports the client IP observed by the Dimensions proxy. This value is an extension report and is not authenticated by the vanilla Terraria protocol, so consumers should only trust it from a trusted proxy path.
+
+TSAPI-family extension packets currently modeled separately are:
+
+- `Extensions.Tsapi.ServerInfo`, packet id `163`;
+- `Extensions.Tsapi.PlayerPlatformInfo`, packet id `164`.
+
+`PacketTypes.ServerInfo` and `PacketTypes.PlayerPlatformInfo` remain temporary compatibility aliases for existing consumers. They are not vanilla Terraria IDs and new code should use the extension packet constants instead.
 
 ## Zero-copy packet views
 
@@ -153,12 +209,13 @@ The older `TagEffectModule` is not part of the current registration table and ha
 
 ## Project layout
 
-- `Multiplicity.Packets/Core` - packet framing, metadata and protocol registration;
-- `Multiplicity.Packets/Packets` - typed packet object models;
+- `Multiplicity.Packets/Core` - packet framing, metadata and vanilla protocol registration;
+- `Multiplicity.Packets/Packets` - vanilla typed packet object models;
+- `Multiplicity.Packets/Extensions` - opt-in extension overlays such as Dimensions and TSAPI-family packets;
 - `Multiplicity.Packets/NetModules` - `NetManager` module models;
 - `Multiplicity.Packets/Views` - low-allocation packet views;
 - `Multiplicity.Packets.Tests` - protocol and serialization regression tests.
 
 ## Summary
 
-Multiplicity provides both a conventional packet object model and a low-allocation view API, with the current wire baseline set to **Terraria 1.4.5.8 / protocol 326**.
+Multiplicity provides both a conventional packet object model and a low-allocation view API, with the current wire baseline set to **Terraria 1.4.5.8 / protocol 326** and non-vanilla packet protocols isolated behind opt-in extension overlays.
