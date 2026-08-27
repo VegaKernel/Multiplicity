@@ -16,7 +16,7 @@ namespace Multiplicity.Packets
     }
 
     /// <summary>
-    /// The WorldInfo (0x07) packet for Terraria 1.4.5.7 / protocol 325.
+    /// The WorldInfo (0x07) packet for Terraria 1.4.5.8 / protocol 326.
     /// </summary>
     public class WorldInfo : TerrariaPacket
     {
@@ -109,7 +109,7 @@ namespace Multiplicity.Packets
         public byte EventInfo10 { get; set; }
         public byte EventInfo11 { get; set; }
         /// <summary>
-        /// Protocol 325 world flags: bit 0 low general-placement tiles, bit 1 permanent Halloween,
+        /// Protocol 326 world flags: bit 0 low general-placement tiles, bit 1 permanent Halloween,
         /// bit 2 permanent Christmas, bit 3 more-lightning seed, bit 4 no-lightning seed.
         /// </summary>
         public byte EventInfo12 { get; set; }
@@ -127,6 +127,8 @@ namespace Multiplicity.Packets
         public ulong LobbyId { get; set; }
         public float SandstormSeverity { get; set; }
         public WorldSpawnPoint[] ExtraSpawnPoints { get; set; }
+        public short DungeonX { get; set; }
+        public short DungeonY { get; set; }
 
         private byte[] _trailingData;
         public byte[] TrailingData
@@ -239,6 +241,13 @@ namespace Multiplicity.Packets
                 ExtraSpawnPoints[i] = new WorldSpawnPoint(br.ReadInt16(), br.ReadInt16());
 
             int trailingLength = (int)(br.BaseStream.Length - br.BaseStream.Position);
+            if (trailingLength >= sizeof(short) * 2)
+            {
+                DungeonX = br.ReadInt16();
+                DungeonY = br.ReadInt16();
+                trailingLength -= sizeof(short) * 2;
+            }
+
             if (trailingLength > 0)
                 TrailingDataMemory = br.ReadMemory(trailingLength);
         }
@@ -341,6 +350,9 @@ namespace Multiplicity.Packets
                 bw.Write(ExtraSpawnPoints[i].X);
                 bw.Write(ExtraSpawnPoints[i].Y);
             }
+
+            bw.Write(DungeonX);
+            bw.Write(DungeonY);
 
             if (TrailingDataMemory.Length > 0)
                 bw.Write(TrailingDataMemory.Span);
