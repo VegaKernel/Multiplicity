@@ -234,13 +234,16 @@ namespace Multiplicity.Packets
             for (int i = 0; i < extraSpawnCount; i++)
                 ExtraSpawnPoints[i] = new WorldSpawnPoint(br.ReadInt16(), br.ReadInt16());
 
-            int trailingLength = (int)(br.BaseStream.Length - br.BaseStream.Position);
-            if (trailingLength >= sizeof(short) * 2)
+            int trailingLength = checked((int)(br.BaseStream.Length - br.BaseStream.Position));
+            if (trailingLength < sizeof(short) * 2)
             {
-                DungeonX = br.ReadInt16();
-                DungeonY = br.ReadInt16();
-                trailingLength -= sizeof(short) * 2;
+                throw new InvalidDataException(
+                    $"Protocol 326 WorldInfo payload requires DungeonX/DungeonY, but only {trailingLength} trailing byte(s) remain.");
             }
+
+            DungeonX = br.ReadInt16();
+            DungeonY = br.ReadInt16();
+            trailingLength -= sizeof(short) * 2;
 
             if (trailingLength > 0)
                 TrailingDataMemory = br.ReadMemory(trailingLength);
