@@ -165,8 +165,8 @@ namespace Multiplicity.Packets
         /*161*/ HostToken,
         /*162*/ DamageNPCAck,
 
-        // Compatibility aliases only. These are extension ids, not vanilla Terraria MessageID values.
-        // New code should use Extensions.Tsapi.ServerInfo.PacketId / PlayerPlatformInfo.PacketId.
+        // Compatibility aliases only. These ids are outside vanilla Terraria desktop MessageID.
+        // New code should use Extensions.Mobile.ServerInfo.PacketId / PlayerPlatformInfo.PacketId.
         ServerInfo = 163,
         PlayerPlatformInfo = 164
     }
