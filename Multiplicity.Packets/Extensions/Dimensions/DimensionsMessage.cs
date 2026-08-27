@@ -15,15 +15,17 @@ namespace Multiplicity.Packets.Extensions.Dimensions
 
         public short MessageType { get; set; }
 
-        public string Payload { get; set; } = string.Empty;
+        public string Payload { get; set; }
 
         public bool IsRealIp => MessageType == RealIpMessageType;
 
         public string ReportedRealIp => IsRealIp ? Payload : null;
 
-        public DimensionsMessage()
+        public DimensionsMessage(short messageType, string payload)
             : base(PacketId)
         {
+            MessageType = messageType;
+            Payload = payload ?? string.Empty;
         }
 
         public DimensionsMessage(BinaryReader reader)
@@ -40,11 +42,7 @@ namespace Multiplicity.Packets.Extensions.Dimensions
                 throw new ArgumentException("Dimensions real-IP payload must be a valid IPv4 or IPv6 address.", nameof(ipAddress));
             }
 
-            return new DimensionsMessage
-            {
-                MessageType = RealIpMessageType,
-                Payload = parsedAddress.ToString()
-            };
+            return new DimensionsMessage(RealIpMessageType, parsedAddress.ToString());
         }
 
         public bool TryGetReportedRealIp(out IPAddress address)
