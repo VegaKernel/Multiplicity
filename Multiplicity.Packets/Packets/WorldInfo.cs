@@ -96,7 +96,7 @@ namespace Multiplicity.Packets
         public ReadOnlyMemory<byte> TreeTopVariationsMemory { get; set; }
         public float Rain { get; set; }
 
-        // BitsByte blocks written by NetMessage.SendData(7).
+        // Eleven BitsByte blocks written by NetMessage.SendData(7).
         public byte EventInfo { get; set; }
         public byte EventInfo2 { get; set; }
         public byte EventInfo3 { get; set; }
@@ -108,11 +108,6 @@ namespace Multiplicity.Packets
         public byte EventInfo9 { get; set; }
         public byte EventInfo10 { get; set; }
         public byte EventInfo11 { get; set; }
-        /// <summary>
-        /// Protocol 326 world flags: bit 0 low general-placement tiles, bit 1 permanent Halloween,
-        /// bit 2 permanent Christmas, bit 3 more-lightning seed, bit 4 no-lightning seed.
-        /// </summary>
-        public byte EventInfo12 { get; set; }
 
         public byte SunDialCooldown { get; set; }
         public byte MoonDialCooldown { get; set; }
@@ -221,7 +216,6 @@ namespace Multiplicity.Packets
             EventInfo9 = br.ReadByte();
             EventInfo10 = br.ReadByte();
             EventInfo11 = br.ReadByte();
-            EventInfo12 = br.ReadByte();
             SunDialCooldown = br.ReadByte();
             MoonDialCooldown = br.ReadByte();
             OreTierCopper = br.ReadInt16();
@@ -329,7 +323,6 @@ namespace Multiplicity.Packets
             bw.Write(EventInfo9);
             bw.Write(EventInfo10);
             bw.Write(EventInfo11);
-            bw.Write(EventInfo12);
             bw.Write(SunDialCooldown);
             bw.Write(MoonDialCooldown);
             bw.Write(OreTierCopper);
