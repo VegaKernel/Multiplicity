@@ -1,3 +1,4 @@
+using System.IO;
 using Multiplicity.Packets;
 using Multiplicity.Packets.Views;
 using Xunit;
@@ -66,6 +67,24 @@ namespace Multiplicity.Packets.Tests
             Assert.Equal((short)400, parsed.ExtraSpawnPoints[1].Y);
             Assert.Equal((short)3413, parsed.DungeonX);
             Assert.Equal((short)234, parsed.DungeonY);
+        }
+
+        [Fact]
+        public void Protocol325Tail_IsRejectedInsteadOfSilentlyAccepted()
+        {
+            WorldInfo packet = new WorldInfo
+            {
+                DungeonX = 3413,
+                DungeonY = 234
+            };
+
+            byte[] protocol326Payload = packet.ToPayloadArray();
+            byte[] protocol325Shape = protocol326Payload[..^4];
+
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(() =>
+                TerrariaPacket.DeserializePayload(PacketTypes.WorldInfo, protocol325Shape));
+
+            Assert.Contains("DungeonX/DungeonY", exception.Message);
         }
     }
 }
