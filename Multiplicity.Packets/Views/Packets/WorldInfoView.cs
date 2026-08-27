@@ -97,6 +97,8 @@ namespace Multiplicity.Packets.Views
         public ulong LobbyId => _packetObject.LobbyId;
         public float SandstormSeverity => _packetObject.SandstormSeverity;
         public WorldSpawnPoint[] ExtraSpawnPoints => _packetObject.ExtraSpawnPoints;
+        public short DungeonX => _packetObject.DungeonX;
+        public short DungeonY => _packetObject.DungeonY;
         public ReadOnlyMemory<byte> TrailingDataMemory => _packetObject.TrailingDataMemory;
     }
 }
