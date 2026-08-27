@@ -166,7 +166,13 @@ namespace Multiplicity.Packets
         /*160*/ SyncItemPosition,
         /*161*/ HostToken,
         /*162*/ DamageNPCAck,
-        /*163*/ ServerInfo,
-        /*164*/ PlayerPlatformInfo
+
+        // Legacy aliases for extension ids. New code should use the constants in
+        // Multiplicity.Packets.Extensions.Tsapi instead of treating these as vanilla Terraria ids.
+        [Obsolete("Packet id 163 is a TSAPI-family extension, not a vanilla Terraria packet. Use Extensions.Tsapi.ServerInfo.PacketId.")]
+        ServerInfo = 163,
+
+        [Obsolete("Packet id 164 is a TSAPI-family extension, not a vanilla Terraria packet. Use Extensions.Tsapi.PlayerPlatformInfo.PacketId.")]
+        PlayerPlatformInfo = 164
     }
 }
