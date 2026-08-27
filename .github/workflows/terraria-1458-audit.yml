@@ -1,0 +1,59 @@
+name: Terraria 1.4.5.8 Audit
+
+on:
+  push:
+    branches:
+      - agent/terraria-1458-audit
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Bundle Multiplicity repository
+        run: git bundle create /tmp/Multiplicity.bundle --all
+
+      - name: Download Terraria Dedicated Server 1.4.5.8
+        run: |
+          curl -fL --retry 3 \
+            https://terraria.org/api/download/pc-dedicated-server/terraria-server-1458.zip \
+            -o /tmp/terraria-server-1458.zip
+          unzip -q /tmp/terraria-server-1458.zip -d /tmp/terraria-server-1458
+          find /tmp/terraria-server-1458 -maxdepth 3 -type f -name 'TerrariaServer.exe' -print
+
+      - name: Install ILSpy command line decompiler
+        run: dotnet tool install ilspycmd --tool-path /tmp/ilspy
+
+      - name: Decompile TerrariaServer.exe
+        run: |
+          SERVER_EXE="$(find /tmp/terraria-server-1458 -type f -path '*/Windows/TerrariaServer.exe' | head -n 1)"
+          test -n "$SERVER_EXE"
+          mkdir -p /tmp/terraria-1458-decompiled
+          /tmp/ilspy/ilspycmd -p -o /tmp/terraria-1458-decompiled "$SERVER_EXE"
+          printf '%s\n' "$SERVER_EXE" > /tmp/terraria-1458-decompiled/SOURCE_BINARY.txt
+
+      - name: Collect audit inputs
+        run: |
+          mkdir -p /tmp/audit-inputs
+          cp /tmp/Multiplicity.bundle /tmp/audit-inputs/
+          cp /tmp/terraria-server-1458.zip /tmp/audit-inputs/
+          cp "$(find /tmp/terraria-server-1458 -type f -path '*/Windows/TerrariaServer.exe' | head -n 1)" /tmp/audit-inputs/TerrariaServer.exe
+          cp -a /tmp/terraria-1458-decompiled /tmp/audit-inputs/
+          du -sh /tmp/audit-inputs/*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: terraria-1458-audit-inputs
+          path: /tmp/audit-inputs
+          compression-level: 6
+          retention-days: 1
