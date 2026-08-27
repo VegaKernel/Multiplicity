@@ -7,6 +7,7 @@ namespace Multiplicity.Packets
     /// Packet id 24 is UnusedMeleeStrike in Terraria 1.4.5.7 / protocol 325.
     /// Vanilla treats receiving it as an invariant violation.
     /// </summary>
+    [PacketRegistrationIgnore]
     public sealed class NpcItemStrike : TerrariaPacket
     {
         public short NpcId { get; set; }
