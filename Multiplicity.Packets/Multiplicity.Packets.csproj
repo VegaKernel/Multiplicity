@@ -29,6 +29,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Multiplicity.Packets.Generators\Multiplicity.Packets.Generators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>
