@@ -1,4 +1,3 @@
-using System;
 using Multiplicity.Packets.Extensions;
 using Multiplicity.Packets.Extensions.Dimensions;
 using Multiplicity.Packets.Extensions.Tsapi;
@@ -38,12 +37,9 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void TsapiServerInfo_IsDecodedOnlyByExtensionAwareDecoder()
+        public void TsapiServerInfo_IsDecodedByExtensionAwareDecoder()
         {
-            ServerInfo packet = new ServerInfo
-            {
-                Payload = new byte[] { 1, 2, 3, 4 }
-            };
+            ServerInfo packet = new ServerInfo(new byte[] { 1, 2, 3, 4 });
             byte[] bytes = packet.ToArray(includeHeader: true);
 
             TerrariaPacket vanilla = TerrariaPacket.Deserialize(bytes);
@@ -57,10 +53,7 @@ namespace Multiplicity.Packets.Tests
         [Fact]
         public void TsapiPlayerPlatformInfo_UsesExtensionId164()
         {
-            PlayerPlatformInfo packet = new PlayerPlatformInfo
-            {
-                Payload = new byte[] { 9, 8, 7 }
-            };
+            PlayerPlatformInfo packet = new PlayerPlatformInfo(new byte[] { 9, 8, 7 });
 
             TerrariaPacket decoded = PacketDecoder.CommonExtensions.Decode(packet.ToArray(includeHeader: true));
             PlayerPlatformInfo extension = Assert.IsType<PlayerPlatformInfo>(decoded);
