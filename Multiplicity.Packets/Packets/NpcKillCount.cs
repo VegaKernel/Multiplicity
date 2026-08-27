@@ -7,6 +7,7 @@ namespace Multiplicity.Packets
     /// Packet id 83 is unused in Terraria 1.4.5.x.
     /// This legacy type is retained only for source compatibility and must not be serialized.
     /// </summary>
+    [PacketRegistrationIgnore]
     public class NpcKillCount : TerrariaPacket
     {
         public short NpcType { get; set; }
