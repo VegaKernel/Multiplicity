@@ -1,7 +1,7 @@
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// Terraria 1.4.5.7 / protocol 325 NetManager registration order.
+    /// Terraria 1.4.5.8 / protocol 326 NetManager registration order.
     /// </summary>
     public enum NetworkModuleTypes : ushort
     {

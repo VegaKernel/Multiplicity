@@ -7,6 +7,7 @@ namespace Multiplicity.Packets
         StartSundialing = 3,
         BigMimicSpawnSmoke = 4,
         RegisterTorchGodBestiaryKill = 5,
-        StartMoondialing = 6
+        StartMoondialing = 6,
+        PartyGirlCake = 10
     }
 }

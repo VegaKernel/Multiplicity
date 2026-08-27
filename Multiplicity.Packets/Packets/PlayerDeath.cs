@@ -1,62 +1,46 @@
+using System;
 using System.IO;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The PlayerDeath (0x2C) packet.
+    /// Packet id 44 is unused in Terraria 1.4.5.x. Current player death synchronization uses PlayerDeathV2.
+    /// This legacy type is retained only for source compatibility and must not be serialized.
     /// </summary>
+    [PacketRegistrationIgnore]
     public class PlayerDeath : TerrariaPacket
     {
-        private const short FixedPayloadLength = 5;
-
         public byte PlayerId { get; set; }
         public byte HitDirection { get; set; }
         public short Damage { get; set; }
         public bool Pvp { get; set; }
-        public string DeathText { get; set; }
+        public string DeathText { get; set; } = string.Empty;
 
         public PlayerDeath()
             : base((byte)PacketTypes.PlayerDeath)
         {
-            DeathText = string.Empty;
+            throw new NotSupportedException("Packet 44 is unused in Terraria protocol 326; use PlayerDeathV2.");
         }
 
         public PlayerDeath(BinaryReader br)
             : base(br)
         {
-            PlayerId = br.ReadByte();
-            HitDirection = br.ReadByte();
-            Damage = br.ReadInt16();
-            Pvp = br.ReadBoolean();
-            DeathText = br.ReadString();
+            throw new InvalidDataException("Packet 44 is unused in Terraria protocol 326.");
         }
 
         public override short GetLength()
         {
-            return (short)(FixedPayloadLength + PacketSerializationHelper.GetSerializedStringLength(DeathText));
+            return 0;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            if (includeHeader)
-            {
-                base.ToStream(stream, includeHeader);
-            }
-
-            using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
-            {
-                bw.Write(PlayerId);
-                bw.Write(HitDirection);
-                bw.Write(Damage);
-                bw.Write(Pvp);
-                bw.Write(DeathText ?? string.Empty);
-            }
+            throw new NotSupportedException("Packet 44 cannot be sent in Terraria protocol 326; use PlayerDeathV2.");
         }
 
         public override string ToString()
         {
-            return $"[PlayerDeath: PlayerId = {PlayerId} HitDirection = {HitDirection} Damage = {Damage} Pvp = {Pvp} DeathText = {DeathText}]";
+            return "[Unused44: unsupported in protocol 326]";
         }
     }
 }
-

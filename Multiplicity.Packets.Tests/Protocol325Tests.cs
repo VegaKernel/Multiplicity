@@ -1,5 +1,6 @@
 using System;
 using Multiplicity.Packets;
+using Multiplicity.Packets.Extensions.Mobile;
 using Multiplicity.Packets.Views;
 using Xunit;
 
@@ -8,14 +9,17 @@ namespace Multiplicity.Packets.Tests
     public class Protocol325Tests
     {
         [Fact]
-        public void ConnectRequest_DefaultsToTerraria325()
+        public void ConnectRequest_CanRepresentTerraria325Explicitly()
         {
-            ConnectRequest packet = new ConnectRequest();
+            ConnectRequest packet = new ConnectRequest
+            {
+                Version = ConnectRequest.BuildVersion(ConnectRequest.Protocol325)
+            };
 
             Assert.Equal(325, ConnectRequest.Protocol325);
-            Assert.Equal(ConnectRequest.Protocol325, ConnectRequest.CurrentProtocol);
             Assert.Equal("Terraria325", packet.Version);
             Assert.True(packet.IsProtocol(325));
+            Assert.False(packet.IsProtocol(ConnectRequest.CurrentProtocol));
 
             byte[] bytes = packet.ToArray(includeHeader: true);
             ConnectRequest parsed = Assert.IsType<ConnectRequest>(
@@ -71,21 +75,35 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void Protocol325PacketIdRange_MatchesDesktopMessageIdsAndExtensions()
+        public void Protocol325PacketIdRange_StopsAtDesktop162AndKeepsMobileIdsSeparate()
         {
             Assert.Equal(145, (int)PacketTypes.SyncItemsWithShimmerDeprecated);
             Assert.Equal(148, (int)PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated);
             Assert.Equal(161, (int)PacketTypes.HostToken);
             Assert.Equal(162, (int)PacketTypes.DamageNPCAck);
-            Assert.Equal(163, (int)PacketTypes.ServerInfo);
-            Assert.Equal(164, (int)PacketTypes.PlayerPlatformInfo);
+            Assert.Equal(163, ServerInfo.PacketId);
+            Assert.Equal(164, PlayerPlatformInfo.PacketId);
+            Assert.False(Enum.IsDefined(typeof(PacketTypes), ServerInfo.PacketId));
+            Assert.False(Enum.IsDefined(typeof(PacketTypes), PlayerPlatformInfo.PacketId));
         }
 
         [Fact]
-        public void Protocol325_DeprecatedVanillaPacketIdsAreNotRegisteredForDeserialization()
+        public void GeneratedVanillaRegistry_ExcludesDeprecatedAndExtensionPacketIds()
         {
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.NpcItemStrike));
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.ChatMessage));
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.PlayerDamage));
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.PlayerDeath));
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.LiquidSet));
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.NpcKillCount));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.SyncItemsWithShimmerDeprecated));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated));
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey((PacketTypes)ServerInfo.PacketId));
+            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey((PacketTypes)PlayerPlatformInfo.PacketId));
+
+            Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.ConnectRequest));
+            Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.WorldInfo));
+            Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.DamageNPCAck));
         }
 
         [Fact]
@@ -258,68 +276,8 @@ namespace Multiplicity.Packets.Tests
             Assert.True((parsed.Flags & WorldItemSyncFlags.HasEnemyGrabDelay) != 0);
             Assert.False(parsed.Shimmered);
             Assert.Equal(0f, parsed.ShimmerTime);
-            Assert.Equal((byte)0, parsed.EnemyGrabDelayTime);
+            Assert.Equal(0, parsed.EnemyGrabDelayTime);
             Assert.Equal(payload, parsed.ToPayloadArray());
-        }
-
-        [Fact]
-        public void PlayerControls_ExposeProtocol325DashAndSnappingStoneBits()
-        {
-            Assert.Equal(0x80, (byte)UpdatePlayerControlFlags.ControlDash);
-            Assert.Equal(0x80, (byte)UpdatePlayerMiscFlags2.AccSnappingStoneLightUp);
-
-            PlayerUpdate packet = new PlayerUpdate
-            {
-                PlayerId = 3,
-                ControlFlags = UpdatePlayerControlFlags.ControlDash,
-                MiscFlags2 = UpdatePlayerMiscFlags2.AccSnappingStoneLightUp,
-                SelectedItem = 1
-            };
-
-            byte[] bytes = packet.ToArray(includeHeader: true);
-            PlayerUpdate parsed = Assert.IsType<PlayerUpdate>(
-                TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
-
-            Assert.True((parsed.ControlFlags & UpdatePlayerControlFlags.ControlDash) != 0);
-            Assert.True((parsed.MiscFlags2 & UpdatePlayerMiscFlags2.AccSnappingStoneLightUp) != 0);
-            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
-        }
-
-        [Fact]
-        public void UnusedMeleeStrike_IsRejectedInProtocol325()
-        {
-            byte[] bytes = { 3, 0, (byte)PacketTypes.NpcItemStrike };
-
-            Assert.Throws<System.IO.InvalidDataException>(() => TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
-            Assert.False(TerrariaPacket.TryDeserialize((ReadOnlyMemory<byte>)bytes, out _));
-            Assert.Throws<NotSupportedException>(() => new NpcItemStrike().ToArray(includeHeader: true));
-        }
-
-        [Fact]
-        public void DebugCommands_UsesProtocol325StringIntFloatFloatLayout()
-        {
-            DebugCommands packet = new DebugCommands
-            {
-                Command = "/randomizeprojslots",
-                Value = 123456,
-                Value2 = 1.25f,
-                Value3 = -3.5f
-            };
-
-            byte[] bytes = packet.ToArray(includeHeader: true);
-            DebugCommands parsed = Assert.IsType<DebugCommands>(
-                TerrariaPacket.Deserialize((ReadOnlyMemory<byte>)bytes));
-            DebugCommandsView view = PacketViewParser.ParseExact(bytes).AsDebugCommandsView();
-
-            Assert.Equal(packet.Command, parsed.Command);
-            Assert.Equal(packet.Value, parsed.Value);
-            Assert.Equal(packet.Value2, parsed.Value2);
-            Assert.Equal(packet.Value3, parsed.Value3);
-            Assert.Equal(packet.Command, view.Command);
-            Assert.Equal(packet.Value, view.Value);
-            Assert.Equal(packet.Value2, view.Value2);
-            Assert.Equal(packet.Value3, view.Value3);
-            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
         }
     }
 }

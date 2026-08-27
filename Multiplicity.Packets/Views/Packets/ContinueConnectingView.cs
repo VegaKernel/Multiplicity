@@ -31,6 +31,8 @@ namespace Multiplicity.Packets.Views
         public ContinueConnecting Packet => _packetObject;
 
         public byte PlayerId => _packetObject.PlayerId;
+
+        public bool ServerSpecialFlag2 => _packetObject.ServerSpecialFlag2;
     }
 }
 

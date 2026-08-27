@@ -83,7 +83,6 @@ namespace Multiplicity.Packets.Views
         public byte EventInfo9 => _packetObject.EventInfo9;
         public byte EventInfo10 => _packetObject.EventInfo10;
         public byte EventInfo11 => _packetObject.EventInfo11;
-        public byte EventInfo12 => _packetObject.EventInfo12;
         public byte SunDialCooldown => _packetObject.SunDialCooldown;
         public byte MoonDialCooldown => _packetObject.MoonDialCooldown;
         public short OreTierCopper => _packetObject.OreTierCopper;
@@ -97,6 +96,8 @@ namespace Multiplicity.Packets.Views
         public ulong LobbyId => _packetObject.LobbyId;
         public float SandstormSeverity => _packetObject.SandstormSeverity;
         public WorldSpawnPoint[] ExtraSpawnPoints => _packetObject.ExtraSpawnPoints;
+        public short DungeonX => _packetObject.DungeonX;
+        public short DungeonY => _packetObject.DungeonY;
         public ReadOnlyMemory<byte> TrailingDataMemory => _packetObject.TrailingDataMemory;
     }
 }

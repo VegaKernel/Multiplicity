@@ -3,11 +3,11 @@ using System.IO;
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The PlayerDeathV2 (76) packet.
+    /// The PlayerDeathV2 (118) packet.
     /// </summary>
     public class PlayerDeathV2 : TerrariaPacket
     {
-        private const short BasePayloadLength = 5;
+        private const short BasePayloadLength = 6;
         private const short ShortPayloadLength = 2;
         private const short BytePayloadLength = 1;
 
@@ -133,20 +133,25 @@ namespace Multiplicity.Packets
         private PlayerDeathReasonFlags BuildReasonFlags()
         {
             PlayerDeathReasonFlags reasonFlags = PlayerDeathReason;
-            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromPlayerIndex, FromPlayerIndex != MissingEntityIndex);
-            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromNpcIndex, FromNpcIndex != MissingEntityIndex);
-            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromProjectileIndex, FromProjectileIndex != MissingEntityIndex);
-            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromOther, FromOther != NoOtherCause);
-            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromProjectileType, FromProjectileType != 0);
-            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromItemType, FromItemType != 0);
-            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromItemPrefix, FromItemPrefix != 0);
-            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromCustomReason, !string.IsNullOrEmpty(FromCustomReason));
+            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromPlayerIndex, HasExplicitReason(reasonFlags, PlayerDeathReasonFlags.FromPlayerIndex) || FromPlayerIndex != MissingEntityIndex);
+            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromNpcIndex, HasExplicitReason(reasonFlags, PlayerDeathReasonFlags.FromNpcIndex) || FromNpcIndex != MissingEntityIndex);
+            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromProjectileIndex, HasExplicitReason(reasonFlags, PlayerDeathReasonFlags.FromProjectileIndex) || FromProjectileIndex != MissingEntityIndex);
+            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromOther, HasExplicitReason(reasonFlags, PlayerDeathReasonFlags.FromOther) || FromOther != NoOtherCause);
+            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromProjectileType, HasExplicitReason(reasonFlags, PlayerDeathReasonFlags.FromProjectileType) || FromProjectileType != 0);
+            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromItemType, HasExplicitReason(reasonFlags, PlayerDeathReasonFlags.FromItemType) || FromItemType != 0);
+            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromItemPrefix, HasExplicitReason(reasonFlags, PlayerDeathReasonFlags.FromItemPrefix) || FromItemPrefix != 0);
+            reasonFlags = SetReason(reasonFlags, PlayerDeathReasonFlags.FromCustomReason, HasExplicitReason(reasonFlags, PlayerDeathReasonFlags.FromCustomReason) || !string.IsNullOrEmpty(FromCustomReason));
             return reasonFlags;
         }
 
         private bool HasReason(PlayerDeathReasonFlags flag)
         {
             return (PlayerDeathReason & flag) != 0;
+        }
+
+        private static bool HasExplicitReason(PlayerDeathReasonFlags current, PlayerDeathReasonFlags flag)
+        {
+            return (current & flag) != 0;
         }
 
         private static PlayerDeathReasonFlags SetReason(PlayerDeathReasonFlags current, PlayerDeathReasonFlags flag, bool enabled)

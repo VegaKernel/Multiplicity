@@ -1,6 +1,4 @@
-using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
@@ -17,71 +15,62 @@ namespace Multiplicity.Packets
 
         public short ChestY { get; set; }
 
+        /// <summary>
+        /// Gets or sets whether the payload includes the trailing chest name string.
+        /// Client-to-server lookup requests contain only the fixed six-byte prefix,
+        /// while server-to-client responses append the string.
+        /// </summary>
+        public bool HasName { get; set; } = true;
+
         public string Name { get; set; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChestName"/> class.
-        /// </summary>
         public ChestName()
             : base((byte)PacketTypes.ChestName)
         {
             Name = string.Empty;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChestName"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public ChestName(BinaryReader br)
             : base(br)
         {
-            this.ChestId = br.ReadInt16();
-            this.ChestX = br.ReadInt16();
-            this.ChestY = br.ReadInt16();
-            this.Name = br.ReadString();
+            ChestId = br.ReadInt16();
+            ChestX = br.ReadInt16();
+            ChestY = br.ReadInt16();
+
+            HasName = br.BaseStream.Position < br.BaseStream.Length;
+            Name = HasName ? br.ReadString() : string.Empty;
         }
 
         public override string ToString()
         {
-            return $"[ChestName: ChestId = {ChestId} ChestX = {ChestX} ChestY = {ChestY} Name = {Name}]";
+            return $"[ChestName: ChestId = {ChestId} ChestX = {ChestX} ChestY = {ChestY} HasName = {HasName} Name = {Name}]";
         }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(FixedPayloadLength + PacketSerializationHelper.GetSerializedStringLength(Name));
+            if (!HasName)
+            {
+                return FixedPayloadLength;
+            }
+
+            return checked((short)(FixedPayloadLength + PacketSerializationHelper.GetSerializedStringLength(Name)));
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            bw.Write(ChestId);
+            bw.Write(ChestX);
+            bw.Write(ChestY);
+            if (HasName)
             {
-                br.Write(ChestId);
-                br.Write(ChestX);
-                br.Write(ChestY);
-                br.Write(Name ?? string.Empty);
+                bw.Write(Name ?? string.Empty);
             }
         }
-
-        #endregion
-
     }
 }
-

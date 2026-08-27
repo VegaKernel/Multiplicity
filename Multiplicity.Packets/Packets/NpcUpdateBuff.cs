@@ -1,114 +1,195 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using Multiplicity.Packets.Extensions;
+using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
     /// The NpcUpdateBuff (0x36) packet.
+    /// Modern Terraria serializes active NPC buffs as a variable-length sequence of
+    /// ushort buff type + ushort time pairs followed by a zero ushort terminator.
     /// </summary>
     public class NpcUpdateBuff : TerrariaPacket
     {
+        private const short BasePayloadLength = sizeof(short) + sizeof(ushort);
+        private const short BuffPayloadLength = sizeof(ushort) + sizeof(ushort);
 
         public short NpcId { get; set; }
 
-        public byte BuffId { get; set; }
+        public List<NpcBuffEntry> Buffs { get; } = new List<NpcBuffEntry>();
 
-        public short Time { get; set; }
+        [Obsolete("Use Buffs. The wire buff type is ushort and the packet is variable-length.")]
+        public byte BuffId
+        {
+            get => GetLegacyBuffId(0);
+            set => GetOrCreateLegacyEntry(0).BuffType = value;
+        }
 
-        public byte BuffId2 { get; set; }
+        [Obsolete("Use Buffs. The wire buff time is ushort and the packet is variable-length.")]
+        public short Time
+        {
+            get => GetLegacyBuffTime(0);
+            set => GetOrCreateLegacyEntry(0).Time = unchecked((ushort)value);
+        }
 
-        public short Time2 { get; set; }
+        [Obsolete("Use Buffs. The wire buff type is ushort and the packet is variable-length.")]
+        public byte BuffId2
+        {
+            get => GetLegacyBuffId(1);
+            set => GetOrCreateLegacyEntry(1).BuffType = value;
+        }
 
-        public byte BuffId3 { get; set; }
+        [Obsolete("Use Buffs. The wire buff time is ushort and the packet is variable-length.")]
+        public short Time2
+        {
+            get => GetLegacyBuffTime(1);
+            set => GetOrCreateLegacyEntry(1).Time = unchecked((ushort)value);
+        }
 
-        public short Time3 { get; set; }
+        [Obsolete("Use Buffs. The wire buff type is ushort and the packet is variable-length.")]
+        public byte BuffId3
+        {
+            get => GetLegacyBuffId(2);
+            set => GetOrCreateLegacyEntry(2).BuffType = value;
+        }
 
-        public byte BuffId4 { get; set; }
+        [Obsolete("Use Buffs. The wire buff time is ushort and the packet is variable-length.")]
+        public short Time3
+        {
+            get => GetLegacyBuffTime(2);
+            set => GetOrCreateLegacyEntry(2).Time = unchecked((ushort)value);
+        }
 
-        public short Time4 { get; set; }
+        [Obsolete("Use Buffs. The wire buff type is ushort and the packet is variable-length.")]
+        public byte BuffId4
+        {
+            get => GetLegacyBuffId(3);
+            set => GetOrCreateLegacyEntry(3).BuffType = value;
+        }
 
-        public byte BuffId5 { get; set; }
+        [Obsolete("Use Buffs. The wire buff time is ushort and the packet is variable-length.")]
+        public short Time4
+        {
+            get => GetLegacyBuffTime(3);
+            set => GetOrCreateLegacyEntry(3).Time = unchecked((ushort)value);
+        }
 
-        public short Time5 { get; set; }
+        [Obsolete("Use Buffs. The wire buff type is ushort and the packet is variable-length.")]
+        public byte BuffId5
+        {
+            get => GetLegacyBuffId(4);
+            set => GetOrCreateLegacyEntry(4).BuffType = value;
+        }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NpcUpdateBuff"/> class.
-        /// </summary>
+        [Obsolete("Use Buffs. The wire buff time is ushort and the packet is variable-length.")]
+        public short Time5
+        {
+            get => GetLegacyBuffTime(4);
+            set => GetOrCreateLegacyEntry(4).Time = unchecked((ushort)value);
+        }
+
         public NpcUpdateBuff()
             : base((byte)PacketTypes.NpcUpdateBuff)
         {
-
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NpcUpdateBuff"/> class.
-        /// </summary>
-        /// <param name="br">br</param>
         public NpcUpdateBuff(BinaryReader br)
             : base(br)
         {
-            this.NpcId = br.ReadInt16();
-            this.BuffId = br.ReadByte();
-            this.Time = br.ReadInt16();
-            this.BuffId2 = br.ReadByte();
-            this.Time2 = br.ReadInt16();
-            this.BuffId3 = br.ReadByte();
-            this.Time3 = br.ReadInt16();
-            this.BuffId4 = br.ReadByte();
-            this.Time4 = br.ReadInt16();
-            this.BuffId5 = br.ReadByte();
-            this.Time5 = br.ReadInt16();
+            NpcId = br.ReadInt16();
+
+            while (true)
+            {
+                ushort buffType = br.ReadUInt16();
+                if (buffType == 0)
+                {
+                    break;
+                }
+
+                ushort time = br.ReadUInt16();
+                Buffs.Add(new NpcBuffEntry(buffType, time));
+            }
         }
 
         public override string ToString()
         {
-            return $"[NpcUpdateBuff: NpcId = {NpcId} BuffId = {BuffId} Time = {Time} BuffId2 = {BuffId2} Time2 = {Time2} BuffId3 = {BuffId3} Time3 = {Time3} BuffId4 = {BuffId4} Time4 = {Time4} BuffId5 = {BuffId5} Time5 = {Time5}]";
+            return $"[NpcUpdateBuff: NpcId = {NpcId} BuffCount = {CountSerializableBuffs()}]";
         }
-
-        #region implemented abstract members of TerrariaPacket
 
         public override short GetLength()
         {
-            return (short)(17);
+            return checked((short)(BasePayloadLength + (CountSerializableBuffs() * BuffPayloadLength)));
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            /*
-             * Length and Id headers get written in the base packet class.
-             */
             if (includeHeader)
             {
                 base.ToStream(stream, includeHeader);
             }
 
-            /*
-             * Always make sure to not close the stream when serializing.
-             * 
-             * It is up to the caller to decide if the underlying stream
-             * gets closed.  If this is a network stream we do not want
-             * the regressions of unconditionally closing the TCP socket
-             * once the payload of data has been sent to the client.
-             */
-            using (BinaryWriter br = new BinaryWriter(stream, new System.Text.UTF8Encoding(), leaveOpen: true))
+            using BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+            bw.Write(NpcId);
+
+            for (int i = 0; i < Buffs.Count; i++)
             {
-                br.Write(NpcId);
-                br.Write(BuffId);
-                br.Write(Time);
-                br.Write(BuffId2);
-                br.Write(Time2);
-                br.Write(BuffId3);
-                br.Write(Time3);
-                br.Write(BuffId4);
-                br.Write(Time4);
-                br.Write(BuffId5);
-                br.Write(Time5);
+                NpcBuffEntry entry = Buffs[i];
+                if (entry == null || entry.BuffType == 0)
+                {
+                    continue;
+                }
+
+                bw.Write(entry.BuffType);
+                bw.Write(entry.Time);
             }
+
+            bw.Write((ushort)0);
         }
 
-        #endregion
+        private int CountSerializableBuffs()
+        {
+            int count = 0;
+            for (int i = 0; i < Buffs.Count; i++)
+            {
+                NpcBuffEntry entry = Buffs[i];
+                if (entry != null && entry.BuffType != 0)
+                {
+                    count++;
+                }
+            }
 
+            return count;
+        }
+
+        private NpcBuffEntry GetOrCreateLegacyEntry(int index)
+        {
+            while (Buffs.Count <= index)
+            {
+                Buffs.Add(new NpcBuffEntry());
+            }
+
+            return Buffs[index];
+        }
+
+        private byte GetLegacyBuffId(int index)
+        {
+            if (index >= Buffs.Count || Buffs[index] == null)
+            {
+                return 0;
+            }
+
+            return checked((byte)Buffs[index].BuffType);
+        }
+
+        private short GetLegacyBuffTime(int index)
+        {
+            if (index >= Buffs.Count || Buffs[index] == null)
+            {
+                return 0;
+            }
+
+            return unchecked((short)Buffs[index].Time);
+        }
     }
 }
-

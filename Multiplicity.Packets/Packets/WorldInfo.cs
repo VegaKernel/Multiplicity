@@ -16,7 +16,7 @@ namespace Multiplicity.Packets
     }
 
     /// <summary>
-    /// The WorldInfo (0x07) packet for Terraria 1.4.5.7 / protocol 325.
+    /// The WorldInfo (0x07) packet for Terraria 1.4.5.8 / protocol 326.
     /// </summary>
     public class WorldInfo : TerrariaPacket
     {
@@ -96,7 +96,7 @@ namespace Multiplicity.Packets
         public ReadOnlyMemory<byte> TreeTopVariationsMemory { get; set; }
         public float Rain { get; set; }
 
-        // BitsByte blocks written by NetMessage.SendData(7).
+        // Eleven BitsByte blocks written by NetMessage.SendData(7).
         public byte EventInfo { get; set; }
         public byte EventInfo2 { get; set; }
         public byte EventInfo3 { get; set; }
@@ -108,11 +108,6 @@ namespace Multiplicity.Packets
         public byte EventInfo9 { get; set; }
         public byte EventInfo10 { get; set; }
         public byte EventInfo11 { get; set; }
-        /// <summary>
-        /// Protocol 325 world flags: bit 0 low general-placement tiles, bit 1 permanent Halloween,
-        /// bit 2 permanent Christmas, bit 3 more-lightning seed, bit 4 no-lightning seed.
-        /// </summary>
-        public byte EventInfo12 { get; set; }
 
         public byte SunDialCooldown { get; set; }
         public byte MoonDialCooldown { get; set; }
@@ -127,6 +122,8 @@ namespace Multiplicity.Packets
         public ulong LobbyId { get; set; }
         public float SandstormSeverity { get; set; }
         public WorldSpawnPoint[] ExtraSpawnPoints { get; set; }
+        public short DungeonX { get; set; }
+        public short DungeonY { get; set; }
 
         private byte[] _trailingData;
         public byte[] TrailingData
@@ -219,7 +216,6 @@ namespace Multiplicity.Packets
             EventInfo9 = br.ReadByte();
             EventInfo10 = br.ReadByte();
             EventInfo11 = br.ReadByte();
-            EventInfo12 = br.ReadByte();
             SunDialCooldown = br.ReadByte();
             MoonDialCooldown = br.ReadByte();
             OreTierCopper = br.ReadInt16();
@@ -238,7 +234,17 @@ namespace Multiplicity.Packets
             for (int i = 0; i < extraSpawnCount; i++)
                 ExtraSpawnPoints[i] = new WorldSpawnPoint(br.ReadInt16(), br.ReadInt16());
 
-            int trailingLength = (int)(br.BaseStream.Length - br.BaseStream.Position);
+            int trailingLength = checked((int)(br.BaseStream.Length - br.BaseStream.Position));
+            if (trailingLength < sizeof(short) * 2)
+            {
+                throw new InvalidDataException(
+                    $"Protocol 326 WorldInfo payload requires DungeonX/DungeonY, but only {trailingLength} trailing byte(s) remain.");
+            }
+
+            DungeonX = br.ReadInt16();
+            DungeonY = br.ReadInt16();
+            trailingLength -= sizeof(short) * 2;
+
             if (trailingLength > 0)
                 TrailingDataMemory = br.ReadMemory(trailingLength);
         }
@@ -320,7 +326,6 @@ namespace Multiplicity.Packets
             bw.Write(EventInfo9);
             bw.Write(EventInfo10);
             bw.Write(EventInfo11);
-            bw.Write(EventInfo12);
             bw.Write(SunDialCooldown);
             bw.Write(MoonDialCooldown);
             bw.Write(OreTierCopper);
@@ -341,6 +346,9 @@ namespace Multiplicity.Packets
                 bw.Write(ExtraSpawnPoints[i].X);
                 bw.Write(ExtraSpawnPoints[i].Y);
             }
+
+            bw.Write(DungeonX);
+            bw.Write(DungeonY);
 
             if (TrailingDataMemory.Length > 0)
                 bw.Write(TrailingDataMemory.Span);

@@ -6,26 +6,35 @@ namespace Multiplicity.Packets
     public abstract class RawPayloadPacket : TerrariaPacket
     {
         private byte[] _payload;
+        private ReadOnlyMemory<byte> _payloadMemory;
 
         public byte[] Payload
         {
             get
             {
-                return _payload ??= PayloadMemory.ToArray();
+                return _payload ??= _payloadMemory.ToArray();
             }
             set
             {
                 _payload = value;
-                PayloadMemory = value ?? Array.Empty<byte>();
+                _payloadMemory = value ?? Array.Empty<byte>();
             }
         }
 
-        public ReadOnlyMemory<byte> PayloadMemory { get; set; }
+        public ReadOnlyMemory<byte> PayloadMemory
+        {
+            get => _payloadMemory;
+            set
+            {
+                _payloadMemory = value;
+                _payload = null;
+            }
+        }
 
         protected RawPayloadPacket(byte id)
             : base(id)
         {
-            PayloadMemory = ReadOnlyMemory<byte>.Empty;
+            _payloadMemory = ReadOnlyMemory<byte>.Empty;
             _payload = Array.Empty<byte>();
         }
 
@@ -37,7 +46,7 @@ namespace Multiplicity.Packets
 
         public override short GetLength()
         {
-            return (short)PayloadMemory.Length;
+            return (short)_payloadMemory.Length;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
@@ -47,9 +56,9 @@ namespace Multiplicity.Packets
                 base.ToStream(stream, includeHeader);
             }
 
-            if (PayloadMemory.Length > 0)
+            if (_payloadMemory.Length > 0)
             {
-                stream.Write(PayloadMemory.Span);
+                stream.Write(_payloadMemory.Span);
             }
         }
 
@@ -59,4 +68,3 @@ namespace Multiplicity.Packets
         }
     }
 }
-

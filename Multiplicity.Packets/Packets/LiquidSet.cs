@@ -1,14 +1,15 @@
+using System;
 using System.IO;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The LiquidSet (0x30) packet.
+    /// Packet id 48 is deprecated in Terraria 1.4.5.x. Current liquid synchronization uses NetLiquidModule.
+    /// This legacy type is retained only for source compatibility and must not be serialized.
     /// </summary>
+    [PacketRegistrationIgnore]
     public class LiquidSet : TerrariaPacket
     {
-        private const short PayloadLength = 6;
-
         public short X { get; set; }
         public short Y { get; set; }
         public byte Liquid { get; set; }
@@ -17,41 +18,28 @@ namespace Multiplicity.Packets
         public LiquidSet()
             : base((byte)PacketTypes.LiquidSet)
         {
+            throw new NotSupportedException("Packet 48 is deprecated in Terraria protocol 326; use NetLiquidModule.");
         }
 
         public LiquidSet(BinaryReader br)
             : base(br)
         {
-            X = br.ReadInt16();
-            Y = br.ReadInt16();
-            Liquid = br.ReadByte();
-            LiquidType = (LiquidKind)br.ReadByte();
+            throw new InvalidDataException("Packet 48 is deprecated in Terraria protocol 326.");
         }
 
         public override short GetLength()
         {
-            return PayloadLength;
+            return 0;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            if (includeHeader)
-            {
-                base.ToStream(stream, includeHeader);
-            }
-
-            using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
-            {
-                bw.Write(X);
-                bw.Write(Y);
-                bw.Write(Liquid);
-                bw.Write((byte)LiquidType);
-            }
+            throw new NotSupportedException("Packet 48 cannot be sent in Terraria protocol 326; use NetLiquidModule.");
         }
 
         public override string ToString()
         {
-            return $"[LiquidSet: X = {X}, Y = {Y}, Liquid = {Liquid}, LiquidType = {LiquidType}]";
+            return "[DeprecatedLiquidUpdate48: unsupported in protocol 326]";
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
@@ -32,12 +32,10 @@ namespace Multiplicity.Packets.Views
 
         public short NpcIndex => _packetObject.NpcIndex;
 
-        public float ExtraValue => _packetObject.ExtraValue;
+        public int ExtraValue => _packetObject.ExtraValue;
 
         public float X => _packetObject.X;
 
         public float Y => _packetObject.Y;
     }
 }
-
-

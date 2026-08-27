@@ -3,6 +3,7 @@ using System.IO;
 
 namespace Multiplicity.Packets
 {
+    [PacketRegistrationIgnore]
     public sealed class SyncItemCannotBeTakenByEnemies : WorldItemSyncPacketBase
     {
         public SyncItemCannotBeTakenByEnemies()

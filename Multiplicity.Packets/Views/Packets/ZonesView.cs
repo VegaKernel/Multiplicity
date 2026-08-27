@@ -7,7 +7,7 @@ namespace Multiplicity.Packets.Views
         private readonly ReadOnlySpan<byte> _sourceSpan;
 
         public ZonesView(ReadOnlySpan<byte> payload)
-        : this(PacketView.FromPayload(PacketTypes.Zones, payload))
+            : this(PacketView.FromPayload(PacketTypes.Zones, payload))
         {
         }
 
@@ -26,6 +26,8 @@ namespace Multiplicity.Packets.Views
             byte zone2 = reader.ReadByte();
             byte zone3 = reader.ReadByte();
             byte zone4 = reader.ReadByte();
+            byte zone5 = reader.ReadByte();
+            byte townNpcCount = reader.ReadByte();
             reader.EnsureEnd();
 
             Header = packet.Header;
@@ -35,6 +37,8 @@ namespace Multiplicity.Packets.Views
             Zone2 = zone2;
             Zone3 = zone3;
             Zone4 = zone4;
+            Zone5 = zone5;
+            TownNpcCount = townNpcCount;
         }
 
         public PacketHeader Header { get; }
@@ -50,8 +54,9 @@ namespace Multiplicity.Packets.Views
         public byte Zone3 { get; }
 
         public byte Zone4 { get; }
+
+        public byte Zone5 { get; }
+
+        public byte TownNpcCount { get; }
     }
 }
-
-
-

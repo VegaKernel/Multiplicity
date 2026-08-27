@@ -1,0 +1,68 @@
+using Multiplicity.Packets.Extensions;
+using Multiplicity.Packets.Extensions.Dimensions;
+using Multiplicity.Packets.Extensions.Mobile;
+using Xunit;
+
+namespace Multiplicity.Packets.Tests
+{
+    public sealed class PacketExtensionOverlayTests
+    {
+        [Fact]
+        public void BarePacket67_FallsBackToVanillaPlaceholder()
+        {
+            Placeholder packet = new Placeholder();
+            byte[] bytes = packet.ToArray(includeHeader: true);
+
+            TerrariaPacket decoded = PacketDecoder.CommonExtensions.Decode(bytes);
+
+            Assert.IsType<Placeholder>(decoded);
+        }
+
+        [Fact]
+        public void DimensionsRealIp_OverridesPacket67WhenPayloadIsPresent()
+        {
+            DimensionsMessage packet = DimensionsMessage.CreateRealIp("203.0.113.42");
+            byte[] bytes = packet.ToArray(includeHeader: true);
+
+            TerrariaPacket vanilla = TerrariaPacket.Deserialize(bytes);
+            TerrariaPacket decoded = PacketDecoder.CommonExtensions.Decode(bytes);
+            DimensionsMessage dimensions = Assert.IsType<DimensionsMessage>(decoded);
+
+            Assert.IsType<Placeholder>(vanilla);
+            Assert.Equal(DimensionsMessage.RealIpMessageType, dimensions.MessageType);
+            Assert.Equal("203.0.113.42", dimensions.ReportedRealIp);
+            Assert.True(dimensions.TryGetReportedRealIp(out System.Net.IPAddress parsed));
+            Assert.Equal("203.0.113.42", parsed.ToString());
+            Assert.Equal(bytes, dimensions.ToArray(includeHeader: true));
+        }
+
+        [Fact]
+        public void MobileServerInfo_IsDecodedOnlyByExtensionAwareDecoder()
+        {
+            ServerInfo packet = new ServerInfo(new byte[] { 1, 2, 3, 4 });
+            byte[] bytes = packet.ToArray(includeHeader: true);
+
+            TerrariaPacket vanilla = TerrariaPacket.Deserialize(bytes);
+            TerrariaPacket decoded = PacketDecoder.CommonExtensions.Decode(bytes);
+            ServerInfo extension = Assert.IsType<ServerInfo>(decoded);
+
+            Assert.IsType<UnknownPacket>(vanilla);
+            Assert.Equal(packet.Payload, extension.Payload);
+        }
+
+        [Fact]
+        public void MobilePlayerPlatformInfo_UsesExtensionId164()
+        {
+            PlayerPlatformInfo packet = new PlayerPlatformInfo(new byte[] { 9, 8, 7 });
+            byte[] bytes = packet.ToArray(includeHeader: true);
+
+            TerrariaPacket vanilla = TerrariaPacket.Deserialize(bytes);
+            TerrariaPacket decoded = PacketDecoder.CommonExtensions.Decode(bytes);
+            PlayerPlatformInfo extension = Assert.IsType<PlayerPlatformInfo>(decoded);
+
+            Assert.IsType<UnknownPacket>(vanilla);
+            Assert.Equal(PlayerPlatformInfo.PacketId, extension.Id);
+            Assert.Equal(packet.Payload, extension.Payload);
+        }
+    }
+}

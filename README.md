@@ -6,24 +6,31 @@ NuGet package id: `Multiplicity`. The assembly and public namespace remain `Mult
 
 ## Protocol support
 
-The current baseline is **Terraria 1.4.5.7 / protocol 325**.
+The current baseline is **Terraria 1.4.5.8 / protocol 326**.
 
-- connection handshake: `Terraria325`;
+- connection handshake: `Terraria326`;
 - vanilla desktop `MessageID.Count`: `163`;
 - vanilla desktop packet ids: `0..162`;
 - highest vanilla packet id: `DamageNPCAck (162)`;
-- `ServerInfo (163)` and `PlayerPlatformInfo (164)` are Multiplicity/TSAPI-family extension ids and are not part of vanilla desktop `MessageID`.
+- `ServerInfo (163)` and `PlayerPlatformInfo (164)` are mobile-family extension ids and are not part of vanilla desktop `MessageID`.
 
-Important protocol-325 changes covered by the library include:
+The confirmed wire delta from Terraria 1.4.5.7 / protocol 325 to 1.4.5.8 / protocol 326 is deliberately small:
+
+- the connection handshake changes from `Terraria325` to `Terraria326`;
+- `WorldInfo (7)` keeps the same eleven world/event flag bytes and appends `short DungeonX + short DungeonY` after the extra-spawn-point list;
+- the remaining packet layouts and the `NetManager` module registration order are inherited from the audited 1.4.5.7 / protocol 325 baseline unless a packet has an independently documented compatibility fix.
+
+Important 1.4.5.x packet-layout fixes covered by the library include:
 
 - NPC slot + generation identity in NPC synchronization and damage packets;
-- 32-bit `ProjectileKey` identity in projectile create/destroy synchronization;
+- 32-bit `ProjectileKey` identity in projectile create/destroy synchronization and projectile trackers;
 - current world-item sync and item ownership layouts;
 - `RemoveItemOwner (39)` force-assignment flag;
+- variable-length `NpcUpdateBuff (54)` entries using `ushort` buff ids and times with a zero terminator;
 - `DamageNPCAck (162)`;
-- additional `WorldInfo` seed/world flags used by 1.4.5.7;
+- current `WorldInfo` seed/world flags plus the protocol-326 dungeon-coordinate tail;
 - current `NetManager` module registration order, including restored `NetCreativeUnlocksModule`;
-- packet ids `145` and `148` are treated as deprecated in protocol 325 and are not registered for normal runtime deserialization.
+- packet ids `24`, `25`, `26`, `44`, `48`, `83`, `145` and `148` are not registered as active vanilla protocol-326 packets.
 
 `KillPortal (95)` uses the vanilla wire layout `ushort PlayerId + byte PortalColor`, so its payload is 3 bytes. The old `ProjectileIndex` property is retained only as an obsolete source-compatibility alias.
 
@@ -32,10 +39,38 @@ Important protocol-325 changes covered by the library include:
 - packet serialization and deserialization;
 - typed packet models;
 - a zero-copy `ReadOnlySpan<byte>` view layer for server hot paths;
-- packet and view names aligned with the TSAPI/Terraria naming where practical;
+- opt-in packet-extension overlays without mixing extension models into the vanilla packet folder;
+- a source-generated vanilla packet registry with no runtime assembly scanning;
+- packet and view names aligned with the Terraria naming where practical;
 - no external runtime dependencies.
 
 Target framework: `net9.0`.
+
+The package is marked as AOT/trimming compatible and enables the .NET AOT and trimming analyzers:
+
+```xml
+<IsAotCompatible>true</IsAotCompatible>
+<IsTrimmable>true</IsTrimmable>
+<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+<EnableAotAnalyzer>true</EnableAotAnalyzer>
+```
+
+A NativeAOT application can therefore consume the same `net9.0` NuGet package; a separate AOT NuGet package is not required.
+
+### AOT-safe packet registration
+
+Vanilla packet registration is generated at compile time by `Multiplicity.Packets.Generators`.
+
+The generator discovers concrete packet models during compilation and emits direct code equivalent to:
+
+```csharp
+PacketRegistration.Fixed(
+    PacketTypes.Zones,
+    static reader => new Zones(reader),
+    static () => new Zones());
+```
+
+There is no runtime `Assembly.GetTypes()`, constructor lookup, `Activator` or reflected `PayloadLength` lookup in the library registry path. The generated registry supplies both deserializers and packet metadata from the same compile-time source of truth. Legacy packet classes that intentionally remain only for source compatibility are marked `[PacketRegistrationIgnore]` and are excluded from generated vanilla registration.
 
 ## Install
 
@@ -65,7 +100,7 @@ switch (packet)
 }
 ```
 
-Main entry points:
+Main vanilla entry points:
 
 - `TerrariaPacket.Deserialize(...)`;
 - `TerrariaPacket.DeserializePayload(...)`;
@@ -83,6 +118,52 @@ TerrariaPacket packet = TerrariaPacket.DeserializePayload(
     payloadOffset,
     payloadLength);
 ```
+
+## Packet extensions
+
+Extension protocols live under `Multiplicity.Packets/Extensions` and are kept separate from vanilla packet models.
+
+The extension-aware decoder applies registered extension decoders **before** the vanilla decoder for the same byte id:
+
+```text
+packet id
+   ↓
+extension overlay
+   ↓ if not claimed
+vanilla decoder
+```
+
+This matters for protocols such as Dimensions, which intentionally reuses vanilla-unused packet id `67`.
+
+```csharp
+using Multiplicity.Packets.Extensions;
+using Multiplicity.Packets.Extensions.Dimensions;
+
+TerrariaPacket packet = PacketDecoder.CommonExtensions.Decode(receiveBuffer);
+
+if (packet is DimensionsMessage dimensions && dimensions.IsRealIp)
+{
+    Console.WriteLine(dimensions.ReportedRealIp);
+}
+```
+
+The upstream Dimensions extension carried on packet `67` has payload:
+
+```text
+Int16 messageType
+string payload
+```
+
+`messageType = 0` reports the client IP observed by the Dimensions proxy. This value is an extension report and is not authenticated by the vanilla Terraria protocol, so consumers should only trust it from a trusted proxy path.
+
+Mobile-family packets currently isolated behind an opt-in extension overlay are:
+
+- `Extensions.Mobile.ServerInfo`, packet id `163`;
+- `Extensions.Mobile.PlayerPlatformInfo`, packet id `164`.
+
+Older mobile protocol tables independently identify the same `ServerInfo` and `PlayerPlatformInfo` packet family, but their numeric ids moved as the shared packet table grew. Until a matching mobile build for ids `163/164` is pinned, Multiplicity deliberately preserves their payloads as opaque bytes instead of pretending an older layout is proven for the current ids.
+
+`PacketTypes.ServerInfo` and `PacketTypes.PlayerPlatformInfo` remain temporary compatibility aliases for existing consumers. They are not vanilla desktop Terraria IDs and new code should use the extension packet constants instead.
 
 ## Zero-copy packet views
 
@@ -122,7 +203,7 @@ A payload-only `PacketView` has no complete Terraria packet header, so `HasPacke
 
 ## Net modules
 
-`LoadNetModule` and `TerrariaNetModule` use the Terraria 1.4.5.7 registration order. The currently registered module ids are:
+`LoadNetModule` and `TerrariaNetModule` use the Terraria 1.4.5.8 registration order, unchanged from the audited 1.4.5.7 baseline. The currently registered module ids are:
 
 | Id | Module |
 |---:|---|
@@ -142,16 +223,18 @@ A payload-only `PacketView` has no complete Terraria packet header, so `HasPacke
 | 13 | `LeashedEntityModule` |
 | 14 | `UnbreakableWallScanModule` |
 
-The older `TagEffectModule` is not part of the protocol-325 registration table and has been removed from the active API.
+The older `TagEffectModule` is not part of the current registration table and has been removed from the active API.
 
 ## Project layout
 
-- `Multiplicity.Packets/Core` - packet framing, metadata and protocol registration;
-- `Multiplicity.Packets/Packets` - typed packet object models;
+- `Multiplicity.Packets/Core` - packet framing and generated-registry runtime support;
+- `Multiplicity.Packets/Packets` - vanilla typed packet object models;
+- `Multiplicity.Packets/Extensions` - opt-in extension overlays such as Dimensions and mobile-family packets;
 - `Multiplicity.Packets/NetModules` - `NetManager` module models;
 - `Multiplicity.Packets/Views` - low-allocation packet views;
+- `Multiplicity.Packets.Generators` - compile-time vanilla packet registry generator;
 - `Multiplicity.Packets.Tests` - protocol and serialization regression tests.
 
 ## Summary
 
-Multiplicity provides both a conventional packet object model and a low-allocation view API, with the current wire baseline set to **Terraria 1.4.5.7 / protocol 325**.
+Multiplicity provides both a conventional packet object model and a low-allocation view API, with the current wire baseline set to **Terraria 1.4.5.8 / protocol 326** and non-vanilla packet protocols isolated behind opt-in extension overlays.

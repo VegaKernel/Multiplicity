@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Multiplicity.Packets.Models;
 
 namespace Multiplicity.Packets.Views
@@ -29,7 +29,7 @@ namespace Multiplicity.Packets.Views
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
 
         public TeleportationPotion Packet => _packetObject;
+
+        public byte Subtype => _packetObject.Subtype;
     }
 }
-
-

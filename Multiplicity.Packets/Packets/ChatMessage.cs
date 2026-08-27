@@ -1,57 +1,44 @@
+using System;
 using System.IO;
-using Multiplicity.Packets.Extensions;
 
 namespace Multiplicity.Packets
 {
     /// <summary>
-    /// The ChatMessage (0x19) packet.
+    /// Packet id 25 is unused in Terraria 1.4.5.x. Chat synchronization uses NetTextModule.
+    /// This legacy type is retained only for source compatibility and must not be serialized.
     /// </summary>
+    [PacketRegistrationIgnore]
     public class ChatMessage : TerrariaPacket
     {
-        private const short FixedPayloadLength = 4;
-
         public byte PlayerId { get; set; }
         public ColorStruct MessageColor { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
 
         public ChatMessage()
             : base((byte)PacketTypes.ChatMessage)
         {
-            Message = string.Empty;
+            throw new NotSupportedException("Packet 25 is unused in Terraria protocol 326; chat uses NetTextModule.");
         }
 
         public ChatMessage(BinaryReader br)
             : base(br)
         {
-            PlayerId = br.ReadByte();
-            MessageColor = br.ReadColor();
-            Message = br.ReadString();
+            throw new InvalidDataException("Packet 25 is unused in Terraria protocol 326.");
         }
 
         public override short GetLength()
         {
-            return (short)(FixedPayloadLength + PacketSerializationHelper.GetSerializedStringLength(Message));
+            return 0;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
         {
-            if (includeHeader)
-            {
-                base.ToStream(stream, includeHeader);
-            }
-
-            using (BinaryWriter bw = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
-            {
-                bw.Write(PlayerId);
-                bw.Write(MessageColor);
-                bw.Write(Message ?? string.Empty);
-            }
+            throw new NotSupportedException("Packet 25 cannot be sent in Terraria protocol 326; chat uses NetTextModule.");
         }
 
         public override string ToString()
         {
-            return $"[ChatMessage: PlayerId = {PlayerId} MessageColor = {MessageColor} Message = {Message}]";
+            return "[Unused25: unsupported in protocol 326]";
         }
     }
 }
-

@@ -10,11 +10,12 @@ namespace Multiplicity.Packets
     public class ConnectRequest : TerrariaPacket
     {
         public const int Protocol325 = 325;
-        public const int CurrentProtocol = Protocol325;
+        public const int Protocol326 = 326;
+        public const int CurrentProtocol = Protocol326;
         public const string VersionPrefix = "Terraria";
 
         /// <summary>
-        /// Gets or sets the protocol banner string. Example: "Terraria325".
+        /// Gets or sets the protocol banner string. Example: "Terraria326".
         /// </summary>
         public string Version { get; set; }
 
