@@ -7,6 +7,26 @@ namespace Multiplicity.Packets.Tests
     public class Protocol326AuditFixesTests
     {
         [Fact]
+        public void ConnectRequest_DefaultsToTerraria326()
+        {
+            ConnectRequest packet = new ConnectRequest();
+
+            Assert.Equal(326, ConnectRequest.Protocol326);
+            Assert.Equal(ConnectRequest.Protocol326, ConnectRequest.CurrentProtocol);
+            Assert.Equal("Terraria326", packet.Version);
+            Assert.True(packet.IsProtocol(326));
+            Assert.False(packet.IsProtocol(325));
+
+            byte[] bytes = packet.ToArray(includeHeader: true);
+            ConnectRequest parsed = Assert.IsType<ConnectRequest>(TerrariaPacket.Deserialize(bytes));
+            ConnectRequestView view = PacketViewParser.ParseExact(bytes).AsConnectRequestView();
+
+            Assert.Equal("Terraria326", parsed.Version);
+            Assert.Equal("Terraria326", view.Version);
+            Assert.Equal(bytes, parsed.ToArray(includeHeader: true));
+        }
+
+        [Fact]
         public void Zones_UsesSevenByteProtocol326Layout()
         {
             Zones packet = new Zones
