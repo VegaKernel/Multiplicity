@@ -7,6 +7,7 @@ namespace Multiplicity.Packets
     /// Packet id 26 is unused in Terraria 1.4.5.x. Current player damage uses the V2 damage packets.
     /// This legacy type is retained only for source compatibility and must not be serialized.
     /// </summary>
+    [PacketRegistrationIgnore]
     public class PlayerDamage : TerrariaPacket
     {
         public byte PlayerId { get; set; }
