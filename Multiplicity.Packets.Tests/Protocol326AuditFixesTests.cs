@@ -83,5 +83,44 @@ namespace Multiplicity.Packets.Tests
         {
             Assert.Equal(10, (byte)NpcSpecialType.PartyGirlCake);
         }
+
+        [Fact]
+        public void WorldInfo_Protocol326TailCarriesDungeonCoordinates()
+        {
+            WorldInfo packet = new WorldInfo
+            {
+                DungeonX = 0x1234,
+                DungeonY = unchecked((short)0xABCD)
+            };
+
+            byte[] payload = packet.ToPayloadArray();
+            WorldInfo parsed = Assert.IsType<WorldInfo>(
+                TerrariaPacket.DeserializePayload(PacketTypes.WorldInfo, payload));
+            WorldInfoView view = WorldInfoView.FromPayload(payload);
+
+            Assert.Equal(new byte[] { 0x34, 0x12, 0xCD, 0xAB }, payload[^4..]);
+            Assert.Equal(packet.DungeonX, parsed.DungeonX);
+            Assert.Equal(packet.DungeonY, parsed.DungeonY);
+            Assert.Equal(packet.DungeonX, view.DungeonX);
+            Assert.Equal(packet.DungeonY, view.DungeonY);
+            Assert.Empty(parsed.TrailingDataMemory.ToArray());
+        }
+
+        [Fact]
+        public void LeashedEntityTypes_MatchProtocol326RegistrationOrder()
+        {
+            Assert.Equal(0, (int)LeashedEntityType.None);
+            Assert.Equal(1, (int)LeashedEntityType.Kite);
+            Assert.Equal(2, (int)LeashedEntityType.WalkerCritter);
+            Assert.Equal(3, (int)LeashedEntityType.AquaticWalkerCritter);
+            Assert.Equal(4, (int)LeashedEntityType.CrawlerCritter);
+            Assert.Equal(5, (int)LeashedEntityType.SnailCritter);
+            Assert.Equal(6, (int)LeashedEntityType.TurtleCritter);
+            Assert.Equal(7, (int)LeashedEntityType.RunnerCritter);
+            Assert.Equal(8, (int)LeashedEntityType.FlyerCritter);
+            Assert.Equal(9, (int)LeashedEntityType.NormalButterfly);
+            Assert.Equal(13, (int)LeashedEntityType.ShimmerFly);
+            Assert.Equal(21, (int)LeashedEntityType.WaterStrider);
+        }
     }
 }
