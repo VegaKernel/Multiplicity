@@ -1,6 +1,6 @@
 using System.IO;
 using Multiplicity.Packets.Extensions.Dimensions;
-using Multiplicity.Packets.Extensions.Tsapi;
+using Multiplicity.Packets.Extensions.Mobile;
 
 namespace Multiplicity.Packets.Extensions
 {
@@ -14,7 +14,7 @@ namespace Multiplicity.Packets.Extensions
                 .Add(DimensionsMessage.PacketId, TryDecodeDimensions)
                 .Build();
 
-        public static PacketExtensionRegistry Tsapi { get; } =
+        public static PacketExtensionRegistry Mobile { get; } =
             PacketExtensionRegistry.CreateBuilder()
                 .Add(ServerInfo.PacketId, DecodeServerInfo)
                 .Add(PlayerPlatformInfo.PacketId, DecodePlayerPlatformInfo)
