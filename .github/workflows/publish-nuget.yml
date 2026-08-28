@@ -4,10 +4,6 @@ on:
   push:
     tags:
       - "v*"
-    branches:
-      - "general-devel"
-    paths:
-      - ".release/2.7.2"
   workflow_dispatch:
     inputs:
       version:
@@ -44,10 +40,8 @@ jobs:
         run: |
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             version="${{ inputs.version }}"
-          elif [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            version="${GITHUB_REF_NAME#v}"
           else
-            version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Multiplicity.Packets/Multiplicity.Packets.csproj | head -n 1)"
+            version="${GITHUB_REF_NAME#v}"
           fi
 
           if [[ -z "$version" ]]; then
