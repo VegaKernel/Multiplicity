@@ -1,5 +1,4 @@
-﻿using System;
-using Multiplicity.Packets.Models;
+using System;
 
 namespace Multiplicity.Packets.Views
 {
@@ -20,8 +19,14 @@ namespace Multiplicity.Packets.Views
 
         public ConnectRequestView(PacketView packet)
         {
+            packet.EnsureType(PacketTypes.ConnectRequest);
+
+            PacketReader reader = packet.CreatePayloadReader();
+            string version = reader.ReadStringUtf8();
+            reader.EnsureEnd();
+
             _packet = packet;
-            _packetObject = PacketViewMaterializer.Materialize<ConnectRequest>(packet, PacketTypes.ConnectRequest);
+            _packetObject = new ConnectRequest { Version = version };
         }
 
         public PacketHeader Header => _packet.Header;
@@ -33,5 +38,3 @@ namespace Multiplicity.Packets.Views
         public string Version => _packetObject.Version;
     }
 }
-
-
