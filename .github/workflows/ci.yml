@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: [self-hosted, windows, x64]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
