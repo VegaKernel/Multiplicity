@@ -4,6 +4,22 @@
 
 NuGet package id: `Multiplicity`. The assembly and public namespace remain `Multiplicity.Packets`.
 
+Current package version: **3.0.0**.
+
+## Dependency policy
+
+`Multiplicity.Packets` is intentionally a **BCL-only runtime/package library**. This is an architectural
+invariant, not an accident of the current implementation:
+
+- do not add runtime `PackageReference` dependencies to `Multiplicity.Packets`;
+- do not depend on TerraRuntime, TShock, Terraria/XNA/MonoGame, ASP.NET Core or a transport framework;
+- protocol models, packet views, buffer abstractions and codecs must remain usable independently;
+- compiler/test tooling may have build-time dependencies, but those must never become dependencies of the
+  shipped `Multiplicity` NuGet package or `Multiplicity.Packets.dll`.
+
+Version 3.0 also removes the generator's NuGet Roslyn dependency: the generator targets .NET 11 and references
+the Roslyn assemblies supplied by the active .NET SDK. xUnit remains test-only.
+
 ## Protocol support
 
 The current baseline is **Terraria 1.4.5.8 / protocol 326**.
@@ -45,11 +61,11 @@ Important 1.4.5.x packet-layout fixes covered by the library include:
 - opt-in packet-extension overlays without mixing extension models into the vanilla packet folder;
 - a source-generated vanilla packet registry with no runtime assembly scanning;
 - packet and view names aligned with the Terraria naming where practical;
-- no external runtime dependencies.
+- no external runtime dependencies; the shipped runtime assembly depends only on the .NET BCL.
 
 Wire compatibility is intentionally dependency-free. Terraria/XNA/MonoGame implementation types are not runtime dependencies of the parser: `Vector2` values are represented by their two `Single` wire components, RGB values use the library's own `ColorStruct`, and protocol-specific compound values such as player death reasons, sound info, item-sync data and raw tile payloads use Multiplicity-owned models with the same byte layout.
 
-Target framework: `net9.0`.
+Target framework: `net11.0`. Version 3.0.0 is intentionally net11-only.
 
 The package is marked as AOT/trimming compatible and enables the .NET AOT and trimming analyzers:
 
@@ -60,7 +76,7 @@ The package is marked as AOT/trimming compatible and enables the .NET AOT and tr
 <EnableAotAnalyzer>true</EnableAotAnalyzer>
 ```
 
-A NativeAOT application can therefore consume the same `net9.0` NuGet package; a separate AOT NuGet package is not required.
+A NativeAOT application can therefore consume the same `net11.0` NuGet package; a separate AOT NuGet package is not required.
 
 ### AOT-safe packet registration
 
@@ -109,9 +125,56 @@ Main vanilla entry points:
 
 - `TerrariaPacket.Deserialize(...)`;
 - `TerrariaPacket.DeserializePayload(...)`;
+- `TerrariaPacket.TryDeserialize(...)`;
+- `TerrariaPacket.TryDeserializePayload(...)`;
 - `TerrariaPacket.ToArray(...)`;
 - `TerrariaPacket.ToPayloadArray()`;
+- `TerrariaPacket.TrySerialize(...)`;
+- `TerrariaPacket.WriteTo(IBufferWriter<byte>)`;
+- `TerrariaPacket.WritePayloadTo(IBufferWriter<byte>)`;
 - `TerrariaPacket.ToStream(...)`.
+
+### Bounded buffers and segmented input
+
+Multiplicity 3.0 moves generic packet-buffer mechanics into the packet library itself so consumers do not need
+to wrap `Stream` or coalesce segmented network buffers in their own adapter layers. These APIs use only BCL
+types and do not add runtime package dependencies.
+
+`WriteTo(IBufferWriter<byte>)` reserves the packet's declared final size, serializes directly into that memory and
+advances the writer only when the serializer wrote exactly that many bytes. Under-write and over-write therefore
+fail closed instead of publishing a partial or padded packet:
+
+```csharp
+using System.Buffers;
+using Multiplicity.Packets;
+
+var output = new ArrayBufferWriter<byte>();
+var packet = new Ping();
+packet.WriteTo(output);
+ReadOnlySpan<byte> frame = output.WrittenSpan;
+```
+
+`TrySerialize(...)` provides the same exact-length invariant when an owned final array is wanted. `ToArray(...)`
+and `ToPayloadArray()` now use that exact-size path as well.
+
+For receive paths built on pipelines or scatter/gather buffers, framed packets and payloads can be decoded
+directly from `ReadOnlySequence<byte>`. Single-segment sequences are borrowed without a copy; multi-segment
+sequences are coalesced through a bounded `ArrayPool<byte>` lease that is returned before the decoded object
+escapes the call:
+
+```csharp
+ReadOnlySequence<byte> frame = GetFrame();
+if (TerrariaPacket.TryDeserialize(in frame, out TerrariaPacket packet))
+{
+    // typed packet model
+}
+```
+
+The library remains transport-agnostic: it does not depend on `System.IO.Pipelines`, sockets, ASP.NET Core,
+TerraRuntime, Terraria/XNA/MonoGame or any other external runtime package. `IBufferWriter<byte>` and
+`ReadOnlySequence<byte>` come from the .NET BCL. The source-generator project also targets `net11.0` in 3.0 and references the Roslyn assemblies shipped with
+the active .NET SDK rather than restoring `Microsoft.CodeAnalysis` packages. It is a compiler-time build tool,
+not a runtime dependency of the `Multiplicity` package.
 
 For hooks such as TSAPI/TShock `NetGetData`, where the packet id is already known and the receive buffer contains a payload slice:
 

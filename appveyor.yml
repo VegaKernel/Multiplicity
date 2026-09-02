@@ -1,4 +1,4 @@
-version: 1.2.{build}
+version: 3.0.{build}
 pull_requests:
         do_not_increment_build_number: true
 branches:
@@ -10,7 +10,7 @@ configuration: Release
 platform: Any CPU
 clone_depth: 3
 assembly_info:
-  patch: true
+  patch: false
   file: '**\AssemblyInfo.*'
   assembly_version: '{version}'
   assembly_file_version: '{version}'

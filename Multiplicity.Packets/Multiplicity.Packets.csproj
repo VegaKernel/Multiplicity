@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <PackageId>Multiplicity</PackageId>
-    <Version>2.7.2</Version>
+    <Version>3.0.0</Version>
     <AssemblyName>Multiplicity.Packets</AssemblyName>
     <RootNamespace>Multiplicity.Packets</RootNamespace>
     <Authors>VegaKernel</Authors>
@@ -20,14 +20,16 @@
     <Nullable>disable</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Deterministic>false</Deterministic>
+    <Deterministic>true</Deterministic>
     <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsAotCompatible>true</IsAotCompatible>
     <IsTrimmable>true</IsTrimmable>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <EnableAotAnalyzer>true</EnableAotAnalyzer>
   </PropertyGroup>
 
+  <!-- Runtime/package dependency policy: keep this project BCL-only; do not add runtime PackageReference items. -->
   <ItemGroup>
     <ProjectReference Include="..\Multiplicity.Packets.Generators\Multiplicity.Packets.Generators.csproj"
                       OutputItemType="Analyzer"
