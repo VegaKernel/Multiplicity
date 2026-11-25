@@ -20,8 +20,6 @@ namespace Multiplicity.Packets
     public enum TweakItemFlags2 : byte
     {
         None = 0,
-        Width = 1 << 0,
-        Height = 1 << 1,
         Scale = 1 << 2,
         Ammo = 1 << 3,
         UseAmmo = 1 << 4,

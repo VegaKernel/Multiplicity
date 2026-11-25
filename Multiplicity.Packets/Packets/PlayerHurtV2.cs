@@ -27,6 +27,11 @@ namespace Multiplicity.Packets
         public short Damage { get; set; }
         public byte HitDirection { get; set; }
         public byte Flags { get; set; }
+        public bool Dodgeable
+        {
+            get => (Flags & 4) != 0;
+            set => Flags = (byte)(value ? Flags | 4 : Flags & ~4);
+        }
         public sbyte CooldownCounter { get; set; }
 
         public PlayerHurtV2()

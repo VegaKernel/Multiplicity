@@ -6,7 +6,7 @@
     <AssemblyName>Multiplicity.Packets</AssemblyName>
     <RootNamespace>Multiplicity.Packets</RootNamespace>
     <Authors>VegaKernel</Authors>
-    <Description>Low-level Terraria packet serialization/deserialization library with typed packet models and zero-copy packet views for protocol 326 (Terraria 1.4.5.8).</Description>
+    <Description>Low-level Terraria packet serialization/deserialization library with typed packet models and zero-copy packet views for protocol 329 (Terraria 1.4.6.1).</Description>
     <PackageTags>Terraria;Packets;Networking;TShock</PackageTags>
     <PackageProjectUrl>https://github.com/VegaKernel/Multiplicity</PackageProjectUrl>
     <RepositoryUrl>https://github.com/VegaKernel/Multiplicity</RepositoryUrl>

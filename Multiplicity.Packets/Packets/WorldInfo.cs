@@ -16,7 +16,7 @@ namespace Multiplicity.Packets
     }
 
     /// <summary>
-    /// The WorldInfo (0x07) packet for Terraria 1.4.5.8 / protocol 326.
+    /// The WorldInfo (0x07) packet for Terraria 1.4.6.1 / protocol 329.
     /// </summary>
     public class WorldInfo : TerrariaPacket
     {
@@ -126,6 +126,12 @@ namespace Multiplicity.Packets
         public byte EventInfo9 { get; set; }
         public byte EventInfo10 { get; set; }
         public byte EventInfo11 { get; set; }
+
+        public bool NoSpidersSeed
+        {
+            get => (EventInfo11 & 0x20) != 0;
+            set => EventInfo11 = (byte)(value ? EventInfo11 | 0x20 : EventInfo11 & ~0x20);
+        }
 
         public byte SunDialCooldown { get; set; }
         public byte MoonDialCooldown { get; set; }
@@ -265,7 +271,7 @@ namespace Multiplicity.Packets
             if (trailingLength < sizeof(short) * 2)
             {
                 throw new InvalidDataException(
-                    $"Protocol 326 WorldInfo payload requires DungeonX/DungeonY, but only {trailingLength} trailing byte(s) remain.");
+                    $"WorldInfo payload requires DungeonX/DungeonY, but only {trailingLength} trailing byte(s) remain.");
             }
 
             DungeonX = br.ReadInt16();

@@ -22,34 +22,12 @@ the Roslyn assemblies supplied by the active .NET SDK. xUnit remains test-only.
 
 ## Protocol support
 
-The current baseline is **Terraria 1.4.5.8 / protocol 326**.
+The current baseline is **Terraria 1.4.6.1 / protocol 329**. The connection banner is `Terraria329`;
+the vanilla desktop `MessageID.Count` is `166` (ids `0..165`, including reserved ids).
 
-- connection handshake: `Terraria326`;
-- vanilla desktop `MessageID.Count`: `163`;
-- vanilla desktop packet ids: `0..162`;
-- highest vanilla packet id: `DamageNPCAck (162)`;
-- `ServerInfo (163)` and `PlayerPlatformInfo (164)` are mobile-family extension ids and are not part of vanilla desktop `MessageID`.
-
-The confirmed wire delta from Terraria 1.4.5.7 / protocol 325 to 1.4.5.8 / protocol 326 is deliberately small:
-
-- the connection handshake changes from `Terraria325` to `Terraria326`;
-- `WorldInfo (7)` keeps the same eleven world/event flag bytes and appends `short DungeonX + short DungeonY` after the extra-spawn-point list;
-- the remaining packet layouts and the `NetManager` module registration order are inherited from the audited 1.4.5.7 / protocol 325 baseline unless a packet has an independently documented compatibility fix.
-
-Important 1.4.5.x packet-layout fixes covered by the library include:
-
-- NPC slot + generation identity in NPC synchronization and damage packets;
-- 32-bit `ProjectileKey` identity in projectile create/destroy synchronization and projectile trackers;
-- current world-item sync and item ownership layouts;
-- `RemoveItemOwner (39)` force-assignment flag;
-- variable-length `NpcUpdateBuff (54)` entries using `ushort` buff ids and times with a zero terminator;
-- `DamageNPCAck (162)`;
-- current `WorldInfo` seed/world flags plus the protocol-326 dungeon-coordinate tail;
-- current `NetManager` module registration order, including restored `NetCreativeUnlocksModule`;
-- Terraria 1.4.5.8 wire corrections for `OpenSignResponse (47)`, `LiquidUpdate (48)`, `UniqueTownNPCInfoSyncRequest (56)`, `QuestsCountSync (76)`, `QuickStackChests (85)`, `MoonlordHorror (103)` and `SpecialFX (112)`;
-- current catchable-NPC release-owner handling in `NpcUpdate (23)`, including automatic life-width selection for 1/2/4-byte life values;
-- packet ids `24`, `25`, `26`, `44`, `83`, `145` and `148` are not registered as active vanilla protocol-326 packets;
-- legacy `LiquidUpdate (48)` remains registered because Terraria 1.4.5.8 still sends and accepts its `Int16 X + Int16 Y + Byte liquid + Byte liquidType` wire shape even though `NetLiquidModule` is preferred.
+See [CHANGELOG.md](CHANGELOG.md) for packet changes and migration notes. Constructing a banner with
+`ConnectRequest.BuildVersion` does not switch the codecs to an older protocol. The library does not
+implement the game's socket transports or platform matchmaking.
 
 `KillPortal (95)` uses the vanilla wire layout `ushort PlayerId + byte PortalColor`, so its payload is 3 bytes. The old `ProjectileIndex` property is retained only as an obsolete source-compatibility alias.
 
@@ -224,14 +202,14 @@ string payload
 
 `messageType = 0` reports the client IP observed by the Dimensions proxy. This value is an extension report and is not authenticated by the vanilla Terraria protocol, so consumers should only trust it from a trusted proxy path.
 
-Mobile-family packets currently isolated behind an opt-in extension overlay are:
+The legacy opaque mobile packet models are still available behind an explicit overlay:
 
 - `Extensions.Mobile.ServerInfo`, packet id `163`;
 - `Extensions.Mobile.PlayerPlatformInfo`, packet id `164`.
 
-Older mobile protocol tables independently identify the same `ServerInfo` and `PlayerPlatformInfo` packet family, but their numeric ids moved as the shared packet table grew. Until a matching mobile build for ids `163/164` is pinned, Multiplicity deliberately preserves their payloads as opaque bytes instead of pretending an older layout is proven for the current ids.
-
-`PacketTypes.ServerInfo` and `PacketTypes.PlayerPlatformInfo` remain temporary compatibility aliases for existing consumers. They are not vanilla desktop Terraria IDs and new code should use the extension packet constants instead.
+Use `new PacketDecoder(PacketExtensions.Mobile)` only for legacy traffic you want to preserve as opaque bytes.
+For protocol 329, use the vanilla packet models and views. `PacketDecoder.CommonExtensions` still
+enables Dimensions, but no longer overrides vanilla ids `163/164`.
 
 ## Zero-copy packet views
 
@@ -271,7 +249,7 @@ A payload-only `PacketView` has no complete Terraria packet header, so `HasPacke
 
 ## Net modules
 
-`LoadNetModule` and `TerrariaNetModule` use the Terraria 1.4.5.8 registration order, unchanged from the audited 1.4.5.7 baseline. The currently registered module ids are:
+`LoadNetModule` and `TerrariaNetModule` use the Terraria 1.4.6.1 registration order, unchanged from the audited 1.4.5.8 baseline. The currently registered module ids are:
 
 | Id | Module |
 |---:|---|
@@ -305,4 +283,4 @@ The older `TagEffectModule` is not part of the current registration table and ha
 
 ## Summary
 
-Multiplicity provides both a conventional packet object model and a low-allocation view API, with the current wire baseline set to **Terraria 1.4.5.8 / protocol 326** and non-vanilla packet protocols isolated behind opt-in extension overlays.
+Multiplicity provides both a conventional packet object model and a low-allocation view API, with the current wire baseline set to **Terraria 1.4.6.1 / protocol 329** and non-vanilla packet protocols isolated behind opt-in extension overlays.

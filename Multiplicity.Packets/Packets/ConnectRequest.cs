@@ -11,11 +11,12 @@ namespace Multiplicity.Packets
     {
         public const int Protocol325 = 325;
         public const int Protocol326 = 326;
-        public const int CurrentProtocol = Protocol326;
+        public const int Protocol329 = 329;
+        public const int CurrentProtocol = Protocol329;
         public const string VersionPrefix = "Terraria";
 
         /// <summary>
-        /// Gets or sets the protocol banner string. Example: "Terraria326".
+        /// Gets or sets the protocol banner string. Example: "Terraria329".
         /// </summary>
         public string Version { get; set; }
 

@@ -40,7 +40,7 @@ namespace Multiplicity.Packets.Views
 
         public byte Emote => _packetObject.Emote;
 
-        public short ExtraMetaData => _packetObject.ExtraMetaData;
+        public ProjectileKey ProjectileKey => _packetObject.ProjectileKey;
     }
 }
 

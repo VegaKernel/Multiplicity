@@ -1,6 +1,7 @@
 using System.IO;
 using Multiplicity.Packets.Extensions.Dimensions;
-using Multiplicity.Packets.Extensions.Mobile;
+using LegacyPlayerPlatformInfo = Multiplicity.Packets.Extensions.Mobile.PlayerPlatformInfo;
+using LegacyServerInfo = Multiplicity.Packets.Extensions.Mobile.ServerInfo;
 
 namespace Multiplicity.Packets.Extensions
 {
@@ -16,15 +17,13 @@ namespace Multiplicity.Packets.Extensions
 
         public static PacketExtensionRegistry Mobile { get; } =
             PacketExtensionRegistry.CreateBuilder()
-                .Add(ServerInfo.PacketId, DecodeServerInfo)
-                .Add(PlayerPlatformInfo.PacketId, DecodePlayerPlatformInfo)
+                .Add(LegacyServerInfo.PacketId, DecodeServerInfo)
+                .Add(LegacyPlayerPlatformInfo.PacketId, DecodePlayerPlatformInfo)
                 .Build();
 
         public static PacketExtensionRegistry Common { get; } =
             PacketExtensionRegistry.CreateBuilder()
                 .Add(DimensionsMessage.PacketId, TryDecodeDimensions)
-                .Add(ServerInfo.PacketId, DecodeServerInfo)
-                .Add(PlayerPlatformInfo.PacketId, DecodePlayerPlatformInfo)
                 .Build();
 
         private static TerrariaPacket TryDecodeDimensions(BinaryReader reader)
@@ -39,8 +38,8 @@ namespace Multiplicity.Packets.Extensions
             return new DimensionsMessage(reader);
         }
 
-        private static TerrariaPacket DecodeServerInfo(BinaryReader reader) => new ServerInfo(reader);
+        private static TerrariaPacket DecodeServerInfo(BinaryReader reader) => new LegacyServerInfo(reader);
 
-        private static TerrariaPacket DecodePlayerPlatformInfo(BinaryReader reader) => new PlayerPlatformInfo(reader);
+        private static TerrariaPacket DecodePlayerPlatformInfo(BinaryReader reader) => new LegacyPlayerPlatformInfo(reader);
     }
 }

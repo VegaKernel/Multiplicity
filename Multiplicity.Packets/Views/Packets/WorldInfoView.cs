@@ -83,6 +83,7 @@ namespace Multiplicity.Packets.Views
         public byte EventInfo9 => _packetObject.EventInfo9;
         public byte EventInfo10 => _packetObject.EventInfo10;
         public byte EventInfo11 => _packetObject.EventInfo11;
+        public bool NoSpidersSeed => _packetObject.NoSpidersSeed;
         public byte SunDialCooldown => _packetObject.SunDialCooldown;
         public byte MoonDialCooldown => _packetObject.MoonDialCooldown;
         public short OreTierCopper => _packetObject.OreTierCopper;

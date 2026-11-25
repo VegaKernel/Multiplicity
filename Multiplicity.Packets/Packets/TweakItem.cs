@@ -21,8 +21,6 @@ namespace Multiplicity.Packets
         public short Shoot { get; set; }
         public float ShootSpeed { get; set; }
         public TweakItemFlags2 Flags2 { get; set; }
-        public short Width { get; set; }
-        public short Height { get; set; }
         public float Scale { get; set; }
         public short Ammo { get; set; }
         public short UseAmmo { get; set; }
@@ -56,10 +54,6 @@ namespace Multiplicity.Packets
             if (HasFlags1(TweakItemFlags1.SecondaryFlags))
             {
                 Flags2 = (TweakItemFlags2)br.ReadByte();
-                if (HasFlags2(TweakItemFlags2.Width))
-                    Width = br.ReadInt16();
-                if (HasFlags2(TweakItemFlags2.Height))
-                    Height = br.ReadInt16();
                 if (HasFlags2(TweakItemFlags2.Scale))
                     Scale = br.ReadSingle();
                 if (HasFlags2(TweakItemFlags2.Ammo))
@@ -93,10 +87,6 @@ namespace Multiplicity.Packets
             if (HasFlags1(TweakItemFlags1.SecondaryFlags))
             {
                 length += SecondaryFlagsPayloadLength;
-                if (HasFlags2(TweakItemFlags2.Width))
-                    length += UShortPayloadLength;
-                if (HasFlags2(TweakItemFlags2.Height))
-                    length += UShortPayloadLength;
                 if (HasFlags2(TweakItemFlags2.Scale))
                     length += FloatPayloadLength;
                 if (HasFlags2(TweakItemFlags2.Ammo))
@@ -139,10 +129,6 @@ namespace Multiplicity.Packets
                 if (HasFlags1(TweakItemFlags1.SecondaryFlags))
                 {
                     bw.Write((byte)Flags2);
-                    if (HasFlags2(TweakItemFlags2.Width))
-                        bw.Write(Width);
-                    if (HasFlags2(TweakItemFlags2.Height))
-                        bw.Write(Height);
                     if (HasFlags2(TweakItemFlags2.Scale))
                         bw.Write(Scale);
                     if (HasFlags2(TweakItemFlags2.Ammo))
@@ -157,7 +143,7 @@ namespace Multiplicity.Packets
 
         public override string ToString()
         {
-            return $"[TweakItem ItemIndex: {ItemIndex}, Width: {Width}, Height: {Height}]";
+            return $"[TweakItem ItemIndex: {ItemIndex}, Flags1: {Flags1}, Flags2: {Flags2}]";
         }
 
         private bool HasFlags1(TweakItemFlags1 flag)

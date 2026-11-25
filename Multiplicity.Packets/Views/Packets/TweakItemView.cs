@@ -50,10 +50,6 @@ namespace Multiplicity.Packets.Views
 
         public TweakItemFlags2 Flags2 => _packetObject.Flags2;
 
-        public short Width => _packetObject.Width;
-
-        public short Height => _packetObject.Height;
-
         public float Scale => _packetObject.Scale;
 
         public short Ammo => _packetObject.Ammo;

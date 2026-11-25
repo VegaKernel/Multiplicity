@@ -832,5 +832,10 @@
             return new PlayerPlatformInfoView(packet);
         }
 
+        public static CustomServerAckView AsCustomServerAckView(this PacketView packet)
+        {
+            return new CustomServerAckView(packet);
+        }
+
     }
 }

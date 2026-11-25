@@ -124,6 +124,7 @@ namespace Multiplicity.Packets.Views
         public byte HitDirection { get; }
 
         public byte Flags { get; }
+        public bool Dodgeable => (Flags & 4) != 0;
 
         public sbyte CooldownCounter { get; }
 

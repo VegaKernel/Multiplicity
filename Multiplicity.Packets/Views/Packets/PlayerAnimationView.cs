@@ -24,6 +24,7 @@ namespace Multiplicity.Packets.Views
             byte playerId = reader.ReadByte();
             float itemRotation = reader.ReadSingle();
             short itemAnimation = reader.ReadInt16();
+            short itemAnimationMax = reader.ReadInt16();
             reader.EnsureEnd();
 
             Header = packet.Header;
@@ -31,6 +32,7 @@ namespace Multiplicity.Packets.Views
             PlayerId = playerId;
             ItemRotation = itemRotation;
             ItemAnimation = itemAnimation;
+            ItemAnimationMax = itemAnimationMax;
         }
 
         public PacketHeader Header { get; }
@@ -42,6 +44,8 @@ namespace Multiplicity.Packets.Views
         public float ItemRotation { get; }
 
         public short ItemAnimation { get; }
+
+        public short ItemAnimationMax { get; }
     }
 }
 

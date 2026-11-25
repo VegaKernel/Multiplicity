@@ -1,6 +1,7 @@
 using Multiplicity.Packets.Extensions;
 using Multiplicity.Packets.Extensions.Dimensions;
-using Multiplicity.Packets.Extensions.Mobile;
+using LegacyPlayerPlatformInfo = Multiplicity.Packets.Extensions.Mobile.PlayerPlatformInfo;
+using LegacyServerInfo = Multiplicity.Packets.Extensions.Mobile.ServerInfo;
 using Xunit;
 
 namespace Multiplicity.Packets.Tests
@@ -37,31 +38,29 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void MobileServerInfo_IsDecodedOnlyByExtensionAwareDecoder()
+        public void MobileServerInfo_RequiresExplicitLegacyOverlay()
         {
-            ServerInfo packet = new ServerInfo(new byte[] { 1, 2, 3, 4 });
+            LegacyServerInfo packet = new LegacyServerInfo(new byte[] { 1, 2, 3, 4 });
             byte[] bytes = packet.ToArray(includeHeader: true);
 
-            TerrariaPacket vanilla = TerrariaPacket.Deserialize(bytes);
-            TerrariaPacket decoded = PacketDecoder.CommonExtensions.Decode(bytes);
-            ServerInfo extension = Assert.IsType<ServerInfo>(decoded);
+            Assert.False(PacketDecoder.CommonExtensions.TryDecode(bytes, out _));
+            TerrariaPacket decoded = new PacketDecoder(PacketExtensions.Mobile).Decode(bytes);
+            LegacyServerInfo extension = Assert.IsType<LegacyServerInfo>(decoded);
 
-            Assert.IsType<UnknownPacket>(vanilla);
             Assert.Equal(packet.Payload, extension.Payload);
         }
 
         [Fact]
         public void MobilePlayerPlatformInfo_UsesExtensionId164()
         {
-            PlayerPlatformInfo packet = new PlayerPlatformInfo(new byte[] { 9, 8, 7 });
+            LegacyPlayerPlatformInfo packet = new LegacyPlayerPlatformInfo(new byte[] { 9, 8, 7 });
             byte[] bytes = packet.ToArray(includeHeader: true);
 
-            TerrariaPacket vanilla = TerrariaPacket.Deserialize(bytes);
-            TerrariaPacket decoded = PacketDecoder.CommonExtensions.Decode(bytes);
-            PlayerPlatformInfo extension = Assert.IsType<PlayerPlatformInfo>(decoded);
+            Assert.False(PacketDecoder.CommonExtensions.TryDecode(bytes, out _));
+            TerrariaPacket decoded = new PacketDecoder(PacketExtensions.Mobile).Decode(bytes);
+            LegacyPlayerPlatformInfo extension = Assert.IsType<LegacyPlayerPlatformInfo>(decoded);
 
-            Assert.IsType<UnknownPacket>(vanilla);
-            Assert.Equal(PlayerPlatformInfo.PacketId, extension.Id);
+            Assert.Equal(LegacyPlayerPlatformInfo.PacketId, extension.Id);
             Assert.Equal(packet.Payload, extension.Payload);
         }
     }

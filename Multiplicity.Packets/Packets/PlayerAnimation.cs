@@ -16,6 +16,8 @@ namespace Multiplicity.Packets
 
         public short ItemAnimation { get; set; }
 
+        public short ItemAnimationMax { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PlayerAnimation"/> class.
         /// </summary>
@@ -35,6 +37,7 @@ namespace Multiplicity.Packets
             this.PlayerId = br.ReadByte();
             this.ItemRotation = br.ReadSingle();
             this.ItemAnimation = br.ReadInt16();
+            this.ItemAnimationMax = br.ReadInt16();
         }
 
         public override string ToString()
@@ -46,7 +49,7 @@ namespace Multiplicity.Packets
 
         public override short GetLength()
         {
-            return (short)(7);
+            return 9;
         }
 
         public override void ToStream(Stream stream, bool includeHeader = true)
@@ -72,6 +75,7 @@ namespace Multiplicity.Packets
                 br.Write(PlayerId);
                 br.Write(ItemRotation);
                 br.Write(ItemAnimation);
+                br.Write(ItemAnimationMax);
             }
         }
 

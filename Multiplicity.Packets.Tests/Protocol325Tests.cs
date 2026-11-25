@@ -1,6 +1,5 @@
 using System;
 using Multiplicity.Packets;
-using Multiplicity.Packets.Extensions.Mobile;
 using Multiplicity.Packets.Views;
 using Xunit;
 
@@ -75,20 +74,20 @@ namespace Multiplicity.Packets.Tests
         }
 
         [Fact]
-        public void Protocol325PacketIdRange_StopsAtDesktop162AndKeepsMobileIdsSeparate()
+        public void Protocol329PacketIdRange_AppendsThreeIdsAfterDamageNpcAck()
         {
             Assert.Equal(145, (int)PacketTypes.SyncItemsWithShimmerDeprecated);
             Assert.Equal(148, (int)PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated);
             Assert.Equal(161, (int)PacketTypes.HostToken);
             Assert.Equal(162, (int)PacketTypes.DamageNPCAck);
-            Assert.Equal(163, ServerInfo.PacketId);
-            Assert.Equal(164, PlayerPlatformInfo.PacketId);
-            Assert.False(Enum.IsDefined(typeof(PacketTypes), ServerInfo.PacketId));
-            Assert.False(Enum.IsDefined(typeof(PacketTypes), PlayerPlatformInfo.PacketId));
+            Assert.Equal(163, (int)PacketTypes.ServerInfo);
+            Assert.Equal(164, (int)PacketTypes.PlayerPlatformInfo);
+            Assert.Equal(165, (int)PacketTypes.CustomServerAck);
+            Assert.False(Enum.IsDefined(typeof(PacketTypes), (byte)166));
         }
 
         [Fact]
-        public void GeneratedVanillaRegistry_ExcludesUnusedAndExtensionPacketIdsButKeepsLegacyLiquid48()
+        public void GeneratedVanillaRegistry_RegistersCrossplayPacketsAndLegacyLiquidButNotUnusedPackets()
         {
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.NpcItemStrike));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.ChatMessage));
@@ -98,8 +97,9 @@ namespace Multiplicity.Packets.Tests
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.NpcKillCount));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.SyncItemsWithShimmerDeprecated));
             Assert.False(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.SyncItemCannotBeTakenByEnemiesDeprecated));
-            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey((PacketTypes)ServerInfo.PacketId));
-            Assert.False(TerrariaPacket.DeserializerMap.ContainsKey((PacketTypes)PlayerPlatformInfo.PacketId));
+            Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.ServerInfo));
+            Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.PlayerPlatformInfo));
+            Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.CustomServerAck));
 
             Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.ConnectRequest));
             Assert.True(TerrariaPacket.DeserializerMap.ContainsKey(PacketTypes.WorldInfo));

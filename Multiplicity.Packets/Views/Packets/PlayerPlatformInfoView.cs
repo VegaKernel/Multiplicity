@@ -1,17 +1,13 @@
 using System;
-using System.IO;
-using Multiplicity.Packets.Extensions;
-using Multiplicity.Packets.Extensions.Mobile;
 
 namespace Multiplicity.Packets.Views
 {
     public readonly ref struct PlayerPlatformInfoView
     {
         private readonly PacketView _packet;
-        private readonly PlayerPlatformInfo _packetObject;
 
         public PlayerPlatformInfoView(ReadOnlySpan<byte> payload)
-            : this(PacketView.FromPayload(PlayerPlatformInfo.PacketId, payload))
+            : this(PacketView.FromPayload(PacketTypes.PlayerPlatformInfo, payload))
         {
         }
 
@@ -22,20 +18,27 @@ namespace Multiplicity.Packets.Views
 
         public PlayerPlatformInfoView(PacketView packet)
         {
-            if (packet.Header.RawPacketId != PlayerPlatformInfo.PacketId)
-            {
-                throw new InvalidDataException($"Expected packet id {PlayerPlatformInfo.PacketId}, got {packet.Header.RawPacketId}.");
-            }
-
+            packet.EnsureType(PacketTypes.PlayerPlatformInfo);
             _packet = packet;
-            _packetObject = (PlayerPlatformInfo)new PacketDecoder(PacketExtensions.Mobile)
-                .DecodePayload(PlayerPlatformInfo.PacketId, packet.PayloadSpan.ToArray());
+            PacketReader reader = packet.CreatePayloadReader();
+            PlayerSlot = reader.ReadByte();
+            Platform = (PlayerPlatform)reader.ReadByte();
+            PlatformUserIdUtf8 = reader.ReadLengthPrefixedBytes();
+            if (Platform == PlayerPlatform.Nintendo)
+                PlatformNameUtf8 = reader.ReadLengthPrefixedBytes();
+            IsHost = reader.ReadBoolean();
+            reader.EnsureEnd();
         }
 
         public PacketHeader Header => _packet.Header;
 
         public ReadOnlySpan<byte> SourceSpan => _packet.SourceSpan;
 
-        public PlayerPlatformInfo Packet => _packetObject;
+        public byte PlayerSlot { get; }
+        public PlayerPlatform Platform { get; }
+        public ReadOnlySpan<byte> PlatformUserIdUtf8 { get; }
+        public ReadOnlySpan<byte> PlatformNameUtf8 { get; }
+        public bool IsHost { get; }
+        public PlayerPlatformInfo Packet => PacketViewMaterializer.Materialize<PlayerPlatformInfo>(_packet, PacketTypes.PlayerPlatformInfo);
     }
 }

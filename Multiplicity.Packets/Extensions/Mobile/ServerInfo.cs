@@ -4,8 +4,7 @@ using System.IO;
 namespace Multiplicity.Packets.Extensions.Mobile
 {
     /// <summary>
-    /// Mobile-family extension packet 163. This id is outside the vanilla Terraria 1.4.5.8 desktop range (0..162).
-    /// The payload remains opaque until the exact 163 wire contract is pinned against a matching mobile build.
+    /// Opaque legacy mobile-family packet 163; use the vanilla model for protocol 329.
     /// </summary>
     public sealed class ServerInfo : RawPayloadPacket
     {

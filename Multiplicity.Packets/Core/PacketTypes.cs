@@ -163,6 +163,9 @@ namespace Multiplicity.Packets
         /*159*/ RequestSection,
         /*160*/ SyncItemPosition,
         /*161*/ HostToken,
-        /*162*/ DamageNPCAck
+        /*162*/ DamageNPCAck,
+        /*163*/ ServerInfo,
+        /*164*/ PlayerPlatformInfo,
+        /*165*/ CustomServerAck
     }
 }
