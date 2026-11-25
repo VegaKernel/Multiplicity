@@ -4,7 +4,7 @@
 
 NuGet package id: `Multiplicity`. The assembly and public namespace remain `Multiplicity.Packets`.
 
-Current package version: **3.0.0**.
+Current package version: **4.0.0**.
 
 ## Dependency policy
 
@@ -43,7 +43,9 @@ implement the game's socket transports or platform matchmaking.
 
 Wire compatibility is intentionally dependency-free. Terraria/XNA/MonoGame implementation types are not runtime dependencies of the parser: `Vector2` values are represented by their two `Single` wire components, RGB values use the library's own `ColorStruct`, and protocol-specific compound values such as player death reasons, sound info, item-sync data and raw tile payloads use Multiplicity-owned models with the same byte layout.
 
-Target framework: `net11.0`. Version 3.0.0 is intentionally net11-only.
+Target frameworks: `net9.0` and `net11.0`. One NuGet package contains both builds of the protocol 329 library.
+Building the repository requires the .NET 11 SDK for the source generator. Consuming the `net9.0` package
+asset does not require .NET 11. Running all tests requires both .NET 9 and .NET 11 runtimes.
 
 The package is marked as AOT/trimming compatible and enables the .NET AOT and trimming analyzers:
 
@@ -54,7 +56,7 @@ The package is marked as AOT/trimming compatible and enables the .NET AOT and tr
 <EnableAotAnalyzer>true</EnableAotAnalyzer>
 ```
 
-A NativeAOT application can therefore consume the same `net11.0` NuGet package; a separate AOT NuGet package is not required.
+A NativeAOT application can therefore consume the same NuGet package; a separate AOT NuGet package is not required.
 
 ### AOT-safe packet registration
 

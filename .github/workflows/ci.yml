@@ -25,10 +25,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Setup .NET 11
+      - name: Setup .NET 9 and .NET 11
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 11.0.100-preview.7.26381.103
+          dotnet-version: |
+            9.0.x
+            11.0.100-preview.7.26381.103
 
       - name: Show .NET SDK
         run: dotnet --info

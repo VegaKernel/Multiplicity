@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 4.0.0 - 2026-11-25
+
+The NuGet package now includes a `net9.0` assembly alongside `net11.0`. Both target the same protocol;
+the source generator still runs under the .NET 11 SDK when building the repository.
 
 ### Terraria 1.4.6.1 / protocol 329
 

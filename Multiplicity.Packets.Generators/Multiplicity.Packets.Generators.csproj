@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <!--
-    This is a build-time source generator for a net11-only library. Reference the Roslyn assemblies
+    This build-time source generator runs under the .NET 11 SDK. Reference the Roslyn assemblies
     shipped with the active .NET SDK instead of restoring Microsoft.CodeAnalysis from NuGet. These
     references are not runtime/package dependencies of Multiplicity.Packets.
   -->
