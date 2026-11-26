@@ -183,6 +183,11 @@ namespace Multiplicity.Packets.Views
                 return true;
             }
 
+            if (IsStandardPlayerUpdate(rawPacketId))
+            {
+                return TryParsePlayerUpdate(payloadBuffer.Span, out packetView, out consumed);
+            }
+
             try
             {
                 using PacketBinaryReader reader = new PacketBinaryReader(rawPacketId, payloadBuffer);
@@ -202,6 +207,38 @@ namespace Multiplicity.Packets.Views
                 return false;
             }
             catch (EndOfStreamException)
+            {
+                return false;
+            }
+        }
+
+        private static bool IsStandardPlayerUpdate(byte rawPacketId) =>
+            rawPacketId == (byte)PacketTypes.PlayerUpdate &&
+            TerrariaPacket.StandardPlayerUpdateDeserializer != null &&
+            TerrariaPacket.DeserializerMap.TryGetValue(PacketTypes.PlayerUpdate, out var deserializer) &&
+            ReferenceEquals(deserializer, TerrariaPacket.StandardPlayerUpdateDeserializer);
+
+        private static bool TryParsePlayerUpdate(ReadOnlySpan<byte> payloadBuffer, out PacketView packetView, out int consumed)
+        {
+            packetView = default;
+            consumed = 0;
+
+            // PacketPayloadStream (the general parser) uses a signed 16-bit length
+            // for the entire supplied payload window, not merely the consumed prefix.
+            if (payloadBuffer.Length > short.MaxValue - TerrariaPacket.PacketHeaderLength)
+            {
+                return false;
+            }
+
+            try
+            {
+                var window = PacketView.FromPayload(PacketTypes.PlayerUpdate, payloadBuffer);
+                int payloadConsumed = PlayerUpdateView.ReadPayloadPrefixLength(window);
+                packetView = PacketView.FromPayload(PacketTypes.PlayerUpdate, payloadBuffer.Slice(0, payloadConsumed));
+                consumed = payloadConsumed;
+                return true;
+            }
+            catch (InvalidDataException)
             {
                 return false;
             }

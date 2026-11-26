@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.0.1 - 2026-11-26
+
+- Parse standard `PlayerUpdate` payloads directly through the existing typed view,
+  avoiding stream, reader and packet-model allocations while preserving bounded
+  payload validation and custom deserializer behavior.
+- No protocol or target-framework changes (Terraria 1.4.6.1 / protocol 329; net9.0 and net11.0).
+
 ## 4.0.0 - 2026-11-25
 
 The NuGet package now includes a `net9.0` assembly alongside `net11.0`. Both target the same protocol;

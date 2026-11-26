@@ -4,7 +4,7 @@
 
 NuGet package id: `Multiplicity`. The assembly and public namespace remain `Multiplicity.Packets`.
 
-Current package version: **4.0.0**.
+Current package version: **4.0.1**.
 
 ## Dependency policy
 

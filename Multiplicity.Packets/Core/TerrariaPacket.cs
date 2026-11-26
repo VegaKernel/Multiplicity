@@ -27,6 +27,11 @@ namespace Multiplicity.Packets
         public static Dictionary<PacketTypes, Func<BinaryReader, TerrariaPacket>> DeserializerMap =
             VanillaPacketRegistry.CreateDeserializerMap();
 
+        // Capture the generated canonical factory before callers can customize
+        // the public map; view parsing must not bypass a replacement reader.
+        internal static readonly Func<BinaryReader, TerrariaPacket> StandardPlayerUpdateDeserializer =
+            DeserializerMap.GetValueOrDefault(PacketTypes.PlayerUpdate);
+
         protected short _length = 0;
 
         /// <summary>

@@ -17,6 +17,17 @@ namespace Multiplicity.Packets.Views
         }
 
         public PlayerUpdateView(PacketView packet)
+            : this(packet, allowTrailing: false, out _)
+        {
+        }
+
+        internal static int ReadPayloadPrefixLength(PacketView packet)
+        {
+            _ = new PlayerUpdateView(packet, allowTrailing: true, out int consumed);
+            return consumed;
+        }
+
+        private PlayerUpdateView(PacketView packet, bool allowTrailing, out int consumed)
         {
             packet.EnsureType(PacketTypes.PlayerUpdate);
 
@@ -64,7 +75,12 @@ namespace Multiplicity.Packets.Views
                 cameraTargetY = reader.ReadSingle();
             }
 
-            reader.EnsureEnd();
+            if (!allowTrailing)
+            {
+                reader.EnsureEnd();
+            }
+
+            consumed = reader.Consumed;
 
             Header = packet.Header;
             _sourceSpan = packet.SourceSpan;
