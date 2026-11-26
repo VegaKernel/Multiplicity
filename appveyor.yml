@@ -15,9 +15,30 @@ assembly_info:
   assembly_version: '{version}'
   assembly_file_version: '{version}'
   assembly_informational_version: '{version}'
-build:
-  publish_nuget: true
-  verbosity: minimal
+install:
+  - ps: |
+      $ErrorActionPreference = 'Stop'
+      $dotnetDir = Join-Path $env:USERPROFILE '.dotnet'
+      $installScript = Join-Path $env:TEMP 'dotnet-install.ps1'
+      Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile $installScript
+      & $installScript -Version 11.0.100 -InstallDir $dotnetDir
+      & $installScript -Runtime dotnet -Channel 9.0 -InstallDir $dotnetDir
+      & (Join-Path $dotnetDir 'dotnet.exe') --info
+      if ($LASTEXITCODE -ne 0) { throw 'Unable to run the installed .NET SDK.' }
+build_script:
+  - ps: |
+      $dotnet = Join-Path $env:USERPROFILE '.dotnet\dotnet.exe'
+      & $dotnet build Multiplicity.sln --configuration Release
+      if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
+      & $dotnet pack Multiplicity.Packets/Multiplicity.Packets.csproj --configuration Release --no-build --output artifacts/nuget
+      if ($LASTEXITCODE -ne 0) { throw 'Pack failed.' }
+test_script:
+  - ps: |
+      $dotnet = Join-Path $env:USERPROFILE '.dotnet\dotnet.exe'
+      & $dotnet test Multiplicity.Packets.Tests/Multiplicity.Packets.Tests.csproj --configuration Release --no-build
+      if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
+artifacts:
+  - path: artifacts/nuget/*.nupkg
 deploy:
 - provider: NuGet
   api_key:

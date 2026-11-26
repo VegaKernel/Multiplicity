@@ -4,7 +4,7 @@
 
 NuGet package id: `Multiplicity`. The assembly and public namespace remain `Multiplicity.Packets`.
 
-Current package version: **4.0.1**.
+Current package version: **4.0.2**.
 
 ## Dependency policy
 
@@ -44,7 +44,8 @@ implement the game's socket transports or platform matchmaking.
 Wire compatibility is intentionally dependency-free. Terraria/XNA/MonoGame implementation types are not runtime dependencies of the parser: `Vector2` values are represented by their two `Single` wire components, RGB values use the library's own `ColorStruct`, and protocol-specific compound values such as player death reasons, sound info, item-sync data and raw tile payloads use Multiplicity-owned models with the same byte layout.
 
 Target frameworks: `net9.0` and `net11.0`. One NuGet package contains both builds of the protocol 329 library.
-Building the repository requires the .NET 11 SDK for the source generator. Consuming the `net9.0` package
+Building the repository requires the stable .NET 11 SDK (11.0.100 or later within .NET 11.0) for the source generator.
+Prerelease SDKs are disabled in `global.json`. Consuming the `net9.0` package
 asset does not require .NET 11. Running all tests requires both .NET 9 and .NET 11 runtimes.
 
 The package is marked as AOT/trimming compatible and enables the .NET AOT and trimming analyzers:

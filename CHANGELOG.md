@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.0.2 - 2026-11-27
+
+- Use the stable .NET 11 SDK (11.0.100) for local builds and CI; prerelease SDKs are disabled.
+- Build and test both `net9.0` and `net11.0`, and include both assemblies in the NuGet package.
+- Build the source generator in Release configuration when building the Release solution.
+- No protocol changes (Terraria 1.4.6.1 / protocol 329).
+
 ## 4.0.1 - 2026-11-26
 
 - Parse standard `PlayerUpdate` payloads directly through the existing typed view,
